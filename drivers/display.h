@@ -1,3 +1,4 @@
+// I think this file is useless >_>
 #ifndef KERNEL_H
 #define KERNEL_H
 
