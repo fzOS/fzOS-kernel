@@ -1,4 +1,4 @@
-#include "graphics.h"
+#include <graphics.h>
 
 static struct {
   EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
@@ -11,7 +11,10 @@ void graphics_init(EFI_GRAPHICS_OUTPUT_PROTOCOL *gop) {
   graphics_data.gop = gop;
   graphics_data.frame_buffer_base = (uint32_t *)gop->Mode->FrameBufferBase;
   graphics_data.pixels_per_line = gop->Mode->Info->PixelsPerScanLine;
-
+  KERNEL_CONSOLE_FONT_MAX_X = graphics_data.pixels_per_line / 8 - 1;
+  KERNEL_CONSOLE_FONT_MAX_Y = graphics_data.gop->Mode->Info->VerticalResolution / 16 - 1;
+  KERNEL_CONSOLE_FONT_POSITION_Y = 0;
+  KERNEL_CONSOLE_FONT_POSITION_X = 0;
   //("graphics");
 }
 
