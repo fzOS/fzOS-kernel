@@ -1,10 +1,10 @@
 #include <kernel.h>
-#include <kerneldisplay.c>
+#include <kerneldisplay.h>
 
 void kernel_main(KernelInfo info) {
   graphics_init(info.gop);
   graphics_clear_screen(0x00000000);
-  uint32_t default_font_color;
+  U32 default_font_color;
   default_font_color = 0xffffff00;
   kernel_log_print_char('H', default_font_color);
   kernel_log_print_char('e', default_font_color);

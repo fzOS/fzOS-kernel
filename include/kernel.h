@@ -1,6 +1,4 @@
-#include <efi.h>
-#include <efilib.h>
-#include <public.h>
+#include <uefivars.h>
 
 #ifndef _KERNEL_H_
 #define _KERNEL_H_

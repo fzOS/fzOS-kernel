@@ -1,7 +1,9 @@
-#include <asciifont.c>
-#include <graphics.c>
+#include "asciifont.c"
 
-void kernel_log_print_char(char c,uint32_t color){
+#include <kerneldisplay.h>
+
+
+void kernel_log_print_char(char c,U32 color){
     unsigned char dots = &fontdata_8x16[c*16];
     int x,y;
     if (KERNEL_CONSOLE_FONT_POSITION_X < KERNEL_CONSOLE_FONT_MAX_X){
