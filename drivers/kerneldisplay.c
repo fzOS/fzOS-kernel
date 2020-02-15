@@ -39,7 +39,7 @@ void kernel_log_line_break(){
 }
 
 void kernel_log_print_string(char *str,U32 color){
-    while (*str !='\0'){
+    while (*str != '\0'){
         if (*str != '\n'){
             kernel_log_print_char(*str,color);
         }else{
