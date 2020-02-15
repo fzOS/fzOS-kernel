@@ -6,16 +6,6 @@ void kernel_main(KernelInfo info) {
   graphics_clear_screen(0x00000000);
   U32 default_font_color;
   default_font_color = 0xffffff00;
-  kernel_log_print_char('H', default_font_color);
-  kernel_log_print_char('e', default_font_color);
-  kernel_log_print_char('l', default_font_color);
-  kernel_log_print_char('l', default_font_color);
-  kernel_log_print_char('o', default_font_color);
-  kernel_log_print_char(' ', default_font_color);
-  kernel_log_print_char('W', default_font_color);
-  kernel_log_print_char('o', default_font_color);
-  kernel_log_print_char('r', default_font_color);
-  kernel_log_print_char('l', default_font_color);
-  kernel_log_print_char('d', default_font_color);
-  kernel_log_print_char('!', default_font_color);
+  kernel_log_print_string('Hello World! I am fzOS.\n', default_font_color);
+  kernel_log_print_string('kernel version: fzKernel 0.1.0', default_font_color);
 }

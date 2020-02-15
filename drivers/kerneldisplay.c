@@ -37,3 +37,15 @@ void kernel_log_line_break(){
     KERNEL_CONSOLE_FONT_POSITION_X = 0;
     KERNEL_CONSOLE_FONT_POSITION_Y = KERNEL_CONSOLE_FONT_POSITION_Y + 1;
 }
+
+void kernel_log_print_string(char *str,U32 color){
+    while (*str !='\0'){
+        if (*str != '\n'){
+            kernel_log_print_char(*str,color);
+        }else{
+            kernel_log_line_break();
+        }
+        
+        str++;
+    }
+}
