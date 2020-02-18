@@ -1,15 +1,16 @@
 #include <uefivars.h>
+#include <types.h>
 
 #ifndef _KERNEL_H_
 #define _KERNEL_H_
 
 typedef struct {
   void *xdsp_address;
-  uint8_t *memory_map;
-  uint64_t mem_map_size;
-  uint64_t mem_map_descriptor_size;
-  uint64_t kernel_lowest_address;
-  uint64_t kernel_page_count;
+  U8 *memory_map;
+  U64 mem_map_size;
+  U64 mem_map_descriptor_size;
+  U64 kernel_lowest_address;
+  U64 kernel_page_count;
   EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
 } KernelInfo;
 
