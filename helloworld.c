@@ -14,7 +14,7 @@ void kernel_main(KernelInfo info) {
   kernel_log_print_string("\n Kernel Memory Usage: ", default_font_color);
   kernel_print_U64_hex(info.kernel_page_count, default_font_color);
   kernel_log_print_string("\n Memory map pointer: ", default_font_color);
-  kernel_print_U8_hex(info.*memory_map, default_font_color);
+  kernel_print_U8_hex(*info.memory_map, default_font_color);
   kernel_log_print_string("\n Memory map size: ", default_font_color);
   kernel_print_U64_hex(info.mem_map_size, default_font_color);
   kernel_log_print_string("\n Memory Map Descriptor: ", default_font_color);
