@@ -2,6 +2,21 @@
 
 #include <kerneldisplay.h>
 
+void kernel_draw_char_pos(U32 color){
+    int x,y;
+    if (KERNEL_CONSOLE_FONT_POSITION_X < KERNEL_CONSOLE_FONT_MAX_X){
+        x = KERNEL_CONSOLE_FONT_POSITION_X * 8;
+        y = KERNEL_CONSOLE_FONT_POSITION_Y * 16;
+        KERNEL_CONSOLE_FONT_POSITION_X = KERNEL_CONSOLE_FONT_POSITION_X + 1;
+    }else{
+        KERNEL_CONSOLE_FONT_POSITION_X = 0;
+        KERNEL_CONSOLE_FONT_POSITION_Y = KERNEL_CONSOLE_FONT_POSITION_Y + 1;
+        x = KERNEL_CONSOLE_FONT_POSITION_X * 8;
+        y = KERNEL_CONSOLE_FONT_POSITION_Y * 16;
+    }
+    graphics_fill_rect(x, y, 8, 16, color);
+}
+
 
 void kernel_log_print_char(char c,U32 color){
     unsigned const char* dots = fontdata_8x16;
