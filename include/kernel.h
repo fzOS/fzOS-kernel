@@ -1,3 +1,5 @@
+#include <efi.h>
+#include <efilib.h>
 #include <uefivars.h>
 #include <types.h>
 
