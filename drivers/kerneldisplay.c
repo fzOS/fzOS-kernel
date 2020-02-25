@@ -17,8 +17,32 @@ void kernel_draw_char_pos(U32 color){
     graphics_fill_rect(x, y, 8, 16, color);
 }
 
-void kernel_print_U64(U64 data, U32 color){
-    
+void kernel_print_U64_hex(U64 data, U32 color){
+    U8 tempint;
+    U8 temp1,temp2;
+    kernel_log_print_char('0', color);
+    kernel_log_print_char('x', color);
+    for (int i = 0; i < 8; i++){
+        /* code */
+        tempint = (data&(0xff00000000000000 >> (8*i)) ) >> (56-8*i);
+        temp1 = (tempint&0xf0) >> 4;
+        temp2 = tempint&0x0f;
+        if (temp1 < 10){
+            temp1 = temp1 + 48;
+            kernel_log_print_char(temp1, color);
+        }else{
+            temp1 = temp1 + 87;
+            kernel_log_print_char(temp1, color);
+        }
+        if (temp2 < 10){
+            temp2 = temp2 + 48;
+            kernel_log_print_char(temp2, color);
+        }else{
+            temp2 = temp2 + 87;
+            kernel_log_print_char(temp2, color);
+        }
+    }
+    kernel_log_print_char(' ', color);
 }
 
 void kernel_log_print_char(char c,U32 color){
