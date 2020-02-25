@@ -1,2 +1,1 @@
-#include <Uefi.h>
-#include <Protocol/GraphicsOutput.h>
+#include <efi.h>

@@ -24,10 +24,10 @@ void graphics_clear_screen(U32 color) {
                      graphics_data.gop->Mode->Info->VerticalResolution, color);
 }
 
-//画方形，y起点，x起点，宽，高，颜色
+//画方形，x起点，y起点，宽，高，颜色
 void graphics_fill_rect(int x, int y, int w, int h, U32 color) {
-  for (int i = y; i < y + h; ++i) {
-    for (int j = x; j < x + w; ++j) {
+  for (int j = y; j < y + h; ++j) {
+    for (int i = x; i < x + w; ++i) {
       graphics_draw_pixel(i, j, color);
     }
   }
