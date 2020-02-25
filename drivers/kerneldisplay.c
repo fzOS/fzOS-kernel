@@ -45,6 +45,29 @@ void kernel_print_U64_hex(U64 data, U32 color){
     kernel_log_print_char(' ', color);
 }
 
+void kernel_print_U8_hex(U8 data, U32 color){
+    U8 temp1,temp2;
+    kernel_log_print_char('0', color);
+    kernel_log_print_char('x', color);
+    temp1 = (data&0xf0) >> 4;
+    temp2 = data&0x0f;
+    if (temp1 < 10){
+        temp1 = temp1 + 48;
+        kernel_log_print_char(temp1, color);
+    }else{
+        temp1 = temp1 + 87;
+        kernel_log_print_char(temp1, color);
+    }
+    if (temp2 < 10){
+        temp2 = temp2 + 48;
+        kernel_log_print_char(temp2, color);
+    }else{
+        temp2 = temp2 + 87;
+        kernel_log_print_char(temp2, color);
+    }
+    kernel_log_print_char(' ', color);
+}
+
 void kernel_log_print_char(char c,U32 color){
     unsigned const char* dots = fontdata_8x16 + c * 16;
     int x,y;
