@@ -19,7 +19,7 @@ void kernel_draw_char_pos(U32 color){
 
 
 void kernel_log_print_char(char c,U32 color){
-    unsigned const char* dots = fontdata_8x16;
+    unsigned const char* dots = fontdata_8x16 + c * 16;
     int x,y;
     if (KERNEL_CONSOLE_FONT_POSITION_X < KERNEL_CONSOLE_FONT_MAX_X){
         x = KERNEL_CONSOLE_FONT_POSITION_X * 8;
