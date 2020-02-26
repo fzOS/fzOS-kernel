@@ -110,3 +110,19 @@ void kernel_log_print_string(char *str,U32 color){
         str++;
     }
 }
+
+void kernel_log_print_line_cut(char c, U32 color){
+    kernel_log_line_break();
+    while ((KERNEL_CONSOLE_FONT_POSITION_X / 8) < (KERNEL_CONSOLE_FONT_MAX_X - 8)){
+        kernel_log_print_char(c, color);
+    }
+}
+
+void kernel_log_print_num(U64 num, U32 color){
+    U8 tempint;
+    tempint = num % 10 + 48;
+    if ((num / 10) != 0){
+        kernel_log_print_num((num/10), color);
+    }
+    kernel_log_print_char((char) tempint, color);
+}
