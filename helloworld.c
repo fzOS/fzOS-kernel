@@ -21,4 +21,11 @@ void kernel_main(KernelInfo info) {
   kernel_print_U64_hex(info.mem_map_size, default_font_color);
   kernel_log_print_string("\n Memory Map Descriptor: ", default_font_color);
   kernel_print_U64_hex(info.mem_map_descriptor_size, default_font_color);
+  U64 text;
+  for (int i = 0; i < 100; i++){
+    /* code */
+    text = (U64) i;
+    kernel_log_print_string("\n DisPlay: ", default_font_color);
+    kernel_print_U64_hex(text, default_font_color);
+  }
 }

@@ -12,5 +12,6 @@ void graphics_init(EFI_GRAPHICS_OUTPUT_PROTOCOL *gop);
 void graphics_clear_screen(U32 color);
 void graphics_fill_rect(int x, int y, int w, int h, U32 color);
 void graphics_draw_pixel(int x, int y, U32 color);
+void kernel_display_move_up();
 
 #endif
