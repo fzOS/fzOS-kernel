@@ -1,7 +1,4 @@
-#include <graphic.h>
-#include <kerneldisplay.h>
 #include <memorysetup.h>
-#include <types.h>
 
 void memory_init(U64 mem_map_descriptor_size,U64 mem_map_size,U8 *memory_map,U32 color){
     /*U64 *memmappointer;
@@ -25,6 +22,6 @@ void memory_init(U64 mem_map_descriptor_size,U64 mem_map_size,U8 *memory_map,U32
         : "g"(CR3Value)
         : 
         : "memory");
-    kernel_log_print_string("\n CR3 value", color);
+    kernel_log_print_string("\n CR3 value:", color);
     kernel_print_U64_hex(CR3Value, color);
 }
