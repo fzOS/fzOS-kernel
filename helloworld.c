@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <kerneldisplay.h>
+#include <memorysetup.h>
 
 void kernel_main(KernelInfo info) {
   graphics_init(info.gop);
@@ -21,22 +22,5 @@ void kernel_main(KernelInfo info) {
   kernel_print_U64_hex(info.mem_map_size, default_font_color);
   kernel_log_print_string("\n Memory Map Descriptor: ", default_font_color);
   kernel_print_U64_hex(info.mem_map_descriptor_size, default_font_color);
-  U64 *memmappointer;
-  memmappointer = (U64 *) info.memory_map;
-  kernel_log_print_string("\n Memory Map: ", default_font_color);
-  for (U8 i = 0; i < (info.mem_map_size / info.mem_map_descriptor_size); i++){
-    kernel_log_print_string("\n #Map", default_font_color);
-    kernel_log_print_num((U64) i, default_font_color);
-    kernel_log_print_char(':', default_font_color);
-    kernel_print_U64_hex(*memmappointer, default_font_color);
-    memmappointer = memmappointer + 1;
-    kernel_print_U64_hex(*memmappointer, default_font_color);
-    memmappointer = memmappointer + 1;
-    kernel_print_U64_hex(*memmappointer, default_font_color);
-    memmappointer = memmappointer + 1;
-    kernel_print_U64_hex(*memmappointer, default_font_color);
-    memmappointer = memmappointer + 1;
-    kernel_print_U64_hex(*memmappointer, default_font_color);
-    memmappointer = memmappointer + 2;
-  }
+  memory_init(info.mem_map_descriptor_size,info.mem_map_size,info.memory_map,default_font_color);
 }
