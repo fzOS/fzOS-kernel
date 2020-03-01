@@ -1,6 +1,10 @@
+ifndef FHH
 GNUEFI_PATH=/usr/include/efi
+else
+GNUEFI_PATH=/usr/local/include/efi
+endif
 BASE_DIR=${PWD}
-CFLAGS=-isystem "${PWD}/include" -isystem "${PWD}/drivers/include" -isystem "${PWD}/memory/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -O2
+CFLAGS=-isystem "${PWD}/include" -isystem "${PWD}/drivers/include" -isystem "${PWD}/memory/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -O2 -fno-stack-protector
 SUBDIRS=drivers memory
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
@@ -16,6 +20,9 @@ kernel:
 all:kernel
 clean:
 	rm -rf build/*
-
-
-	
+install:
+	sudo qemu-nbd -c /dev/nbd0 '/home/fhh/VirtualBox VMs/UEFITest/raw.vdi'
+	sudo mount -t auto /dev/nbd0p1 /media
+	sudo cp -f build/kernel /media/
+	sudo umount /media
+	sudo qemu-nbd --disconnect /dev/nbd0

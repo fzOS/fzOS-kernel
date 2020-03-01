@@ -1,4 +1,5 @@
 // I think this file is useless >_>
+// Yes indeeed :) --fhh
 #ifndef KERNEL_H
 #define KERNEL_H
 

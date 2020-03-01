@@ -6,6 +6,12 @@
         "uefi.h": "c",
         "types.h": "c",
         "kerneldisplay.h": "c",
-        "efi.h": "c"
+        "efi.h": "c",
+        "eficompiler.h": "c",
+        "efidef.h": "c",
+        "efibind.h": "c",
+        "parser.h": "c",
+        "stdarg.h": "c",
+        "cstdarg": "c"
     }
 }

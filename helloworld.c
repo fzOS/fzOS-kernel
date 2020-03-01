@@ -23,4 +23,5 @@ void kernel_main(KernelInfo info) {
   kernel_log_print_string("\n Memory Map Descriptor: ", default_font_color);
   kernel_print_U64_hex(info.mem_map_descriptor_size, default_font_color);
   memory_init(info.mem_map_descriptor_size,info.mem_map_size,info.memory_map,default_font_color);
+  printk("\nCharacter:%c\nInteger:%d\nHex:%x\nString:%s\n",'a',12345,0x123456,"4666666666");
 }

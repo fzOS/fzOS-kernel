@@ -64,6 +64,10 @@ void kernel_print_U8_hex(U8 data, U32 color){
 }
 
 void kernel_log_print_char(char c,U32 color){
+    if(c=='\n') {
+        kernel_log_line_break();
+        return;
+    }
     unsigned const char* dots = fontdata_8x16 + c * 16;
     if ((KERNEL_CONSOLE_FONT_POSITION_X / 8) < KERNEL_CONSOLE_FONT_MAX_X){
         KERNEL_CONSOLE_FONT_POSITION_X = KERNEL_CONSOLE_FONT_POSITION_X + 8;
@@ -125,4 +129,34 @@ void kernel_log_print_num(U64 num, U32 color){
         kernel_log_print_num((num/10), color);
     }
     kernel_log_print_char((char) tempint, color);
+}
+int printk(char* format,...)
+{
+    int count=0;
+    va_list arg;
+    va_start(arg, format);
+    char* pointer = format;
+    while(*pointer!='\0')
+    {
+        if(*pointer=='%')
+        {
+            pointer++;
+            switch(*pointer)
+            {
+                case 'c':{kernel_log_print_char(va_arg(arg,int),0x00ffffff);break;}
+                case 'd':{kernel_log_print_num(va_arg(arg,int),0x00ffffff);break;}
+                case 'x':{kernel_print_U64_hex(va_arg(arg,int),0x00ffffff);break;}
+                case 's':{kernel_log_print_string(va_arg(arg,char*),0x00ffffff);break;}
+                default:break;
+            }
+            //pointer++;
+        }
+        else
+        {
+            kernel_log_print_char(*pointer,0x00ffffff);
+        }
+        pointer++;
+    }
+    return count;
+    
 }
