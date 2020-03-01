@@ -140,14 +140,15 @@ int printk(char* format,...)
     {
         if(*pointer=='%')
         {
+            count++;
             pointer++;
             switch(*pointer)
             {
                 case 'c':{kernel_log_print_char(va_arg(arg,int),0x00ffffff);break;}
-                case 'd':{kernel_log_print_num(va_arg(arg,int),0x00ffffff);break;}
-                case 'x':{kernel_print_U64_hex(va_arg(arg,int),0x00ffffff);break;}
+                case 'd':{kernel_log_print_num(va_arg(arg,U64),0x00ffffff);break;}
+                case 'x':{kernel_print_U64_hex(va_arg(arg,U64),0x00ffffff);break;}
                 case 's':{kernel_log_print_string(va_arg(arg,char*),0x00ffffff);break;}
-                default:break;
+                default:{count--;break;}
             }
             //pointer++;
         }
