@@ -3,8 +3,9 @@
         "graphics.h": "c",
         "kernel.h": "c",
         "uefivars.h": "c",
-        "uefi.h": "c", 
+        "uefi.h": "c",
         "types.h": "c",
-        "kerneldisplay.h": "c"
+        "kerneldisplay.h": "c",
+        "efi.h": "c"
     }
 }

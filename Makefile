@@ -1,4 +1,3 @@
-EDK_PATH = /home/chengyu/Documents/edk2
 GNUEFI_PATH=/usr/include/efi
 BASE_DIR=${PWD}
 CFLAGS=-isystem "${PWD}/include" -isystem "${PWD}/drivers/include" -isystem "${PWD}/memory/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -O2
