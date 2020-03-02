@@ -1,7 +1,7 @@
 #include <kernel.h>
 #include <kerneldisplay.h>
 #include <memorysetup.h>
-
+#include <acpi_parser.h>
 void kernel_main(KernelInfo info) {
   graphics_init(info.gop);
   graphics_clear_screen(0x001e1e1e);
@@ -23,5 +23,6 @@ void kernel_main(KernelInfo info) {
   kernel_log_print_string("\n Memory Map Descriptor: ", default_font_color);
   kernel_print_U64_hex(info.mem_map_descriptor_size, default_font_color);
   memory_init(info.mem_map_descriptor_size,info.mem_map_size,info.memory_map,default_font_color);
-  printk("\nCharacter:%c\nInteger:%d\nHex:%x\nString:%s\n",'a',12345,0x123456,"4666666666");
+  printk("Parsing ACPI table......\n");
+  parse_acpi(info.rsdp_address);
 }

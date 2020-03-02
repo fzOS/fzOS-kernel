@@ -4,8 +4,8 @@ else
 GNUEFI_PATH=/usr/local/include/efi
 endif
 BASE_DIR=${PWD}
-CFLAGS=-isystem "${PWD}/include" -isystem "${PWD}/drivers/include" -isystem "${PWD}/memory/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -O2 -fno-stack-protector
-SUBDIRS=drivers memory
+CFLAGS=-isystem "${PWD}/include" -isystem "${PWD}/drivers/include"  -isystem "${PWD}/common/include" -isystem "${PWD}/memory/include" -isystem "${PWD}/acpi/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -O2 -fno-stack-protector
+SUBDIRS=drivers memory acpi common
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
         echo "making in $$subdir"; \

@@ -1,7 +1,6 @@
 #ifndef ACPI_PARSER
 #define ACPI_PARSER
 #include <types.h>
-
 //定义ACPI RSDP指针文件结构。
 typedef struct {
     char Signature[8];
@@ -17,4 +16,17 @@ typedef struct {
     U8 ExtendedChecksum;
     U8 reserved[3];
 } __attribute__ ((packed)) RSDPDescriptor20;
+typedef struct {
+    char Signature[4];
+    U32 Length;
+    U8 Revision;
+    U8 Checksum;
+    char OEMID[6];
+    char OEMTableID[8];
+    U32 OEMRevision;
+    U32 CreatorID;
+    U32 CreatorRevision;
+}__attribute__ ((packed)) ACPISDTHeader;
 #endif
+void parse_acpi(U8* in);
+void* get_xsdt_addr(RSDPDescriptor20* rsdp);

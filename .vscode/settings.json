@@ -12,6 +12,23 @@
         "efibind.h": "c",
         "parser.h": "c",
         "stdarg.h": "c",
-        "cstdarg": "c"
+        "cstdarg": "c",
+        "acpi_parser.h": "c",
+        "memorysetup.h": "c",
+        "xsdt.h": "c",
+        "cstring": "c",
+        "variant": "c",
+        "strings.h": "c",
+        "string.h": "c",
+        "array": "c",
+        "hash_map": "c",
+        "deque": "c",
+        "list": "c",
+        "string": "c",
+        "vector": "c",
+        "iterator": "c",
+        "string_view": "c",
+        "tuple": "c",
+        "kstring.h": "c"
     }
 }
