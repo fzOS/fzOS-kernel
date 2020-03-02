@@ -2,17 +2,22 @@
 #include <kerneldisplay.h>
 #include <kstring.h>
 void parse_xsdt(void* in) {
-    char oemid[7];//For print ACPI Table OEM ID.
+    //检测表。
+    if(validate_table((U8*)in)) {
+        printk("Error:broken xsdt.\n");
+        return;
+    }
     char tableid[9];//For print ACPI Table ID.
     char sig[5]; //For print ACPI Signnature ID.
     //识别头。
-    printk("The XDST header is at %x.\n",in);
     XSDT* xsdt = (XSDT*)in;
-    strcopy(oemid,xsdt->header.OEMID,6);
-    strcopy(sig,xsdt->header.Signature,4);
-    printk("Table Signature:%s\n",sig);
-    printk("Table OEM ID:%s\n",oemid);
-    strcopy(tableid,xsdt->header.OEMTableID,8);
-    printk("Table ID:%s\n",tableid);
-    printk("Table length:%d\n",xsdt->header.Length);
+    int entry_count = xsdt->header.Length = sizeof(xsdt->header) / sizeof(U64);
+    printk("There are %d entries in XSDT Table.\n",entry_count);
+    U64* entries = (&xsdt->PointerToOtherSDT);
+    for(int i=0;i<entry_count;i++) {
+        ACPISDTHeader* current_header = (ACPISDTHeader*)entries[i];
+        strcopy(tableid,current_header->OEMTableID,8);
+        strcopy(sig,current_header->Signature,4);
+        printk("Entry #%d:%x %s %s\n",i,entries[i],tableid,sig);
+    }
 }

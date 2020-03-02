@@ -30,3 +30,4 @@ typedef struct {
 #endif
 void parse_acpi(U8* in);
 void* get_xsdt_addr(RSDPDescriptor20* rsdp);
+int validate_table(U8* in);

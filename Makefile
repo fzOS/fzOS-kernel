@@ -4,7 +4,7 @@ else
 GNUEFI_PATH=/usr/local/include/efi
 endif
 BASE_DIR=${PWD}
-CFLAGS=-isystem "${PWD}/include" -isystem "${PWD}/drivers/include"  -isystem "${PWD}/common/include" -isystem "${PWD}/memory/include" -isystem "${PWD}/acpi/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -Wall -Werror -O2 -fno-stack-protector
+CFLAGS=-isystem "${PWD}/include" -isystem "${PWD}/drivers/include"  -isystem "${PWD}/common/include" -isystem "${PWD}/memory/include" -isystem "${PWD}/acpi/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member
 SUBDIRS=drivers memory acpi common
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
