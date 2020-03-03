@@ -29,6 +29,7 @@
         "iterator": "c",
         "string_view": "c",
         "tuple": "c",
-        "kstring.h": "c"
+        "kstring.h": "c",
+        "apic.h": "c"
     }
 }

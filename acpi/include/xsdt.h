@@ -5,5 +5,5 @@ typedef struct {
     ACPISDTHeader header;
     U64 PointerToOtherSDT;
 } __attribute__ ((packed)) XSDT;
-void parse_xsdt(void* in);
+int parse_xsdt(void* in);
 #endif

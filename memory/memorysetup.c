@@ -57,7 +57,7 @@ void memory_init(U64 mem_map_descriptor_size,U64 mem_map_size,U8 *memory_map,U32
         four_level_paging_flag = four_level_paging_flag + 1;
     }
     if (four_level_paging_flag == 3){// check if four level paging is enabled
-        kernel_log_print_string("\n 4-Level Paging is enabled; Attempt to handle it now.",color);
+        kernel_log_print_string("\n 4-Level Paging is enabled; Attempt to handle it now.\n",color);
         // Start read UEFI page settings and creating new page tables
     }
 

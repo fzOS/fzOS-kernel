@@ -18,11 +18,9 @@ int validate_table(U8* in) {
 }
 //ACPI表读取的入口。
 void parse_acpi(U8* in) {
-    char oemid[7];//For print ACPI Table OEM ID.
     //由于现在真的很难找到ACPI 1.0的设备，我们假设至少有ACPI 2.0。
     RSDPDescriptor20* rsdp = (RSDPDescriptor20*) in;
-    strcopy(oemid,rsdp->firstPart.OEMID,6);
-    printk("ACPI XSDP Version:%d\n",oemid,rsdp->firstPart.Revision); 
+    printk("ACPI XSDP Version:%d\n",rsdp->firstPart.Revision); 
     //获取XSDT地址。
     void* xsdt = get_xsdt_addr(rsdp);
     //解析XSDT。
