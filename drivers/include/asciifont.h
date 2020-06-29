@@ -1,3 +1,5 @@
+#ifndef ASCIIFONT
+#define ASCIIFONT
 // linux那偷来的字库
 #define FONTDATAMAX 4096
 
@@ -4612,3 +4614,4 @@ static const unsigned char fontdata_8x16[FONTDATAMAX] = {
 	0x00, /* 00000000 */
 
 };
+#endif

@@ -1,4 +1,4 @@
-ifndef FHH
+ifneq '$(USER)' 'fhh'
 GNUEFI_PATH=/usr/include/efi
 else
 GNUEFI_PATH=/usr/local/include/efi

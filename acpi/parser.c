@@ -1,6 +1,6 @@
 //解析ACPI的函数。
 #include <acpi_parser.h>
-#include <kerneldisplay.h>
+#include <printk.h>
 #include <xsdt.h>
 #include <kstring.h>
 //解析RSDT的地址。

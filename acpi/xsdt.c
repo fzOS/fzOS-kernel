@@ -1,6 +1,6 @@
 #include <xsdt.h>
 #include <apic.h>
-#include <kerneldisplay.h>
+#include <printk.h>
 #include <kstring.h>
 int parse_xsdt(void* in) {
     //总共需要识别的表。
@@ -29,7 +29,7 @@ int parse_xsdt(void* in) {
                 break;
             }
         }
-        parse_apic(table_entries[1]);
     }
+    parse_apic(table_entries[1]);
     return 0;
 }

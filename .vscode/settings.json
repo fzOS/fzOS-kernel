@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.h": "c",
         "graphics.h": "c",
         "kernel.h": "c",
         "uefivars.h": "c",
@@ -30,6 +31,8 @@
         "string_view": "c",
         "tuple": "c",
         "kstring.h": "c",
-        "apic.h": "c"
+        "apic.h": "c",
+        "cstdio": "c",
+        "fstream": "c"
     }
 }
