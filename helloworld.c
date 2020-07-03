@@ -16,7 +16,7 @@ void kernel_main(KernelInfo info) {
     printk(" Hello World! I am fzOS.");
     printk("\n Kernel version: fzKernel-0.1.2\n");
     int width=info.gop->Mode->Info->PixelsPerScanLine/8-1;
-    for(int i=0;i<width;i++)
+    for(int i=0;i<width-2;i++)
     {
         printk("+");
     }

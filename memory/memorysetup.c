@@ -1,5 +1,4 @@
 #include <memorysetup.h>
-
 void memory_init(U64 mem_map_descriptor_size,U64 mem_map_size,U8 *memory_map,U32 color){
     /*U64 *memmappointer;
     memmappointer = (U64 *) memory_map;
@@ -16,7 +15,11 @@ void memory_init(U64 mem_map_descriptor_size,U64 mem_map_size,U8 *memory_map,U32
         kernel_print_U64_hex(*memmappointer, color);
         memmappointer = memmappointer + 2;
     }*/
-    U64 CR0Value,CR3Value,CR4Value,PageDictionAddr,RFLAGValue,EFERValue;
+    CR3 CR3;
+    CR0 CR0;
+    CR4 CR4;
+    EFER EFER;
+    RFLAGS RFLAGS;
     __asm__(
         "movq %%cr3,%0;"
         "movq %%cr4,%1;"
@@ -25,35 +28,37 @@ void memory_init(U64 mem_map_descriptor_size,U64 mem_map_size,U8 *memory_map,U32
         "movq $0xC0000080,%%rcx;"
         "rdmsr;"
         "movq %%rax, %4;"
-        : "=g"(CR3Value), "=g"(CR4Value), "=g"(CR0Value), "=g"(RFLAGValue), "=g"(EFERValue)
+        : "=g"(CR3), "=g"(CR4), "=g"(CR0), "=g"(RFLAGS), "=g"(EFER)
         : 
         : "%rcx","%rax","%rdx","memory");
     //printk("\n RFLAGS value:", color);
     //kernel_print_U64_hex(RFLAGValue, color);
     U8 four_level_paging_flag = 0;
     U8 ia32e_mode_flag = 0;
-    printk("\n EFER value:%x",EFERValue);
-    printk("\n CR0 value:%x",CR0Value);
-    printk("\n CR3 value:%x",CR3Value);
-    PageDictionAddr = (CR3Value&0xffffffffffff000) >> 12;
-    printk("\n Page Diction Address Base:%x",PageDictionAddr);
-    printk("\n CR4 value:%x",CR4Value);
-    if (((EFERValue >> 8) & 0x1) == 0x1){//check ia32-EFER.LME status
+    printk("\n EFER value:%x",EFER.raw);
+    printk("\n CR0 value:%x",CR0.raw);
+    printk("\n CR3 value:%x",CR3.raw);
+    printk("\n Page Diction Address Base:%x",CR3.split.base_addr);
+    printk("\n CR4 value:%x",CR4.raw);
+    if (EFER.split.LME){//check ia32-EFER.LME status
         ia32e_mode_flag = 1;
         printk("\n CPU is at IA-32E mode");
         four_level_paging_flag = four_level_paging_flag + 1;
     }
-    if (((CR4Value >> 5) & 0x1) == 0x1){//check CR4.PAE status
+    if (CR4.split.PAE){//check CR4.PAE status
         printk("\n CR4.PAE is enabled", color);
         four_level_paging_flag = four_level_paging_flag + 1;
     }
-    if (((CR0Value >> 31) & 0x1) == 0x1){//check CR0.PG status
+    if (CR0.split.PG){//check CR0.PG status
         printk("\n CR0.PG is enabled", color);
         four_level_paging_flag = four_level_paging_flag + 1;
     }
     if (four_level_paging_flag == 3){// check if four level paging is enabled
         printk("\n 4-Level Paging is enabled; Attempt to handle it now.\n",color);
         // Start read UEFI page settings and creating new page tables
+
+
+
     }
 
     //To let the compiler KNOW we use the variable.
