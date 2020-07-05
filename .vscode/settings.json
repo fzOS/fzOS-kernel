@@ -33,6 +33,7 @@
         "kstring.h": "c",
         "apic.h": "c",
         "cstdio": "c",
-        "fstream": "c"
+        "fstream": "c",
+        "algorithm": "c"
     }
 }

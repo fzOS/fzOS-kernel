@@ -3,7 +3,6 @@
 #include <fbcon.h>
 #include <memorysetup.h>
 #include <acpi_parser.h>
-
 //定义的标准输入/输出。
 char_dev stdio;
 

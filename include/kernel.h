@@ -8,7 +8,6 @@
 
 typedef struct {
   void *rsdp_address;
-  //U8 *uefi_rt_pointer;
   U8 *memory_map;
   U64 mem_map_size;
   U64 mem_map_descriptor_size;
