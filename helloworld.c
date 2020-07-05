@@ -2,6 +2,7 @@
 #include <printk.h>
 #include <fbcon.h>
 #include <memorysetup.h>
+#include <cpuid.h>
 #include <acpi_parser.h>
 //定义的标准输入/输出。
 char_dev stdio;
@@ -19,6 +20,12 @@ void kernel_main(KernelInfo info) {
     {
         printk("+");
     }
+    char buff[100];
+    get_processor_vendor(buff);
+    buff[12]=0;
+    printk("\n CPU information: %s ",buff);
+    get_processor_name(buff);
+    printk("%s",buff);
     printk("\n Kernel lowest address: %x",info.kernel_lowest_address);
     printk("\n Kernel Memory Usage: %x",info.kernel_page_count);
     U64 memorymappointer;

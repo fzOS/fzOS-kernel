@@ -8,15 +8,15 @@ CFLAGS=-isystem "${PWD}/include" -isystem "${PWD}/drivers/include"  -isystem "${
 SUBDIRS=drivers memory acpi common syscall
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
-        echo "making in $$subdir"; \
         ( cd $$subdir && $(MAKE) all -f Makefile -e BASE_DIR=${BASE_DIR} -e CFLAGS='${CFLAGS}') || exit 1; \
         done
 
 kernel:
 	$(RECURSIVE_MAKE)
-	#ugly.....
-	gcc ${CFLAGS} -c helloworld.c -o build/helloworld.o
-	ld -e kernel_main build/*.o -o build/kernel
+	@echo -e "\e[32;1m[CC]\e[0m" build/helloworld.o
+	@gcc ${CFLAGS} -c helloworld.c -o build/helloworld.o
+	@echo -e "\e[34;1m[LD]\e[0m" kernel
+	@ld -e kernel_main build/*.o -o build/kernel
 all:kernel
 clean:
 	rm -rf build/*

@@ -1,5 +1,10 @@
-all:build/kstring.o build/printk.o
+all:build/kstring.o build/printk.o build/cpuid.o
 build/kstring.o:
-	gcc ${CFLAGS} -c kstring.c -o ${BASE_DIR}/build/kstring.o
+	@echo -e "\e[32;1m[CC]\e[0m" $@
+	@gcc ${CFLAGS} -c kstring.c -o ${BASE_DIR}/build/kstring.o
 build/printk.o:
-	gcc ${CFLAGS} -c printk.c -o ${BASE_DIR}/build/printk.o
+	@echo -e "\e[32;1m[CC]\e[0m" $@
+	@gcc ${CFLAGS} -c printk.c -o ${BASE_DIR}/build/printk.o
+build/cpuid.o:
+	@echo -e "\e[32;1m[CC]\e[0m" $@
+	@gcc ${CFLAGS} -c cpuid.c -o ${BASE_DIR}/build/cpuid.o

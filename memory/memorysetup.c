@@ -65,6 +65,7 @@ void memory_init(U64 mem_map_descriptor_size,U64 mem_map_size,U8 *memory_map,U32
             }
         }
         memmappointer = (memmap*)memory_map;
+        #if 0
         printk("\n Memory Map: \n", color);
         printk(" Type PhysStart VirtStart PageCount Attr\n");
         for (U8 i = 0; i < (mem_map_count); i++){
@@ -75,7 +76,9 @@ void memory_init(U64 mem_map_descriptor_size,U64 mem_map_size,U8 *memory_map,U32
                                         memmappointer->Attribute);
             memmappointer++;
         }
-        
+        #endif
+        //Now, we can calculate how much pages do we need.
+
     }
 
     //To let the compiler KNOW we use the variable.
