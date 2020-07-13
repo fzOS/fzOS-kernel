@@ -25,7 +25,6 @@ void putU64hex(U64 data)
             stdio.putchar(temp2);
         }
     }
-    stdio.putchar(' ');
 }
 
 void putU8hex(U8 data)
@@ -49,7 +48,6 @@ void putU8hex(U8 data)
         temp2 = temp2 + 87;
         stdio.putchar(temp2);
     }
-    stdio.putchar(' ');
 }
 
 

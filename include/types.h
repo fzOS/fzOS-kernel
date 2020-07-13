@@ -13,4 +13,6 @@ typedef char I8;
 
 typedef U8 byte;
 
+#define NULL 0
+#define nullptr (void*) 0
 #endif

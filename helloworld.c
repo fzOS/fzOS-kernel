@@ -25,14 +25,7 @@ void kernel_main(KernelInfo info) {
     buff[12]=0;
     printk("\n CPU information: %s ",buff);
     get_processor_name(buff);
-    printk("%s",buff);
-    printk("\n Kernel lowest address: %x",info.kernel_lowest_address);
-    printk("\n Kernel Memory Usage: %x",info.kernel_page_count);
-    U64 memorymappointer;
-    memorymappointer = (U64) info.memory_map;
-    printk("\n Memory map pointer: %x", memorymappointer);
-    printk("\n Memory map size: %x", info.mem_map_size);
-    printk("\n Memory Map Descriptor: %x",info.mem_map_descriptor_size);
+    printk("%s\n",buff);
     memory_init(info.mem_map_descriptor_size,info.mem_map_size,info.memory_map,default_font_color);
     printk("Parsing ACPI table......\n");
     parse_acpi(info.rsdp_address);
