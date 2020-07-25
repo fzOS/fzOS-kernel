@@ -1,3 +1,4 @@
 experiment/**
 .vscode/**
 build/**
+test/**

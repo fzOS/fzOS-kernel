@@ -35,6 +35,22 @@
         "cstdio": "c",
         "fstream": "c",
         "algorithm": "c",
-        "bitset": "c"
-    }
+        "bitset": "c",
+        "chrono": "c",
+        "compare": "c",
+        "functional": "c",
+        "istream": "c",
+        "ostream": "c",
+        "ranges": "c",
+        "ratio": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "unordered_map": "c",
+        "initializer_list": "c"
+    },
+    "clang-format.fallbackStyle": "WebKit",
+    "clang.cflags": [
+       
+        "-Wincompatible-library-redeclaration"
+    ]
 }

@@ -1,4 +1,44 @@
 #include <linkedlist.h>
+int iterator_linked_list_next(iterator(linked_list)* this)
+{
+    if(this->current==this->list->tail) {
+        return 0;
+    }
+    this->current = this->current->next;
+    return 1;
+}
+int iterator_linked_list_prev(iterator(linked_list)* this)
+{
+    if(this->current==this->list->head.next) {
+        return 0;
+    }
+    this->current = this->current->prev;
+    return 1;
+}
+void iterator_linked_list_remove(iterator(linked_list)* this)
+{
+    //首先，判断我们是不是在头结点。
+    if(this->current!=&(this->list->head)) {
+        //如果当前不是尾部的话，修改一下下一个结点的信息。
+        if(this->current!=(this->list->tail)) {
+            this->current->next->prev = this->current->prev;
+        }
+        //如果是尾部的话，修改tail的记录信息。
+        else {
+            this->list->tail = this->current->prev;
+        }
+        this->current->prev->next = this->current->next;
+        //向前一位。
+        linked_list_node* p = this->current;
+        this->current = this->current->prev;
+        //回收内存。
+        memfree(p->data);
+        memfree(p);
+    }
+    else {
+        return;
+    }
+}
 void insert_existing_node(linked_list* list,linked_list_node* node,int pos)
 {
     //如果位置<0,那么直接在尾部插入。
@@ -29,6 +69,18 @@ void insert_existing_node(linked_list* list,linked_list_node* node,int pos)
     }
     return;
 }
+void insert_existing_node_before_existing(linked_list* list,linked_list_node* node,linked_list_node* existing)
+{
+    //如果已经是头的话，就没必要再往前找了。
+    if(existing != &(list->head)) {
+        existing = existing->prev;
+    }
+    //插入。
+        node->next     = existing;
+        node->prev     = existing->prev;
+        existing->prev = node;
+        
+}
 void remove_node_pos(linked_list* list,int pos)
 {
     int i=0;
@@ -52,4 +104,12 @@ void remove_node(linked_list* list,linked_list_node* node)
         node->next->prev = node->prev;
         node->prev->next = node->next;
     }
+}
+void init_iterator_linked_list(iterator(linked_list)* iterator,linked_list* source)
+{
+    iterator->list = source;
+    iterator->current = &(source->head);
+    iterator->next = (void*)iterator_linked_list_next;
+    iterator->prev = (void*)iterator_linked_list_prev;
+    iterator->remove = (void*)iterator_linked_list_remove;
 }

@@ -1,13 +1,16 @@
-all:build/kstring.o build/printk.o build/cpuid.o build/linkedlist.o
+all:build/kstring.o build/printk.o build/cpuid.o build/linkedlist.o build/halt.o
 build/kstring.o:
 	@echo -e "\e[32;1m[CC]\e[0m" $@
-	@gcc ${CFLAGS} -c kstring.c -o ${BASE_DIR}/build/kstring.o
+	@$(CC) ${CFLAGS} -c kstring.c -o ${BASE_DIR}/build/kstring.o
 build/printk.o:
 	@echo -e "\e[32;1m[CC]\e[0m" $@
-	@gcc ${CFLAGS} -c printk.c -o ${BASE_DIR}/build/printk.o
+	@$(CC) ${CFLAGS} -c printk.c -o ${BASE_DIR}/build/printk.o
 build/cpuid.o:
 	@echo -e "\e[32;1m[CC]\e[0m" $@
-	@gcc ${CFLAGS} -c cpuid.c -o ${BASE_DIR}/build/cpuid.o
+	@$(CC) ${CFLAGS} -c cpuid.c -o ${BASE_DIR}/build/cpuid.o
 build/linkedlist.o:
 	@echo -e "\e[32;1m[CC]\e[0m" $@
-	@gcc ${CFLAGS} -c linkedlist.c -o ${BASE_DIR}/build/linkedlist.o
+	@$(CC) ${CFLAGS} -c linkedlist.c -o ${BASE_DIR}/build/linkedlist.o
+build/halt.o:
+	@echo -e "\e[32;1m[CC]\e[0m" $@
+	@$(CC) ${CFLAGS} -c halt.c -o ${BASE_DIR}/build/halt.o

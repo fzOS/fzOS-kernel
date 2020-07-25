@@ -1,6 +1,8 @@
 #ifndef LINKEDLIST
 #define LINKEDLIST
 #include <types.h>
+#include <iterator.h>
+#include <memory.h>
 typedef struct linked_list_node 
 {
     struct linked_list_node* prev;
@@ -16,6 +18,7 @@ typedef struct
     linked_list_node* tail;
 } linked_list;
 void insert_existing_node(linked_list* list,linked_list_node* node,int pos);
+void insert_existing_node_before_existing(linked_list* list,linked_list_node* node,linked_list_node* existing);
 void remove_node(linked_list* list,linked_list_node* node);
 void remove_node_pos(linked_list* list,int pos);
 #endif
