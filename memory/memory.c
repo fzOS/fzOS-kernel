@@ -2,13 +2,12 @@
 #include <memory.h>
 #include <memorysetup.h>
 #include <types.h>
-
 extern linked_list* freemem_linked_list;
 extern linked_list* allocated_page_linked_list;
 extern iterator(linked_list) freemem_linked_list_iterator, allocated_page_linked_list_iterator;
 void* memalloc(U64 size)
 {
-    printk("Attempting to allocate %d bytes.\n", size);
+    debug("allocating %d bytes of memory.\n",size);
     init_iterator(linked_list, &allocated_page_linked_list_iterator, allocated_page_linked_list);
     //留出8bytes存储分配的内存大小。
     size += sizeof(U64);
@@ -17,9 +16,6 @@ void* memalloc(U64 size)
     iterator(linked_list) iter;
     init_iterator(linked_list, &iter, allocated_page_linked_list);
     while (iter.next(&iter)) {
-        printk("checking %x,%d,%d\n", ((allocated_page_list_node*)(iter.current->data))->page_begin_address,
-            ((allocated_page_list_node*)(iter.current->data))->begin_offset,
-            ((allocated_page_list_node*)(iter.current->data))->remaining_bytes_in_page);
         if (((allocated_page_list_node*)iter.current->data)->remaining_bytes_in_page >= size) {
             addr = ((allocated_page_list_node*)(iter.current->data))->page_begin_address + ((allocated_page_list_node*)(iter.current->data))->begin_offset;
             *(U64*)addr = size;
@@ -35,22 +31,16 @@ void* memalloc(U64 size)
     if (addr == -1) {
         //如果没有找到的话，去申请新的页面。
         U64 page_count = size / 4096 + 1;
-        printk("Cannot get enough remaining free space.Now allocating %d pages.\n",
-            page_count);
         addr = allocate_page(page_count);
         if (addr == -1)
             return (void*)addr;
         *((U64*)addr) = size;
         addr += sizeof(U64);
-        printk("Putting remaining %d bytes into free mem list.\n",
-            (page_count)*4096 - size);
         //将剩下的插入空闲链表里.
-        printk("Allocating allocated page list node.\n");
         allocated_page_list_node* remaining = memalloc(sizeof(allocated_page_list_node));
         remaining->begin_offset = size % 4096;
         remaining->page_begin_address = (addr - sizeof(U64)) + 4096 * (page_count - 1);
         remaining->remaining_bytes_in_page = (page_count)*4096 - size;
-        printk("Allocating link list node.\n");
         linked_list_node* remaining_node = memalloc(sizeof(linked_list_node));
         remaining_node->data = remaining;
         linked_list_node* current_node = &(allocated_page_linked_list->head);
@@ -71,21 +61,16 @@ void memfree(void* pointer)
 {
     //取出分配的内存大小。
     U64 size = *(((U64*)(pointer)) - 1);
-    printk(" Freeing space:%d\n", size);
     U64 begin_address = (U64)(pointer - sizeof(U64));
+    debug("Freeing %d bytes from %x.\n",size,begin_address);
     init_iterator(linked_list, &allocated_page_linked_list_iterator, allocated_page_linked_list);
     iterator(linked_list) iter;
     init_iterator(linked_list, &iter, allocated_page_linked_list);
     allocated_page_list_node* node;
     //搜索地址。
-    while (iter.next(&iter)) {
+    while (iter.next(&iter) && (node = iter.current->data,node->page_begin_address <= (begin_address & 0xFFFFFFFFFFFFF000ULL))) {
+        debug("%x < %x\n",node->page_begin_address,(begin_address & 0xFFFFFFFFFFFFF000ULL));
         node = (allocated_page_list_node*)(iter.current->data);
-        printk("checking %x,%d,%d\n", node->page_begin_address,
-            node->begin_offset,
-            node->remaining_bytes_in_page);
-        if (node->page_begin_address != (begin_address & 0xFFFFFFFFFFFFF000ULL)) {
-            continue;
-        }
         //取出偏移。
         U16 offset = begin_address & 0xFFF;
         U8 has_next = 1;
@@ -94,14 +79,59 @@ void memfree(void* pointer)
             node = (allocated_page_list_node*)(iter.current->data);
         }
         //如果是因为找到了位置而停下来，执行长度修改操作。
-        if (!(node->page_begin_address == (begin_address & 0xFFFFFFFFFFFFF000ULL) && node->begin_offset < offset)) {
+        if (node->page_begin_address == (begin_address & 0xFFFFFFFFFFFFF000ULL) && node->begin_offset > offset) {
             //无需验证是否有后面，因为当前已经在“后面”.
             //首先，如果有前面，验证是否与前面相连。
             if (iter.current->prev != &(iter.list->head)) {
                 if (((allocated_page_list_node*)iter.current->prev->data)->page_begin_address == (begin_address & 0xFFFFFFFFFFFFF000ULL)\
-                &&((allocated_page_list_node*)iter.current->prev->data)->begin_offset + ((allocated_page_list_node*)iter.current->prev->data)->remaining_bytes_in_page == )
+                &&((allocated_page_list_node*)iter.current->prev->data)->begin_offset + ((allocated_page_list_node*)iter.current->prev->data)->remaining_bytes_in_page == begin_address) {
+                    debug("Do not match");
+                    ((allocated_page_list_node*)iter.current->prev->data)->remaining_bytes_in_page += size;
+                    //如果与后面也相连，删除后面的结点。
+                    if(begin_address+size==(node->begin_offset|node->page_begin_address)) {
+                        iter.remove(&iter);
+                    }
+                    return;
+                }
             }
+            else {
+                //Again,判断后面是否相连。
+                if(iter.current!=iter.list->tail&&(node->page_begin_address == (begin_address & 0xFFFFFFFFFFFFF000ULL)&&begin_address+size==(node->begin_offset|node->page_begin_address))) {
+                    node->begin_offset -= size;
+                    node->remaining_bytes_in_page += size;
+                    return;
+                }
+                //最后，如果都不相连，新增结点，并插入队列，
+                allocated_page_list_node* remaining = memalloc(sizeof(allocated_page_list_node));
+                remaining->begin_offset = begin_address & 0x0FFFULL;
+                remaining->page_begin_address = begin_address & 0xFFFFFFFFFFFFF000ULL;
+                remaining->remaining_bytes_in_page = size;
+                linked_list_node* remaining_node = memalloc(sizeof(linked_list_node));
+                remaining_node->data = remaining;
+                if(iter.current!=iter.list->tail) {
+                    insert_existing_node_before_existing(allocated_page_linked_list,remaining_node,iter.current);
+                }
+                else {
+                    insert_existing_node(allocated_page_linked_list,remaining_node,-1);
+                }
+                return;
+            }
+            debug("Failed to free memory at addr %x.\n",begin_address);
+            break;
         }
+    }
+    debug("Cannot find required address.\n");
+    allocated_page_list_node* remaining = memalloc(sizeof(allocated_page_list_node));
+    remaining->begin_offset = begin_address & 0x0FFFULL;
+    remaining->page_begin_address = begin_address & 0xFFFFFFFFFFFFF000ULL;
+    remaining->remaining_bytes_in_page = size;
+    linked_list_node* remaining_node = memalloc(sizeof(linked_list_node));
+    remaining_node->data = remaining;
+    if(iter.current!=iter.list->tail) {
+        insert_existing_node_before_existing(allocated_page_linked_list,remaining_node,iter.current);
+    }
+    else {
+        insert_existing_node(allocated_page_linked_list,remaining_node,-1);
     }
 }
 U64 allocate_page(U64 page_count)
@@ -111,7 +141,8 @@ U64 allocate_page(U64 page_count)
     do {
         if (((freemem_node*)current_node->data)->length >= page_count) {
             ((freemem_node*)current_node->data)->length -= page_count;
-            address = ((freemem_node*)current_node->data)->beginaddr += page_count;
+            address = ((freemem_node*)current_node->data)->beginaddr;
+            ((freemem_node*)current_node->data)->beginaddr += (page_count<<12);
             if (!((freemem_node*)current_node->data)->length) {
                 remove_node(freemem_linked_list, current_node);
                 memfree(current_node);
@@ -165,3 +196,29 @@ void free_page(U64 page_begin_address, U64 page_count)
         }
     }
 }
+
+
+
+//DEBUG,显示当前空闲内存的分配情况。
+void print_partial_memory(void)
+{
+    debug("Partial memory:\n");
+    iterator(linked_list) iter;
+    init_iterator(linked_list,&iter,allocated_page_linked_list);
+    while(iter.next(&iter)) {
+        debug("%x,%d\n",((allocated_page_list_node*)(iter.current->data))->page_begin_address
+                        |((allocated_page_list_node*)(iter.current->data))->begin_offset,
+                         ((allocated_page_list_node*)(iter.current->data))->remaining_bytes_in_page);
+    }
+}
+void print_free_page(void)
+{
+    debug("Free page:\n");
+    iterator(linked_list) iter;
+    init_iterator(linked_list,&iter,freemem_linked_list);
+    while(iter.next(&iter)) {
+        debug("%x,%d\n",((freemem_node*)(iter.current->data))->beginaddr,
+                         ((freemem_node*)(iter.current->data))->length);
+    }
+}
+//END

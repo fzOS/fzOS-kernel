@@ -1,3 +1,4 @@
+#include <version.h>
 #include <kernel.h>
 #include <printk.h>
 #include <fbcon.h>
@@ -5,6 +6,7 @@
 #include <cpuid.h>
 #include <acpi_parser.h>
 #include <halt.h>
+
 //定义的标准输入/输出。
 char_dev stdio;
 
@@ -13,7 +15,7 @@ void kernel_main(KernelInfo info) {
     graphics_clear_screen(0x001e1e1e);
     fbcon_init(&stdio);
     printk(" Hello World! I am fzOS.");
-    printk("\n Kernel version: fzKernel-0.1.2\n");
+    printk("\n Kernel version: %s\n",VERSION);
     int width=info.gop->Mode->Info->PixelsPerScanLine/8-1;
     for(int i=0;i<width-2;i++)
     {

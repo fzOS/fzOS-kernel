@@ -24,12 +24,8 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
         : "=g"(CR3.raw), "=g"(CR4.raw), "=g"(CR0.raw), "=g"(RFLAGS.raw), "=g"(EFER.raw)
         :
         : "%rcx", "%rax", "%rdx", "memory");
-    //printk("\n RFLAGS value:", color);
-    //kernel_print_U64_hex(RFLAGValue, color);
     U8 four_level_paging_flag = 0;
-    U8 long_mode_flag = 0;
     if (EFER.split.LME) { //check ia32-EFER.LME status
-        long_mode_flag = 1;
         four_level_paging_flag = four_level_paging_flag + 1;
     }
     if (CR4.split.PAE) { //check CR4.PAE status
@@ -78,7 +74,7 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
         memory_address maxaddr;
         maxaddr.raw = (memmappointer[mem_map_count-1]).PhysicalStart
                    +(((memmappointer[mem_map_count-2]).NumberOfPages)<<12)-1;
-        printk("Our maximum Memory Address 0x%x belongs PML4E#%x,"
+        debug("Our maximum Memory Address 0x%x belongs PML4E#%x,"
                "PDPE#%x,PDE#%x,PTE#%x,offset+%x.\n",
                 maxaddr.raw,
                 maxaddr.split.page_map_level_4_offset,
@@ -151,26 +147,34 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
                 current_pointer += sizeof(U64);
                 ((linked_list_node*)current_pointer)->data = node;
                 insert_existing_node(allocated_page_linked_list, current_pointer, -1);
-                printk(" Memory: free-space initialization done.\n");
+                debug(" Memory: free-space initialization done.\n");
                 break;
             }
         }
-        printk("Testing memalloc.\n");
+        debug("Testing memalloc.\n");
         U64* test = memalloc(2333);
+        debug("Got %x,%d\n",test,*(test-1));
         U64* test2 = memalloc(23333);
+        debug("Got %x,%d\n",test2,*(test2-1));
         U64* test3 = memalloc(2500);
+        debug("Got %x,%d\n",test3,*(test3-1));
         U64* test4 = memalloc(1000);
+        debug("Got %x,%d\n",test4,*(test4-1));
+        print_partial_memory();
         memfree(test);
+        print_partial_memory();
         memfree(test2);
+        print_partial_memory();
         memfree(test3);
+        print_partial_memory();
         memfree(test4);
-
+        print_partial_memory();
 #if 0
         //Let's check if we can handle paging properly.
         int test=0xdeadbeef;
         memory_address testaddr;
         testaddr.raw = (U64)&test;
-        printk("Memory Address 0x%x belongs PML4E#%x,PDPE#%x,PDE#%x,PTE#%x,offset+%x.\n",
+        debug("Memory Address 0x%x belongs PML4E#%x,PDPE#%x,PDE#%x,PTE#%x,offset+%x.\n",
                 testaddr.raw,
                 testaddr.split.page_map_level_4_offset,
                 testaddr.split.page_directory_pointer_offset,
@@ -178,11 +182,8 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
                 testaddr.split.page_table_offset,
                 testaddr.split.physical_page_offset
         );
-        printk("Target PDPE is at%x.\n",*((U64*)(U64)CR3.split.base_addr));
+        debug("Target PDPE is at%x.\n",*((U64*)(U64)CR3.split.base_addr));
 #endif
     }
 
-    //To let the compiler KNOW we use the variable.
-    //Should be removed after functions being added.
-    long_mode_flag += 0;
 }
