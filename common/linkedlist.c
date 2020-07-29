@@ -71,14 +71,13 @@ void insert_existing_node(linked_list* list,linked_list_node* node,int pos)
 }
 void insert_existing_node_before_existing(linked_list* list,linked_list_node* node,linked_list_node* existing)
 {
-    //如果已经是头的话，就没必要再往前找了。
-    if(existing != &(list->head)) {
-        existing = existing->prev;
-    }
     //插入。
-        node->next     = existing;
-        node->prev     = existing->prev;
+    node->prev = existing->prev;
+    node->next = existing;
+    if(existing != &(list->head)) {
+        existing->prev->next = node;
         existing->prev = node;
+    }
         
 }
 void remove_node_pos(linked_list* list,int pos)

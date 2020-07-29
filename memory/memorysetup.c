@@ -3,6 +3,12 @@
 #include <linkedlist.h>
 #include <memorysetup.h>
 #include <memorytables.h>
+
+//此文件不想再调试了。
+// --by fhh
+#undef debug
+#define debug(x...)
+
 linked_list* freemem_linked_list;
 linked_list* allocated_page_linked_list;
 iterator(linked_list) freemem_linked_list_iterator,allocated_page_linked_list_iterator;
@@ -151,24 +157,19 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
                 break;
             }
         }
+#if 0
+        print_partial_memory();
+        print_free_page();
         debug("Testing memalloc.\n");
         U64* test = memalloc(2333);
-        debug("Got %x,%d\n",test,*(test-1));
         U64* test2 = memalloc(23333);
-        debug("Got %x,%d\n",test2,*(test2-1));
-        U64* test3 = memalloc(2500);
-        debug("Got %x,%d\n",test3,*(test3-1));
-        U64* test4 = memalloc(1000);
-        debug("Got %x,%d\n",test4,*(test4-1));
         print_partial_memory();
+        print_free_page();
         memfree(test);
-        print_partial_memory();
         memfree(test2);
         print_partial_memory();
-        memfree(test3);
-        print_partial_memory();
-        memfree(test4);
-        print_partial_memory();
+        print_free_page(); 
+#endif       
 #if 0
         //Let's check if we can handle paging properly.
         int test=0xdeadbeef;

@@ -7,7 +7,7 @@ CC=ccache
 endif
 BASE_DIR=${PWD}
 CC:=${CC} gcc
-CFLAGS=-isystem "${PWD}/include" -isystem "${PWD}/drivers/include"  -isystem "${PWD}/common/include" -isystem "${PWD}/memory/include" -isystem "${PWD}/acpi/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -Wall -Werror -O2 -march=native -fno-stack-protector -Wno-address-of-packed-member -Wno-unused-command-line-argument -Wno-visibility -Wno-implicit-function-declaration
+CFLAGS=-isystem "${PWD}/include" -isystem "${PWD}/drivers/include"  -isystem "${PWD}/common/include" -isystem "${PWD}/memory/include" -isystem "${PWD}/acpi/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -Wall -Werror -O2 -march=native -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration
 SUBDIRS=drivers memory acpi common syscall
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
