@@ -3,13 +3,13 @@
 int number_of_processors;
 int parse_apic(U8* in) {
     if(validate_table(in)) {
-        printk("Error:broken apic.\n");
+        printk(" Error:broken apic.\n");
         return -1;
     }
     APICHeader* header = (APICHeader*) in;
-    printk("Local APIC address:%x\n",header->LocalAPICAddress);
+    debug("Local APIC address:%x\n",header->LocalAPICAddress);
     if(header->Flags) {
-        printk("APIC:Multi 8259 controller enabled.\n");
+        debug("APIC:Multi 8259 controller enabled.\n");
     }
     //循环处理APIC。
     U8* position = in+sizeof(APICHeader);
@@ -18,7 +18,7 @@ int parse_apic(U8* in) {
             case 0: { //Processor Local APIC
                 ProcessorLocalApic* table = (ProcessorLocalApic*)position;
                 if(table->Flags) {
-                    printk("Processor#%d :%b\n",number_of_processors++,table->APICID);
+                    printk(" Processor#%d :%b\n",number_of_processors++,table->APICID);
                 }
                 position += sizeof(ProcessorLocalApic);
                 break;

@@ -20,7 +20,7 @@ int validate_table(U8* in) {
 void parse_acpi(U8* in) {
     //由于现在真的很难找到ACPI 1.0的设备，我们假设至少有ACPI 2.0。
     RSDPDescriptor20* rsdp = (RSDPDescriptor20*) in;
-    printk("ACPI XSDP Version:%d\n",rsdp->firstPart.Revision); 
+    debug(" ACPI XSDP Version:%d\n",rsdp->firstPart.Revision); 
     //获取XSDT地址。
     void* xsdt = get_xsdt_addr(rsdp);
     //解析XSDT。
