@@ -1,13 +1,14 @@
 #ifndef FADT_H
 #define FADT_H
 #include <acpi_parser.h>
+#include <printk.h>
 typedef struct {
     ACPISDTHeader header;
-    U32 ;          //FirmwareCtrl,Not used
-    U32 ;          //Dsdt,Not used
+    U32 Reserved0; //FirmwareCtrl,Not used
+    U32 Reserved1;         //Dsdt,Not used
  
     // field used in ACPI 1.0; no longer in use, for compatibility only
-    U8  Reserved;
+    U8  Reserved2;
  
     U8  PreferredPowerManagementProfile;
     U16 SCI_Interrupt;
@@ -45,14 +46,14 @@ typedef struct {
     // reserved in ACPI 1.0; used since ACPI 2.0+
     U16 BootArchitectureFlags;
  
-    U8  Reserved2;
+    U8  Reserved3;
     U32 Flags;
  
     // 12 byte structure; see below for details
     GenericAddressStructure ResetReg;
  
     U8  ResetValue;
-    U8  Reserved3[3];
+    U8  Reserved4[3];
  
     // 64bit pointers - Available on ACPI 2.0+
     U64 X_FirmwareControl;
@@ -67,5 +68,5 @@ typedef struct {
     GenericAddressStructure X_GPE0Block;
     GenericAddressStructure X_GPE1Block;
 } __attribute__ ((packed)) FADT;
-
+int parse_fadt(void* in);
 #endif

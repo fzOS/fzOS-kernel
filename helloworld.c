@@ -6,7 +6,7 @@
 #include <cpuid.h>
 #include <acpi_parser.h>
 #include <halt.h>
-
+#include <power_control.h>
 //定义的标准输入/输出。
 char_dev stdio;
 
@@ -30,5 +30,7 @@ void kernel_main(KernelInfo info) {
     memory_init(info.mem_map_descriptor_size,info.mem_map_size,info.memory_map);
     printk(" Parsing ACPI table......\n");
     parse_acpi(info.rsdp_address);
+    //reset();
+    poweroff();
     halt();
 }

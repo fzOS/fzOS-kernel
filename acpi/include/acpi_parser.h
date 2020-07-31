@@ -1,6 +1,10 @@
 #ifndef ACPI_PARSER
 #define ACPI_PARSER
+#include <halt.h>
 #include <types.h>
+extern char* acpi_table_names[];
+extern U8*   acpi_table_entries[];
+extern U8 table_count;
 //定义ACPI RSDP指针文件结构。
 typedef struct {
     char Signature[8];
@@ -27,6 +31,14 @@ typedef struct {
     U32 CreatorID;
     U32 CreatorRevision;
 }__attribute__ ((packed)) ACPISDTHeader;
+typedef struct 
+{
+  U8 AddressSpace;
+  U8 BitWidth;
+  U8 BitOffset;
+  U8 AccessSize;
+  U64 Address;
+}__attribute__ ((packed)) GenericAddressStructure;
 #endif
 void parse_acpi(U8* in);
 void* get_xsdt_addr(RSDPDescriptor20* rsdp);
