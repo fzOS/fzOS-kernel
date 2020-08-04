@@ -10,7 +10,6 @@ int parse_fadt(void* in) {
     if(fadt->SMI_CommandPort) {
         if(fadt->AcpiEnable||fadt->AcpiDisable) {
             debug(" Enabling ACPI.\n");
-            debug(" Sending %b to control port %x.\n",fadt->AcpiEnable,fadt->SMI_CommandPort);
             outb(fadt->SMI_CommandPort,fadt->AcpiEnable);
         }
     }

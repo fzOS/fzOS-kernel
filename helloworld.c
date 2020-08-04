@@ -7,10 +7,12 @@
 #include <acpi_parser.h>
 #include <halt.h>
 #include <power_control.h>
+#include <gdt.h>
 //定义的标准输入/输出。
 char_dev stdio;
 
 void kernel_main(KernelInfo info) {
+    asm("cli");
     graphics_init(info.gop);
     graphics_clear_screen(0x001e1e1e);
     fbcon_init(&stdio);
@@ -30,7 +32,9 @@ void kernel_main(KernelInfo info) {
     memory_init(info.mem_map_descriptor_size,info.mem_map_size,info.memory_map);
     printk(" Parsing ACPI table......\n");
     parse_acpi(info.rsdp_address);
+    init_gdt();
     //reset();
-    poweroff();
+    //poweroff();
+    debug(" Now we can safely enable interrupts.\n");
     halt();
 }

@@ -46,7 +46,9 @@
         "type_traits": "c",
         "utility": "c",
         "unordered_map": "c",
-        "initializer_list": "c"
+        "initializer_list": "c",
+        "cstdlib": "c",
+        "future": "c"
     },
     "clang-format.fallbackStyle": "WebKit",
     "clang.cflags": [

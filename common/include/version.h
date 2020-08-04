@@ -1,7 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 #include <types.h>
-#define GIT_VERSION "git-40f7c97"
+#define GIT_VERSION "git-d4301ff"
 #define NUMBER_VERSION "0.1.3"
 
 #ifdef FZOS_DEBUG_SWITCH

@@ -5,7 +5,7 @@
 //一些与字符串操作有关的函数。
 int strcopy(char* dest,char* src,int n);
 int strcomp(char* first,char* second);
-int memcopy(U8* desc,U8* src,int n);
-int memcomp(U8* first,U8* second,int n);
-int memmove(U8* dest,U8* src,int n);
+int memcopy(void* dest,void* src,int n);
+int memcomp(void* first,void* second,int n);
+int memmove(void* dest,void* src,int n);
 #endif

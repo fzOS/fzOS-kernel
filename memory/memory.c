@@ -235,4 +235,9 @@ void print_free_page(void)
             ((freemem_node*)(iter.current->data))->length);
     }
 }
+U64 memset(void* pointer,byte value,int n)
+{
+    for (int i = 0; i < n; i++) ((U8*)pointer)[i] = value;
+    return n;
+}
 //END

@@ -3,7 +3,7 @@
 #include <linkedlist.h>
 #include <memorysetup.h>
 #include <memorytables.h>
-
+#include <gdt.h>
 //此文件不想再调试了。
 // --by fhh
 #undef debug
