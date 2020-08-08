@@ -46,20 +46,15 @@ struct table_ptr {
 
 extern void gdt_flush(struct table_ptr * gdt_ptr); //在汇编中
 
-void * memzero(void * s, U64 n) {
-    for (int i = 0; i < n; i++) ((U8*)s)[i] = 0;
-    return s;
-}
-
+struct table_ptr gdt_ptr = { sizeof(gdt_table)-1, (U64)&gdt_table };
 void init_gdt() {
-    memzero((void*)&tss,sizeof(tss));
+    memset((void*)&tss,0x00,sizeof(tss));
     U64 tss_base = ((U64)&tss);
     gdt_table.tss_low.base15_0 = tss_base & 0xffff;
     gdt_table.tss_low.base23_16 = (tss_base >> 16) & 0xff;
     gdt_table.tss_low.base31_24 = (tss_base >> 24) & 0xff;
     gdt_table.tss_low.limit15_0 = sizeof(tss);
     gdt_table.tss_high.limit15_0 = (tss_base >> 32) & 0xffff;
-    struct table_ptr gdt_ptr = { sizeof(gdt_table)-1, (U64)&gdt_table };
-    printk("loading gdt...\n");
+    debug(" Loading GDT...\n");
     gdt_flush(&gdt_ptr);
 }

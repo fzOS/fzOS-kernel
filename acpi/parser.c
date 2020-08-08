@@ -29,7 +29,8 @@ void parse_acpi(U8* in) {
     void* xsdt = get_xsdt_addr(rsdp);
     //解析XSDT。
     if(parse_xsdt(xsdt)) {
-        die();
+        printk("Invaild ACPI table.System halted.\n");
+        halt();
     }
     
 }

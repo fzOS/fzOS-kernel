@@ -1,6 +1,7 @@
 #include <fadt.h>
 #include <io.h>
 #include <dsdt.h>
+U8 acpi_poweroff_interrupt;
 int parse_fadt(void* in) {
     if(validate_table((U8*)in)) {
         printk(" Error:broken fadt.\n");
@@ -13,6 +14,7 @@ int parse_fadt(void* in) {
             outb(fadt->SMI_CommandPort,fadt->AcpiEnable);
         }
     }
+    acpi_poweroff_interrupt = fadt->SCI_Interrupt;
     acpi_table_entries[4] = (void*)fadt->X_Dsdt;
     return parse_dsdt(acpi_table_entries[4]);
 }

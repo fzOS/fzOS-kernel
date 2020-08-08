@@ -1,4 +1,4 @@
-#include <version.h>
+
 #include <kernel.h>
 #include <printk.h>
 #include <fbcon.h>
@@ -8,6 +8,10 @@
 #include <halt.h>
 #include <power_control.h>
 #include <gdt.h>
+#include <interrupt.h>
+#ifndef VERSION
+#define VERSION "0.1"
+#endif
 //定义的标准输入/输出。
 char_dev stdio;
 
@@ -33,8 +37,10 @@ void kernel_main(KernelInfo info) {
     printk(" Parsing ACPI table......\n");
     parse_acpi(info.rsdp_address);
     init_gdt();
+    init_interrupt();
     //reset();
     //poweroff();
-    debug(" Now we can safely enable interrupts.\n");
+    debug(" Now we can safely trigger interrupts.\n");
+
     halt();
 }

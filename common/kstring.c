@@ -53,3 +53,9 @@ int memmove(void* dest,void* src,int n)
         return n;
     }
 }
+#pragma GCC optimize 1
+U64 memset(void* pointer,U8 value,int n)
+{
+    for (int i = 0; i < n; i++) ((U8*)pointer)[i] = value;
+    return n;
+}

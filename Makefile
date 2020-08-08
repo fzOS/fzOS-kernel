@@ -1,13 +1,21 @@
+#if we are debugging
+DEBUG=1
+
 ifneq '$(USER)' 'fhh'
 GNUEFI_PATH=/usr/include/efi
 else
 export PATH:=/home/fhh/.ccache/:${PATH}
 GNUEFI_PATH=/usr/local/include/efi
-CC=ccache 
+CC= ccache 
+endif
+ifeq '$(DEBUG)' '1'
+VERSION := $(shell echo git-`git rev-parse --short HEAD`)
+else
+VERSION := 0.1.3
 endif
 BASE_DIR=${PWD}
 CC:=${CC} gcc
-CFLAGS=-isystem "${PWD}/include" -isystem "${PWD}/drivers/include"  -isystem "${PWD}/common/include" -isystem "${PWD}/memory/include" -isystem "${PWD}/acpi/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -Wall -Werror -O2 -march=native -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration
+CFLAGS=-DVERSION="\"${VERSION}\"" -isystem "${PWD}/include" -isystem "${PWD}/drivers/include"  -isystem "${PWD}/common/include" -isystem "${PWD}/memory/include" -isystem "${PWD}/acpi/include" -isystem "${PWD}/syscall/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -Wall -Werror -O2 -march=native -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration
 SUBDIRS=drivers memory acpi common syscall
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
@@ -15,8 +23,7 @@ RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         done
 all:version_update kernel
 version_update:
-	@sed -i "s/git-[0-9A-Za-z]\{7\}/git-`git rev-parse --short HEAD`/" common/include/version.h
-	@echo -e "\e[33;1m[Ver.]\e[0m	" `gcc -DGET_VERSION_DIRECTLY ${CFLAGS} common/include/version.h -o /dev/null  2> tmp.txt && cat tmp.txt | awk 'NR==1 {print $$5}' && rm tmp.txt `
+	@echo -e "\e[33;1m[Ver.]\e[0m	" ${VERSION}
 kernel:
 	$(RECURSIVE_MAKE)
 	@echo -e "\e[32;1m[CC]\e[0m	" build/helloworld.o

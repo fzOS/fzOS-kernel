@@ -14,4 +14,12 @@ typedef struct {
     U8 APICID;
     U32 Flags;
 } __attribute__ ((packed)) ProcessorLocalApic;
+typedef struct {
+    U8 Type;
+    U8 Length;
+    U8 IOACPIID;
+    U8 Reserved;
+    U32 IOAPICAddr;
+    U32 GlobalSystemInterruptBase;
+} __attribute__ ((packed)) IOApic;
 #endif

@@ -8,4 +8,5 @@ int strcomp(char* first,char* second);
 int memcopy(void* dest,void* src,int n);
 int memcomp(void* first,void* second,int n);
 int memmove(void* dest,void* src,int n);
+U64 memset(void* pointer,U8 value,int n);
 #endif
