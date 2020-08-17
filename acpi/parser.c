@@ -3,6 +3,10 @@
 #include <printk.h>
 #include <xsdt.h>
 #include <kstring.h>
+//总共需要识别的表。
+char* acpi_table_names[]={"FACP","APIC","SSDT","BGRT","DSDT"};
+U8*   acpi_table_entries[sizeof(acpi_table_names)/8];
+U8 table_count = sizeof(acpi_table_names)/sizeof(char*);
 //解析RSDT的地址。
 void* get_xsdt_addr(RSDPDescriptor20* rsdp) {
     return (void*)((U64)rsdp->XsdtAddress);
@@ -20,10 +24,13 @@ int validate_table(U8* in) {
 void parse_acpi(U8* in) {
     //由于现在真的很难找到ACPI 1.0的设备，我们假设至少有ACPI 2.0。
     RSDPDescriptor20* rsdp = (RSDPDescriptor20*) in;
-    printk("ACPI XSDP Version:%d\n",rsdp->firstPart.Revision); 
+    debug(" ACPI XSDP Version:%d\n",rsdp->firstPart.Revision); 
     //获取XSDT地址。
     void* xsdt = get_xsdt_addr(rsdp);
     //解析XSDT。
-    parse_xsdt(xsdt);
+    if(parse_xsdt(xsdt)) {
+        printk("Invaild ACPI table.System halted.\n");
+        halt();
+    }
     
 }

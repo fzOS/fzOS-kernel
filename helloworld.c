@@ -1,4 +1,4 @@
-#include <version.h>
+
 #include <kernel.h>
 #include <printk.h>
 #include <fbcon.h>
@@ -6,11 +6,18 @@
 #include <cpuid.h>
 #include <acpi_parser.h>
 #include <halt.h>
-
+#include <power_control.h>
+#include <gdt.h>
+#include <interrupt.h>
+#include <keyboard.h>
+#ifndef VERSION
+#define VERSION "0.1"
+#endif
 //定义的标准输入/输出。
 char_dev stdio;
 
 void kernel_main(KernelInfo info) {
+    asm("cli");
     graphics_init(info.gop);
     graphics_clear_screen(0x001e1e1e);
     fbcon_init(&stdio);
@@ -30,5 +37,15 @@ void kernel_main(KernelInfo info) {
     memory_init(info.mem_map_descriptor_size,info.mem_map_size,info.memory_map);
     printk(" Parsing ACPI table......\n");
     parse_acpi(info.rsdp_address);
+    init_gdt();
+    init_interrupt();
+    __asm__("sti");
+    
+    init_keyboard();
+    //reset();
+    //poweroff();
+
+you_will_never_reach_here:
     halt();
+    goto you_will_never_reach_here;
 }

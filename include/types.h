@@ -3,7 +3,7 @@
 #define TYPES_H
 
 //记录我们是否在debug模式下。
-//#define FZOS_DEBUG_SWITCH
+#define FZOS_DEBUG_SWITCH
 
 typedef unsigned long long U64;
 typedef unsigned int U32;
@@ -17,7 +17,9 @@ typedef char I8;
 
 typedef U8 byte;
 
+#ifndef NULL
 #define NULL 0
+#endif
 #define nullptr (void*) 0
 
 
