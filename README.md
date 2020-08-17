@@ -8,8 +8,11 @@ Kernel source code for fzOS.
 
 + [x]Step1: 用图形模式实现一个字符显示输出；（helloworld）这个完成了，kernel log 支持字符串输出;
 + [x]Step2: 基本实现了U64的16进制和10进制输出;
-+ [ ]Step3: 实现CPU段表的设置, 接管内存分配;
-+ [ ]Step4: 实现基础的中断程序和TSS任务表设置;
++ [x]Step3: 实现CPU段表的设置, 接管内存分配;
++ [x]Step4: 实现基础的中断程序和TSS任务表设置;
++ [ ]Step5: 实现基础的键盘驱动程序;
++ [ ]Step6: 实现完整的ACPI支持，完成“高级电源管理”;
++ [ ]Step7: 实现文件系统;
 + [ ]后面看着办先
 
 # File Structure
