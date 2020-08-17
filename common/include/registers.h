@@ -100,4 +100,6 @@ typedef union {
     } __attribute__ ((packed)) split;
     U64 raw;
 } RFLAGS;
+U64 rdmsr(U64 opcode);
+void wrmsr(U64 opcode,U64 value);
 #endif

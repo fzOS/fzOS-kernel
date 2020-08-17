@@ -1,6 +1,8 @@
 #include <apic.h>
 #include <printk.h>
 int number_of_processors;
+U64 ioapic_address=0xFFFFFFFF;
+U64 localapic_address=0xFFFFFFFF;
 int parse_apic(U8* in) {
     if(validate_table(in)) {
         printk(" Error:broken apic.\n");
@@ -8,6 +10,7 @@ int parse_apic(U8* in) {
     }
     APICHeader* header = (APICHeader*) in;
     debug(" Local APIC address:%x\n",header->LocalAPICAddress);
+    localapic_address = header->LocalAPICAddress;
     if(header->Flags) {
         debug(" APIC:Multi 8259 controller enabled.\n");
     }
@@ -25,7 +28,8 @@ int parse_apic(U8* in) {
             }
             case 1: { //I/O APIC
                 IOApic* table = (IOApic*)position;
-                printk(" Found I/O APIC at %x.\n",table->IOAPICAddr);
+                debug(" Found I/O APIC at %x.\n",table->IOAPICAddr);
+                ioapic_address = table->IOAPICAddr;
                 position += sizeof(IOApic);
                 break;
             }

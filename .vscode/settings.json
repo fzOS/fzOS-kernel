@@ -54,5 +54,6 @@
     "clang.cflags": [
        
         "-Wincompatible-library-redeclaration"
-    ]
+    ],
+    "github.gitAuthentication": false
 }

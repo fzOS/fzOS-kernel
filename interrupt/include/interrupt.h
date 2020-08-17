@@ -27,5 +27,6 @@ typedef struct {
     U64 SS
 } interrupt_frame;
 extern interrupt_gate_descriptor IDT[256];
+void set_interrupt_handler(int index,U64 addr,U8 type);
 void init_interrupt(void);
 #endif
