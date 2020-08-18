@@ -5,6 +5,7 @@ struct iterator_##type \
 { \
     type* list; \
     type##_node* current; \
+    U64 count;\
     int (*next)(struct iterator_##type* this); \
     int (*prev)(struct iterator_##type* this); \
     void (*remove)(struct iterator_##type* this); \

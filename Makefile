@@ -25,6 +25,7 @@ all:version_update kernel
 version_update:
 	@echo -e "\e[33;1m[Ver.]\e[0m	" ${VERSION}
 kernel:
+	mkdir -p build/
 	$(RECURSIVE_MAKE)
 	@echo -e "\e[32;1m[CC]\e[0m	" build/helloworld.o
 	@$(CC) ${CFLAGS} -c helloworld.c -o build/helloworld.o
