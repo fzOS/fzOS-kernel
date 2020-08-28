@@ -8,7 +8,7 @@ g_data graphics_data;
 //初始化gop接口
 void graphics_init(EFI_GRAPHICS_OUTPUT_PROTOCOL *gop) {
   graphics_data.gop = gop;
-  graphics_data.frame_buffer_base = (U32*)gop->Mode->FrameBufferBase;
+  graphics_data.frame_buffer_base = (U32*)(gop->Mode->FrameBufferBase+KERNEL_ADDR_OFFSET);
   graphics_data.pixels_per_line = gop->Mode->Info->PixelsPerScanLine;
   graphics_data.default_background_color = 0x001e1e1e;
   //("graphics");

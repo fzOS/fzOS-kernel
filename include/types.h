@@ -22,5 +22,5 @@ typedef U8 byte;
 #endif
 #define nullptr (void*) 0
 
-
+#define KERNEL_ADDR_OFFSET (0xFFFF800000000000ULL)
 #endif

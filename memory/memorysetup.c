@@ -8,7 +8,7 @@
 // --by fhh
 #undef debug
 #define debug(x...)
-
+U64 PML4E_base_address;
 linked_list* freemem_linked_list;
 linked_list* allocated_page_linked_list;
 iterator(linked_list) freemem_linked_list_iterator,allocated_page_linked_list_iterator;
@@ -41,13 +41,18 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
         four_level_paging_flag = four_level_paging_flag + 1;
     }
     if (four_level_paging_flag == 3) { // check if four level paging is enabled
+        PML4E_base_address = (CR3.split.base_addr)<<12;
+
+
+
+        
         // Start read UEFI page settings and creating new page tables
         memmap* memmappointer = (memmap*)memory_map;
         memmappointer = (memmap*)memory_map;
         int mem_map_count = mem_map_size / mem_map_descriptor_size;
         for (int i = 0; i < mem_map_count - 1; i++) {
-            if (memmappointer[i].PhysicalStart + (memmappointer[i].NumberOfPages << 12)
-                == memmappointer[i + 1].PhysicalStart) {
+            if (memmappointer[i].VirtualStart + (memmappointer[i].NumberOfPages << 12)
+                == memmappointer[i + 1].VirtualStart) {
                 if (memmappointer[i].Type == 3
                     || memmappointer[i].Type == 4
                     || memmappointer[i].Type == 7) {
@@ -76,20 +81,6 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
         }
 
         memmappointer = (memmap*)memory_map;
-#if 0
-        memory_address maxaddr;
-        maxaddr.raw = (memmappointer[mem_map_count-1]).PhysicalStart
-                   +(((memmappointer[mem_map_count-2]).NumberOfPages)<<12)-1;
-        debug("Our maximum Memory Address 0x%x belongs PML4E#%x,"
-               "PDPE#%x,PDE#%x,PTE#%x,offset+%x.\n",
-                maxaddr.raw,
-                maxaddr.split.page_map_level_4_offset,
-                maxaddr.split.page_directory_pointer_offset,
-                maxaddr.split.page_directory_offset,
-                maxaddr.split.page_table_offset,
-                maxaddr.split.physical_page_offset
-        );
-#endif
         //Now, we can calculate how much pages do we need.
         //To make things easy, We decide to continue using UEFI's mapping method.
         //That is, Physical address is explicitly equivalent to its virtual address.
@@ -102,10 +93,10 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
         for (U8 i = 0; i < (mem_map_count); i++) {
             if (memmappointer[i].Type == 7
                 && memmappointer[i].NumberOfPages > (total_required_size >> 12) + 1) {
-                void* current_pointer = (linked_list*)memmappointer[i].PhysicalStart;
+                void* current_pointer = (linked_list*)memmappointer[i].VirtualStart;
                 //alter free page information.
                 memmappointer[i].NumberOfPages -= (total_required_size >> 12) + 1;
-                memmappointer[i].PhysicalStart += ((total_required_size & 0xFFFFFFFFFFFFF000ULL) + 0x1000);
+                memmappointer[i].VirtualStart += ((total_required_size & 0xFFFFFFFFFFFFF000ULL) + 0x1000);
                 //Construct the main list first.
                 *(U64*)current_pointer = sizeof(linked_list) + sizeof(U64);
                 current_pointer += sizeof(U64);
@@ -120,7 +111,7 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
                     }
                     *(U64*)current_pointer = sizeof(freemem_node) + sizeof(U64);
                     current_pointer += sizeof(U64);
-                    ((freemem_node*)current_pointer)->beginaddr = memmappointer[i].PhysicalStart;
+                    ((freemem_node*)current_pointer)->beginaddr = memmappointer[i].VirtualStart;
                     ((freemem_node*)current_pointer)->length = memmappointer[i].NumberOfPages;
                     current_pointer += sizeof(freemem_node);
                 }
@@ -144,7 +135,7 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
                 *(U64*)current_pointer = sizeof(allocated_page_list_node) + sizeof(U64);
                 current_pointer += sizeof(U64);
                 allocated_page_list_node* node = current_pointer;
-                node->page_begin_address = memmappointer[i].PhysicalStart
+                node->page_begin_address = memmappointer[i].VirtualStart
                     - ((total_required_size & 0xFFFFFFFFFFFFF000ULL) + 0x1000);
                 node->begin_offset = total_required_size;
                 node->remaining_bytes_in_page = 4096 - total_required_size;
@@ -183,7 +174,7 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
                 testaddr.split.page_table_offset,
                 testaddr.split.physical_page_offset
         );
-        debug("Target PDPE is at%x.\n",*((U64*)(U64)CR3.split.base_addr));
+        
 #endif
     }
 

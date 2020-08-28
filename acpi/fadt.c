@@ -15,6 +15,6 @@ int parse_fadt(void* in) {
         }
     }
     acpi_poweroff_interrupt = fadt->SCI_Interrupt;
-    acpi_table_entries[4] = (void*)fadt->X_Dsdt;
+    acpi_table_entries[4] = (void*)(fadt->X_Dsdt|KERNEL_ADDR_OFFSET);
     return parse_dsdt(acpi_table_entries[4]);
 }

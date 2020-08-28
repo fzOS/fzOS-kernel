@@ -217,21 +217,21 @@ void free_page(U64 page_begin_address, U64 page_count)
 //DEBUG,显示当前空闲内存的分配情况。
 void print_partial_memory(void)
 {
-    debug("Partial memory:\n");
+    printk(" Partial memory:\n");
     iterator(linked_list) iter;
     init_iterator(linked_list, &iter, allocated_page_linked_list);
     while (iter.next(&iter)) {
-        debug("%x,%d\n", ((allocated_page_list_node*)(iter.current->data))->page_begin_address | ((allocated_page_list_node*)(iter.current->data))->begin_offset,
+        printk(" %x,%d\n", ((allocated_page_list_node*)(iter.current->data))->page_begin_address | ((allocated_page_list_node*)(iter.current->data))->begin_offset,
             ((allocated_page_list_node*)(iter.current->data))->remaining_bytes_in_page);
     }
 }
 void print_free_page(void)
 {
-    debug("Free page:\n");
+    printk(" Free page:\n");
     iterator(linked_list) iter;
     init_iterator(linked_list, &iter, freemem_linked_list);
     while (iter.next(&iter)) {
-        debug("%x,%d\n", ((freemem_node*)(iter.current->data))->beginaddr,
+        printk(" %x,%d\n", ((freemem_node*)(iter.current->data))->beginaddr,
             ((freemem_node*)(iter.current->data))->length);
     }
 }

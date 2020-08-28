@@ -52,8 +52,8 @@
     },
     "clang-format.fallbackStyle": "WebKit",
     "clang.cflags": [
-       
-        "-Wincompatible-library-redeclaration"
+        "-Wno-incompatible-library-redeclaration"
     ],
-    "github.gitAuthentication": false
+    "github.gitAuthentication": false,
+    "C_Cpp.errorSquiggles": "Disabled"
 }

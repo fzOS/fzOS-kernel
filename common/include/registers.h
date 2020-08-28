@@ -1,6 +1,6 @@
-#ifndef REGISTERS
-#define REGISTERS
-#include "types.h"
+#ifndef REGISTERS_H
+#define REGISTERS_H
+#include <types.h>
 //定义一些神奇的结构体。
 typedef union {
     struct {
@@ -9,7 +9,7 @@ typedef union {
     int PCD:1;//4
     int padding1:7;//5~11
     U64 base_addr:40;//12~51
-    int padding2:12;//52~63
+    int signal:12;//52~63
     } __attribute__ ((packed)) split;
     U64 raw;
 } CR3;

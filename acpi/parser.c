@@ -9,7 +9,7 @@ U8*   acpi_table_entries[sizeof(acpi_table_names)/8];
 U8 table_count = sizeof(acpi_table_names)/sizeof(char*);
 //解析RSDT的地址。
 void* get_xsdt_addr(RSDPDescriptor20* rsdp) {
-    return (void*)((U64)rsdp->XsdtAddress);
+    return (void*)((U64)rsdp->XsdtAddress|KERNEL_ADDR_OFFSET);
 }
 //校验表。
 int validate_table(U8* in) {

@@ -3,6 +3,7 @@
 int iterator_tree_next(iterator(tree)* this) 
 {
     //我们只支持先根遍历（这也是用的最多的）
+    //换句话说，自己-孩子-兄弟，即深度有限遍历（DFS）
     //别的遍历方法？见鬼去吧！#（滑稽）
     if(this->current->child) {
         this->current = this->current->child;

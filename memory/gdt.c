@@ -60,7 +60,7 @@ struct table_ptr gdt_ptr = { sizeof(gdt_table) - 1, (U64)&gdt_table };
 void init_gdt()
 {
     memset((void*)&tss, 0x00, sizeof(tss));
-    U64 tss_base = ((U64)&tss);
+    U64 tss_base = ((U64)&tss)&~(KERNEL_ADDR_OFFSET);
     gdt_table.tss_low.base15_0 = tss_base & 0xffff;
     gdt_table.tss_low.base23_16 = (tss_base >> 16) & 0xff;
     gdt_table.tss_low.base31_24 = (tss_base >> 24) & 0xff;

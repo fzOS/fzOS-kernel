@@ -1,4 +1,3 @@
-
 #include <kernel.h>
 #include <printk.h>
 #include <fbcon.h>
@@ -10,6 +9,8 @@
 #include <gdt.h>
 #include <interrupt.h>
 #include <keyboard.h>
+
+
 #ifndef VERSION
 #define VERSION "0.1"
 #endif
@@ -39,9 +40,10 @@ void kernel_main(KernelInfo info) {
     parse_acpi(info.rsdp_address);
     init_gdt();
     init_interrupt();
-    __asm__("sti");
+    
     
     init_keyboard();
+    __asm__("sti");
     //reset();
     //poweroff();
 
