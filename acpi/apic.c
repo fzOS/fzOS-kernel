@@ -9,8 +9,8 @@ int parse_apic(U8* in) {
         return -1;
     }
     APICHeader* header = (APICHeader*) in;
-    debug(" Local APIC address:%x\n",header->LocalAPICAddress);
-    localapic_address = header->LocalAPICAddress;
+    localapic_address = header->LocalAPICAddress|KERNEL_ADDR_OFFSET;
+    debug(" Local APIC address:%x\n",localapic_address);
     if(header->Flags) {
         debug(" APIC:Multi 8259 controller enabled.\n");
     }
@@ -28,7 +28,8 @@ int parse_apic(U8* in) {
             }
             case 1: { //I/O APIC
                 IOApic* table = (IOApic*)position;
-                debug(" Found I/O APIC at %x.\n",table->IOAPICAddr);
+                ioapic_address = table->IOAPICAddr|KERNEL_ADDR_OFFSET;
+                debug(" Found I/O APIC at %x.\n",ioapic_address);
                 ioapic_address = table->IOAPICAddr;
                 position += sizeof(IOApic);
                 break;

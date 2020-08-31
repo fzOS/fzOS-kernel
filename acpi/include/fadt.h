@@ -69,4 +69,5 @@ typedef struct {
     GenericAddressStructure X_GPE1Block;
 } __attribute__ ((packed)) FADT;
 int parse_fadt(void* in);
+void acpi_enable_power_button(void);
 #endif

@@ -39,7 +39,8 @@ typedef struct
   U8 AccessSize;
   U64 Address;
 }__attribute__ ((packed)) GenericAddressStructure;
-#endif
+void acpi_interrupt_handler(void);
 void parse_acpi(U8* in);
 void* get_xsdt_addr(RSDPDescriptor20* rsdp);
 int validate_table(U8* in);
+#endif

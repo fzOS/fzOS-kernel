@@ -3,6 +3,9 @@
 #include <printk.h>
 #include <xsdt.h>
 #include <kstring.h>
+#include <fadt.h>
+#include <io.h>
+#include <power_control.h>
 //总共需要识别的表。
 char* acpi_table_names[]={"FACP","APIC","SSDT","BGRT","DSDT"};
 U8*   acpi_table_entries[sizeof(acpi_table_names)/8];
@@ -29,8 +32,29 @@ void parse_acpi(U8* in) {
     void* xsdt = get_xsdt_addr(rsdp);
     //解析XSDT。
     if(parse_xsdt(xsdt)) {
-        printk("Invaild ACPI table.System halted.\n");
+        printk(" Invaild ACPI table.System halted.\n");
         halt();
     }
     
+}
+void acpi_interrupt_handler(void)
+{
+    debug(" Fired ACPI interrupt.\n");
+    FADT* fadt = (FADT*)(acpi_table_entries[0]);
+    U16 pm1_enable_port = (U16)fadt->X_PM1aEventBlock.Address;
+    U16 action = inw((U16)(pm1_enable_port));
+    outw(pm1_enable_port,1<<8);
+    if((action&(1<<8))) {
+        debug(" Now doing power off.\n");
+        outw(pm1_enable_port,1<<8);
+        poweroff();
+    }
+    if(pm1_enable_port=(U16)fadt->X_PM1bEventBlock.Address,pm1_enable_port) {
+        action = inw((U16)(pm1_enable_port));
+        if((action&(1<<8))) {
+            debug(" Now doing power off.\n");
+            outw(pm1_enable_port,1<<8);
+            poweroff();
+        }
+    }
 }

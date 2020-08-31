@@ -3,9 +3,11 @@
 #include <power_control.h>
 #include <printk.h>
 #include <registers.h>
+#include <acpi_parser.h>
+#include <fadt.h>
 extern U64 ioapic_address;
 extern U64 localapic_address;
-extern U8 acpi_poweroff_interrupt;
+extern U8 acpi_interrupt;
 extern void (*int_handler_irqs[IRQS_MAX])(interrupt_frame* frame);
 void (*irq_handlers[IRQS_MAX])(void);
 void (*irq_register)(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(void));
@@ -59,7 +61,8 @@ void init_irq(void)
         wrmsr(0x1B,apic_en);
     }
     //由于肯定有ACPI，我们在这里注册ACPI关机信号。
-    //irq_register(acpi_poweroff_interrupt, 0xAC,1,1,(U64)int_handler_dummy);
+    acpi_enable_power_button();
+    irq_register(acpi_interrupt, 0xAC,1,1,acpi_interrupt_handler);
 }
 
 void irq_register_ioapic(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(void))
@@ -85,7 +88,7 @@ void irq_register_8259(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_p
 void irq_clear_ioapic(void)
 {
     //Test.
-    (*(U32*)(0xFEE000B0))=0x00;
+    (*(U32*)(localapic_address+0xB0))=0x00;
 }
 void irq_clear_8259(void)
 {

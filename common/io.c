@@ -21,7 +21,7 @@ inline void outw(U16 port, U16 val)
      * The  outb  %al, %dx  encoding is the only option for all other cases.
      * %1 expands to %dx because  port  is a uint16_t.  %w1 could be used if we had the port number a wider C type */
 }
-inline U8 inw(U16 port)
+inline U16 inw(U16 port)
 {
     U16 val;
     asm volatile ("inw %1, %0":"=a"(val):"Nd"(port));

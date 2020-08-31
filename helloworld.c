@@ -24,6 +24,7 @@ void kernel_main(KernelInfo info) {
     fbcon_init(&stdio);
     printk("\n Hello World! I am fzOS.\n");
     printk(" Kernel version: %s\n",VERSION);
+    debug(" Kernel begins at %x.\n",kernel_main);
     int width=info.gop->Mode->Info->PixelsPerScanLine/8-1;
     for(int i=0;i<width-2;i++)
     {
