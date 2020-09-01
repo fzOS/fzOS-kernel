@@ -57,6 +57,26 @@ struct table_ptr {
 extern void gdt_flush(struct table_ptr* gdt_ptr); //在汇编中
 
 struct table_ptr gdt_ptr = { sizeof(gdt_table) - 1, (U64)&gdt_table };
+
+void __attribute__ ((noinline))  gdt_flush_c(struct table_ptr* gdt_ptr)
+{
+    __asm__ volatile(
+        "lgdt (%%rdi)\n"            //Load GDT
+        "mov $0x30, %%ax\n"         //
+        "ltr %%ax\n"                // Load TSS
+        "movq %%rsp, %%rax\n"       //
+        "pushq $0x10\n"             // New SS at 16-bytes in to GDT
+        "pushq %%rax\n"             // New RSP
+        "pushfq\n"                  // New flags
+        "pushq $0x08\n"             // New CS at 8-bytes in to GDT
+        "lea 0x03(%%rip),%%rax\n"   // 人工PIE，一定不能动下面两条指令！！！！
+        "pushq %%rax\n"             // New RIP
+        "iretq\n"                   // Loads registers (the CS register cannot be set via mov) and jumps to 1:
+        "nop\n"
+        :::
+    );
+
+}
 void init_gdt()
 {
     memset((void*)&tss, 0x00, sizeof(tss));
@@ -67,5 +87,5 @@ void init_gdt()
     gdt_table.tss_low.limit15_0 = sizeof(tss);
     gdt_table.tss_high.limit15_0 = (tss_base >> 32) & 0xffff;
     debug(" Loading GDT...\n");
-    gdt_flush(&gdt_ptr);
+    gdt_flush_c(&gdt_ptr);
 }
