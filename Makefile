@@ -31,6 +31,8 @@ kernel:
 	@$(CC) ${CFLAGS} -c helloworld.c -o build/helloworld.o
 	@echo -e "\e[34;1m[LD]\e[0m	" kernel
 	@ld -e kernel_main build/*.o -o build/kernel -pie -no-dynamic-linker
+	@echo -e "\e[37;1m[NM]\e[0m	" symbols
+	@nm -n build/kernel > build/symbols
 	@echo -e "\e[35;1m[STRIP]\e[0m	" kernel
 	@strip build/kernel
 clean:
