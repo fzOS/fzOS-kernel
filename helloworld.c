@@ -47,7 +47,7 @@ void kernel_main(KernelInfo info) {
     __asm__("sti");
     //reset();
     //poweroff();
-
+    printk(" gRT is at:%x\n",info.rt);
 you_will_never_reach_here:
     halt();
     goto you_will_never_reach_here;

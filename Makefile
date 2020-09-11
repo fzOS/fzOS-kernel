@@ -15,8 +15,8 @@ VERSION := 0.1.3
 endif
 BASE_DIR=${PWD}
 CC:=${CC} gcc
-CFLAGS=-pie -DVERSION="\"${VERSION}\"" -isystem "${PWD}/include" -isystem "${PWD}/interrupt/include" -isystem "${PWD}/drivers/include"  -isystem "${PWD}/common/include" -isystem "${PWD}/memory/include" -isystem "${PWD}/acpi/include" -isystem "${PWD}/syscall/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -Wall -Werror -O2 -march=native -mtune=native -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration
-SUBDIRS=drivers memory acpi common syscall interrupt
+CFLAGS=-pie -DVERSION="\"${VERSION}\"" -isystem "${PWD}/include" -isystem "${PWD}/interrupt/include" -isystem "${PWD}/drivers/include"  -isystem "${PWD}/common/include" -isystem "${PWD}/memory/include" -isystem "${PWD}/acpi/include" -isystem "${PWD}/syscall/include"  -isystem "${PWD}/threading/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -Wall -Werror -O2 -march=native -mtune=native -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration
+SUBDIRS=drivers memory acpi common syscall interrupt threading
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
         ( cd $$subdir && $(MAKE) all -f Makefile -e CC="${CC}" -e BASE_DIR=${BASE_DIR} -e CFLAGS='${CFLAGS}') || exit 1; \

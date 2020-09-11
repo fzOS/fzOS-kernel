@@ -14,6 +14,7 @@ typedef struct {
   U64 kernel_lowest_address;
   U64 kernel_page_count;
   EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
+  EFI_RUNTIME_SERVICES *rt;
 } KernelInfo;
 
 typedef void (*KernelMainFunc)(KernelInfo);
