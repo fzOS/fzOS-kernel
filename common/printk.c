@@ -97,6 +97,7 @@ int printk(char* format,...)
         }
         pointer++;
     }
+    va_end(arg);
     return count;
     
 }

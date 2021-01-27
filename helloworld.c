@@ -18,7 +18,7 @@
 char_dev stdio;
 
 void kernel_main(KernelInfo info) {
-    asm("cli");
+    __asm__("cli");
     graphics_init(info.gop);
     graphics_clear_screen(0x001e1e1e);
     fbcon_init(&stdio);
