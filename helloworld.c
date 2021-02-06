@@ -9,7 +9,7 @@
 #include <gdt.h>
 #include <interrupt.h>
 #include <keyboard.h>
-
+#include <syscall.h>
 
 #ifndef VERSION
 #define VERSION "0.1"
@@ -47,7 +47,14 @@ void kernel_main(KernelInfo info) {
     __asm__("sti");
     //reset();
     //poweroff();
-    printk(" gRT is at:%x\n",info.rt);
+    printk("Enabling Syscall.\n");
+    init_syscall();
+    //测试Syscall.
+    __asm__ (
+        "movq " "$0x1,%rax\n"
+        "syscall"
+    );
+    printk("Syscall success.\n");
 you_will_never_reach_here:
     halt();
     goto you_will_never_reach_here;

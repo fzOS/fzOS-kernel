@@ -4,6 +4,8 @@
 
 #include <types.h>
 
+void init_syscall();
+
 //定义系统调用编号。
 #define SYSCALL_OPEN 1
 #define SYSCALL_READ 2
