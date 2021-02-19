@@ -24,7 +24,7 @@ typedef struct {
     U64 CS;
     U64 RFLAGS;
     U64 RSP;
-    U64 SS
+    U64 SS;
 } interrupt_frame;
 extern interrupt_gate_descriptor IDT[256];
 void set_interrupt_handler(int index,U64 addr,U8 type);

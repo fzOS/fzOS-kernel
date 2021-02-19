@@ -101,9 +101,14 @@ void set_interrupt_handler(int index,U64 addr,U8 type)
     IDT[index].target_selector = 0x08;
     IDT[index].type = type;
     IDT[index].present = 1;
+    IDT[index].dpl = 3;
 }
 void init_interrupt(void)
 {
+    //首先填充一些null的。
+    for(int i=0;i<32;i++) {
+        set_interrupt_handler(i,(U64)int_handler_dummy,TRAP_GATE);
+    }
     set_interrupt_handler(0,(U64)int_handler_DE,TRAP_GATE);
     set_interrupt_handler(6,(U64)int_handler_UD,TRAP_GATE);    
     set_interrupt_handler(8,(U64)int_handler_DF,TRAP_GATE);   

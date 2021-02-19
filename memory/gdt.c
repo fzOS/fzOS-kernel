@@ -40,13 +40,13 @@ __attribute__((aligned(4096))) struct {
     struct gdt_entry tss_high;
 } gdt_table = {
     { 0, 0, 0, 0x00, 0x00, 0 }, /* 0x00 null  */
-    { 0, 0, 0, 0x9a, 0xa0, 0 }, /* 0x08 kernel code (kernel base selector) */
-    { 0, 0, 0, 0x92, 0xa0, 0 }, /* 0x10 kernel data */
+    { 0xff, 0, 0, 0x9a, 0xaf, 0 }, /* 0x08 kernel code (kernel base selector) */
+    { 0xff, 0, 0, 0x92, 0xaf, 0 }, /* 0x10 kernel data */
     { 0, 0, 0, 0x00, 0x00, 0 }, /* 0x18 null (user base selector) */
-    { 0, 0, 0, 0x92, 0xa0, 0 }, /* 0x20 user data */
-    { 0, 0, 0, 0x9a, 0xa0, 0 }, /* 0x28 user code */
-    { 0, 0, 0, 0x89, 0xa0, 0 }, /* 0x40 tss low */
-    { 0, 0, 0, 0x00, 0x00, 0 }, /* 0x48 tss high */
+    { 0xff, 0, 0, 0xf2, 0xaf, 0 }, /* 0x20 user data */
+    { 0xff, 0, 0, 0xfa, 0xaf, 0 }, /* 0x28 user code */
+    { 0, 0, 0, 0x89, 0xa0, 0 }, /* 0x30 tss low */
+    { 0, 0, 0, 0x00, 0x00, 0 }, /* 0x38 tss high */
 };
 
 struct table_ptr {
@@ -61,6 +61,11 @@ struct table_ptr gdt_ptr = { sizeof(gdt_table) - 1, (U64)&gdt_table };
 void __attribute__ ((noinline))  gdt_flush_c(struct table_ptr* gdt_ptr)
 {
     __asm__ volatile(
+        "movq $0x0,%%rax\n"
+        "mov  %%ax,%%ds\n"
+        "mov  %%ax,%%es\n"
+        "mov  %%ax,%%fs\n"
+        "mov  %%ax,%%gs\n"
         "lgdt (%%rdi)\n"            //Load GDT
         "mov $0x30, %%ax\n"         //
         "ltr %%ax\n"                // Load TSS

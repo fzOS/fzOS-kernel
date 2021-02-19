@@ -41,4 +41,4 @@ install:
 	guestmount -a '/home/fhh/VirtualBox VMs/UEFITest/raw.vdi' -m /dev/sda1 --rw /media
 	cp -f build/kernel /media/
 	umount /media
-	VBoxManage startvm "UEFITest"
+	VBoxManage startvm "UEFITest" -E VBOX_GUI_DBG_ENABLED=true #-E VBOX_GUI_DBG_AUTO_SHOW=true

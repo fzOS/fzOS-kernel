@@ -1,33 +1,35 @@
 #include <syscall.h>
 #include <printk.h>
-void syscall_handler(U64 arg1)
+void userspace(){
+    for(;;);
+}
+void __attribute__ ((noreturn)) syscall_handler (U64 arg1)
 {
-    U64 what;
+    register U64 what;
     __asm__ (
+        "pushq " "%%rcx\n"
+        "pushq " "%%r11\n"
         "movq " "%%rax,%0\n"
-        :"=g"(what)
+        :"=r"(what)
         :
         :"%rax","memory"
     );
+    
     printk("Syscalled for reason %d.\n",what);
     __asm__(
-        "sysretq"
+        "popq " "%%r11\n"
+        "popq " "%%rcx\n"
+        "addq " "$0x08,%%rsp\n" //栈平衡
+        "sysretq\n"
+        :
+        :
+        :
     );
+    //解决gcc的noreturn问题
+    while(1){};
 }
-#pragma GCC optimize 0
-void init_syscall()
+void  __attribute__((optimize("O0"))) init_syscall() 
 {
-    /*
-     
-      mov rcx, 0xc0000080 ; EFER MSR
-    rdmsr               ; read current EFER
-    or eax, 1           ; enable SCE bit
-    wrmsr               ; write back new EFER
-    mov rcx, 0xc0000081 ; STAR MSR
-    rdmsr               ; read current STAR
-    mov edx, 0x00180008 ; load up GDT segment bases 0x0 (kernel) and 0x18 (user)
-    wrmsr               ; write back new STAR
-    ret          */
     void (*syscall_handler_pointer) = syscall_handler;
     register  U64  syscall_handler_address = (U64) syscall_handler_pointer;
     syscall_handler_address |= 0xFFFF800000000000;
@@ -38,7 +40,7 @@ void init_syscall()
         "wrmsr\n"
         "movq " "$0xc0000081, %%rcx\n"
         "rdmsr\n"
-        "movq " "$0x00180008, %%rdx\n"
+        "movq " "$0x001b0008, %%rdx\n"
         "wrmsr\n"
         "movq " "$0xc0000082, %%rcx\n"
         "rdmsr\n"
