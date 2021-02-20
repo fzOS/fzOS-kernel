@@ -1,6 +1,6 @@
 #include <tree.h>
-
-int iterator_tree_next(iterator(tree)* this) 
+typedef iterator(tree) iterator_tree;
+int iterator_tree_next(iterator_tree* this) 
 {
     //我们只支持先根遍历（这也是用的最多的）
     //换句话说，自己-孩子-兄弟，即深度有限遍历（DFS）
@@ -21,7 +21,7 @@ int iterator_tree_next(iterator(tree)* this)
     }
     return 0;
 }
-int iterator_tree_prev(iterator(tree)* this)
+int iterator_tree_prev(iterator_tree* this)
 {
     if(this->current==(&this->list->entry)) {
         return 0;
@@ -40,12 +40,12 @@ int iterator_tree_prev(iterator(tree)* this)
     this->current = child;
     return 1;
 }
-void iterator_tree_remove(iterator(tree)* this)
+void iterator_tree_remove(iterator_tree* this)
 {
     //暂时不实现删除。
     return;
 }
-void init_iterator_tree_node(iterator(tree)* iterator,tree* source) 
+void init_iterator_tree_node(iterator_tree* iterator,tree* source) 
 {
     iterator->list = source;
     iterator->count = 0;

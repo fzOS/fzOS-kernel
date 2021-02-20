@@ -18,9 +18,214 @@ const char* pci_class_name[] = {
     "Satellite Communication Controller",
     "Encryption Controller",
     "Signal Processing Controller",
-    "Reserved"
+    "Reserved",
+};
+const char* pci_subclass_0_name[] = {
+    "Non-VGA-Compatible devices",
+    "VGA-Compatible Device",
+};
+const char* pci_subclass_1_name[] = {
+    "SCSI Bus Controller",
+    "IDE Controller",
+    "Floppy Disk Controller",
+    "IPI Bus Controller",
+    "RAID Controller",
+    "ATA Controller",
+    "Serial ATA",
+    "Serial Attached SCSI",
+    "Non-Volatile Memory Controller",
+};
+const char* pci_subclass_2_name[] = {
+    "Ethernet Controller",
+    "Token Ring Controller",
+    "FDDI Controller",
+    "ATM Controller",
+    "ISDN Controller",
+    "WorldFip Controller",
+    "PICMG 2.14 Multi Computing",
+    "Fabric Controller",
+};
+const char* pci_subclass_3_name[] = {
+    "VGA Compatible Controller",
+    "XGA Controller",
+    "3D Controller (Not VGA-Compatible)",
+};
+const char* pci_subclass_4_name[] = {
+    "Multimedia Video Controller",
+    "Multimedia Audio Controller",
+    "Computer Telephony Device",
+    "Audio Device",
+};
+const char* pci_subclass_5_name[] = {
+    "RAM Controller",
+    "Flash Controller",
+};
+const char* pci_subclass_6_name[] = {
+    "Host Bridge",
+    "ISA Bridge",
+    "EISA Bridge",
+    "MCA Bridge",
+    "PCI-to-PCI Bridge",
+    "PCMCIA Bridge",
+    "NuBus Bridge",
+    "CardBus Bridge",
+    "RACEway Bridge",
+    "PCI-to-PCI Bridge",
+    "InfiniBand-to-PCI Host Bridge",
+};
+const char* pci_subclass_7_name[] = {
+    "Serial Controller",
+    "Parallel Controller",
+    "Multiport Serial Controller",
+    "Modem",
+    "IEEE 488.1/2 (GPIB) Controller",
+    "Smart Card",
+};
+const char* pci_subclass_8_name[] = {
+    "PIC",
+    "DMA Controller",
+    "Timer",
+    "RTC Controller",
+    "PCI Hot-Plug Controller",
+    "SD Host controller",
+    "IOMMU",
+};
+const char* pci_subclass_9_name[] = {
+    "Keyboard Controller",
+    "Digitizer Pen",
+    "Mouse Controller",
+    "Scanner Controller",
+    "Gameport Controller",
+};
+const char* pci_subclass_a_name[] = {
+    "Generic",
+};
+const char* pci_subclass_b_name[] = {
+    "386",
+    "486",
+    "Pentium",
+    "Pentium Pro",
+};
+const char* pci_subclass_c_name[] = {
+    "FireWire (IEEE 1394) Controller",
+    "ACCESS Bus",
+    "SSA",
+    "USB Controller",
+    "Fibre Channel",
+    "SMBus",
+    "InfiniBand",
+    "IPMI Interface",
+    "SERCOS Interface (IEC 61491)",
+    "CANbus",
+};
+const char* pci_subclass_d_name[] = {
+    "iRDA Compatible Controller",
+    "Consumer IR Controller",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "RF Controller",
+    "Bluetooth Controller",
+    "Broadband Controller",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "Ethernet Controller (802.1a)",
+    "Ethernet Controller (802.1b)",
+};
+const char* pci_subclass_e_name[] = {
+    "I20",
+};
+const char* pci_subclass_f_name[] = {
+    "Satellite TV Controller",
+    "Satellite Audio Controller",
+    "Satellite Voice Controller",
+    "Satellite Data Controller",
+};
+const char* pci_subclass_10_name[] = {
+    "Network and Computing Encrpytion/Decryption",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "Entertainment Encryption/Decryption",
+};
+const char* pci_subclass_11_name[] = {
+    "DPIO Modules",
+    "Performance Counters",
 };
 static const int pci_class_name_size = sizeof(pci_class_name)/sizeof(unsigned char*);
+static const char** pci_subclass_name[] = {
+    pci_subclass_0_name,
+    pci_subclass_1_name, 
+    pci_subclass_2_name, 
+    pci_subclass_3_name, 
+    pci_subclass_4_name, 
+    pci_subclass_5_name, 
+    pci_subclass_6_name, 
+    pci_subclass_7_name, 
+    pci_subclass_8_name, 
+    pci_subclass_9_name, 
+    pci_subclass_a_name, 
+    pci_subclass_b_name, 
+    pci_subclass_c_name, 
+    pci_subclass_d_name, 
+    pci_subclass_e_name, 
+    pci_subclass_f_name, 
+    pci_subclass_10_name, 
+    pci_subclass_11_name, 
+};
+static const int pci_subclass_name_size[] = {
+    sizeof(pci_subclass_0_name)/sizeof(const char*),
+    sizeof(pci_subclass_1_name)/sizeof(const char*), 
+    sizeof(pci_subclass_2_name)/sizeof(const char*), 
+    sizeof(pci_subclass_3_name)/sizeof(const char*), 
+    sizeof(pci_subclass_4_name)/sizeof(const char*), 
+    sizeof(pci_subclass_5_name)/sizeof(const char*), 
+    sizeof(pci_subclass_6_name)/sizeof(const char*), 
+    sizeof(pci_subclass_7_name)/sizeof(const char*), 
+    sizeof(pci_subclass_8_name)/sizeof(const char*), 
+    sizeof(pci_subclass_9_name)/sizeof(const char*), 
+    sizeof(pci_subclass_a_name)/sizeof(const char*), 
+    sizeof(pci_subclass_b_name)/sizeof(const char*), 
+    sizeof(pci_subclass_c_name)/sizeof(const char*), 
+    sizeof(pci_subclass_d_name)/sizeof(const char*), 
+    sizeof(pci_subclass_e_name)/sizeof(const char*), 
+    sizeof(pci_subclass_f_name)/sizeof(const char*), 
+    sizeof(pci_subclass_10_name)/sizeof(const char*), 
+    sizeof(pci_subclass_11_name)/sizeof(const char*),
+}; 
 U16 pci_config_read_word (U8 bus, U8 device, U8 func, U8 offset)
 {
     U32 address;
@@ -28,25 +233,22 @@ U16 pci_config_read_word (U8 bus, U8 device, U8 func, U8 offset)
     U32 ldevice = (U32)device;
     U32 lfunc = (U32)func;
     U16 tmp = 0;
-    /* create configuration address as per Figure 1 */
     address = (U32)((lbus << 16) | (ldevice << 11) |
               (lfunc << 8) | (offset & 0xfc) |  0x80<<24);
-    /* write out the address */
     outl(0xCF8, address);
-    /* read in the data */
-    /* (offset & 2) * 8) = 0 will choose the first word of the 32 bits register */
     U32 result = inl(0xCFC);
     tmp = (U16)((result >> ((offset & 2) * 8)) & 0xffff);
     return (tmp);
 }
 void pci_check_device(U8 bus,U8 slot,U8 func)
 {
-     printk("%d:%d:%d %s %w %w\n",bus,slot,func,
-                                  pci_get_class(bus,slot,func),
+     printk(" %d:%d:%d %s %w %w\n",bus,slot,func,
+                                  pci_get_class_name(bus,slot,func),
                                   pci_get_vendor(bus,slot,func),
                                   pci_get_device(bus,slot,func));
 }
-void pci_check_bus(U8 bus) {
+void pci_check_bus(U8 bus) 
+{
     for(U8 slot = 0; slot < 32; slot++) {
         if(pci_get_vendor(bus,slot,0)!=0xFFFF) {
             pci_check_device(bus,slot,0);
@@ -62,46 +264,28 @@ void pci_check_bus(U8 bus) {
             }
         }
     }
- }
+}
 void pci_check_all_buses(void) {
-    //U8 bus;
-/* 
-     headerType = getHeaderType(0, 0, 0);
-     if( (headerType & 0x80) == 0) {
-         ///Single PCI host controller 
-         checkBus(0);
-     } else {
-         // Multiple PCI host controllers
-         for(function = 0; function < 8; function++) {
-             if(getVendorID(0, 0, function) != 0xFFFF) break;
-             bus = function;
-             checkBus(bus);
-         }
-     }
-
-    U8 header_type = get_type(0,0,0);
-    printk("PCI Root Host Controller: %w:%w\n",get_vendor(0,0,0),get_device(0,0,0));
-    if(header_type&0x80) {
-        
-    }
-*/
      U8 bus;
      for(bus = 0; bus < 255; bus++) {
         pci_check_bus(bus);
      }
-     printk("Done.\n");
 }
 void init_pci()
 {
-    printk("[PCI Configuration Begin]\n");
+    printk(" [PCI Configuration Begin]\n");
     pci_check_all_buses();
+    printk(" [PCI Configuration End]\n");
 }
-
-const char* pci_get_class(U8 bus,U8 slot,U8 func)
+const char* pci_get_class_name(U8 bus,U8 slot,U8 func)
 {
-    U8 class = ((pci_config_read_word(bus,slot,func,0x0a)&0xFF00)>>8);
+    U8 class = pci_get_class(bus,slot,func);
     if(class >= pci_class_name_size) {
         return pci_class_name[pci_class_name_size-1];
     }
-    return pci_class_name[class];
+    U8 subclass = pci_get_subclass(bus,slot,func);
+    if(subclass>=pci_subclass_name_size[class]||*(pci_subclass_name[class][subclass])=='\0') {
+        return pci_class_name[class];        
+    }
+    return pci_subclass_name[class][subclass];
 }
