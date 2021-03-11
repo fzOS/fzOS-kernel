@@ -1,5 +1,5 @@
 #include <pci.h>
-
+#include <sata_ahci.h>
 const char* pci_class_name[] = {
     "Unclassified",
     "Mass Storage Controller",
@@ -265,13 +265,15 @@ void pci_write_dword(U8 bus, U8 device, U8 func, U8 offset,U32 val)
 }
 void pci_check_device(U8 bus,U8 slot,U8 func)
 {
+    U8 class = pci_get_class(bus,slot,func);
+    U8 subclass = pci_get_subclass(bus,slot,func);
     printk(" %d:%d:%d %s %w %w\n",bus,slot,func,
-                                  pci_get_class_name(bus,slot,func),
+                                  pci_get_class_name(class,subclass),
                                   pci_get_vendor(bus,slot,func),
                                   pci_get_device(bus,slot,func));
-    U16 status = pci_get_status(bus,slot,func);
-    if(status&0x10) {
-        debug("This device has capabilities list.\n");
+    //注册AHCI设备。
+    if(class==0x01 && subclass ==0x06) {
+        sata_ahci_register(bus,slot,func);
     }
 }
 void pci_check_bus(U8 bus) 
@@ -304,13 +306,11 @@ void init_pci()
     pci_check_all_buses();
     printk(" [PCI Configuration End]\n");
 }
-const char* pci_get_class_name(U8 bus,U8 slot,U8 func)
+const char* pci_get_class_name(U8 class, U8 subclass)
 {
-    U8 class = pci_get_class(bus,slot,func);
     if(class >= pci_class_name_size) {
         return pci_class_name[pci_class_name_size-1];
     }
-    U8 subclass = pci_get_subclass(bus,slot,func);
     if(subclass>=pci_subclass_name_size[class]||*(pci_subclass_name[class][subclass])=='\0') {
         return pci_class_name[class];        
     }
