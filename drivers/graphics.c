@@ -1,4 +1,4 @@
-#include <graphics.h>
+#include <drivers/graphics.h>
 #include <types.h>
 U32 KERNEL_CONSOLE_FONT_POSITION_Y;
 U32 KERNEL_CONSOLE_FONT_POSITION_X;

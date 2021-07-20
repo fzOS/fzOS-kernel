@@ -1,5 +1,5 @@
-#include <syscall.h>
-#include <printk.h>
+#include <syscall/syscall.h>
+#include <common/printk.h>
 void userspace(){
     for(;;);
 }

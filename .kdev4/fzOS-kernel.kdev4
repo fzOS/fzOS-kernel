@@ -13,16 +13,9 @@ parserArgumentsOpenCL=-ferror-limit=100 -fspell-checking -Wdocumentation -Wunuse
 Name=Clang
 
 [CustomDefinesAndIncludes][ProjectPath0][Includes]
-1=/home/fhh/fzOS-kernel/common/include
-10=/usr/local/include/efi/x86_64
-2=/home/fhh/fzOS-kernel/drivers/include
+1=/usr/include/efi
+2=/usr/include/efi/x86_64
 3=/home/fhh/fzOS-kernel/include
-4=/home/fhh/fzOS-kernel/acpi/include
-5=/home/fhh/fzOS-kernel/interrupt/include
-6=/home/fhh/fzOS-kernel/memory/include
-7=/home/fhh/fzOS-kernel/syscall/include
-8=/home/fhh/fzOS-kernel/threading/include
-9=/usr/local/include/efi
 
 [Launch]
 Launch Configurations=Launch Configuration 0
@@ -47,6 +40,7 @@ Working Directory=
 isExecutable=false
 
 [MakeBuilder]
+Install As Root=true
 Number Of Jobs=1
 Override Number Of Jobs=true
 

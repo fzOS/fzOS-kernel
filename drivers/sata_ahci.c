@@ -1,4 +1,4 @@
-#include <sata_ahci.h>
+#include <drivers/sata_ahci.h>
 #define sata_debug(x...) debug(" sata ahci:" x)
 void sata_ahci_register(U8 bus,U8 slot,U8 func)
 {

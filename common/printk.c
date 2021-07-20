@@ -1,4 +1,4 @@
-#include <printk.h>
+#include <common/printk.h>
 void putU64hex(U64 data)
 {
     U8 tempint;

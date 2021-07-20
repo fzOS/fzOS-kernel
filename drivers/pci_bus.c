@@ -1,5 +1,5 @@
-#include <pci.h>
-#include <sata_ahci.h>
+#include <drivers/pci.h>
+#include <drivers/sata_ahci.h>
 const char* pci_class_name[] = {
     "Unclassified",
     "Mass Storage Controller",

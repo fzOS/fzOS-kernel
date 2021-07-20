@@ -1,11 +1,10 @@
 #if we are debugging
 DEBUG=1
-
-ifneq '$(USER)' 'fhh'
 GNUEFI_PATH=/usr/include/efi
+ifneq '$(USER)' 'fhh'
+
 else
 export PATH:=/home/fhh/.ccache/:${PATH}
-GNUEFI_PATH=/usr/local/include/efi
 CC= ccache 
 endif
 ifeq '$(DEBUG)' '1'
@@ -15,7 +14,7 @@ VERSION := 0.1.3
 endif
 BASE_DIR=${PWD}
 CC:=${CC} gcc
-CFLAGS=-pie -DVERSION="\"${VERSION}\"" -isystem "${PWD}/include" -isystem "${PWD}/interrupt/include" -isystem "${PWD}/drivers/include"  -isystem "${PWD}/common/include" -isystem "${PWD}/memory/include" -isystem "${PWD}/acpi/include" -isystem "${PWD}/syscall/include"  -isystem "${PWD}/threading/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -Wall -Werror -O2 -march=native -mtune=native -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration
+CFLAGS=-pie -DVERSION="\"${VERSION}\"" -isystem "${PWD}/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-sse -mno-red-zone -ffreestanding
 SUBDIRS=drivers memory acpi common syscall interrupt threading
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
@@ -38,7 +37,12 @@ kernel:
 clean:
 	rm -rf build/*
 install:
-	guestmount -a '/home/fhh/VirtualBox VMs/UEFITest/raw.vdi' -m /dev/sda1 --rw /media
-	cp -f build/kernel /media/
-	umount /media
-	VBoxManage startvm "UEFITest" -E VBOX_GUI_DBG_ENABLED=true #-E VBOX_GUI_DBG_AUTO_SHOW=true
+	@echo -e "\e[33;1m[INSTALL]\e[0mkernel"
+	@a=$$(losetup -f) && \
+	echo "Mounting at $${a}p1" && \
+	losetup -f -P '/home/fhh/VirtualBox VMs/UEFITest/raw.img' && \
+	mount -t auto $${a}p1 /media && \
+	cp -f build/kernel /media/ && \
+	umount /media && \
+	losetup -d $$a
+	@su - fhh -c 'VBoxManage startvm "UEFITest" -E VBOX_GUI_DBG_ENABLED=true' #-E VBOX_GUI_DBG_AUTO_SHOW=true

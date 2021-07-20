@@ -1,5 +1,5 @@
-#include <cpuid.h>
-#include <printk.h>
+#include <common/cpuid.h>
+#include <common/printk.h>
 #include <types.h>
 typedef union {
     struct {

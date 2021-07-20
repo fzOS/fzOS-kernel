@@ -1,11 +1,10 @@
+#ifndef _KERNEL_H_
+#define _KERNEL_H_
+
 #include <efi.h>
 #include <efilib.h>
 #include <uefivars.h>
 #include <types.h>
-
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
-
 typedef struct {
   void *rsdp_address;
   U8 *memory_map;
@@ -15,6 +14,7 @@ typedef struct {
   U64 kernel_page_count;
   EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
   EFI_RUNTIME_SERVICES *rt;
+  U64 new_empty_stack;
 } KernelInfo;
 
 typedef void (*KernelMainFunc)(KernelInfo);

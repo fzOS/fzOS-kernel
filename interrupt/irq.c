@@ -1,10 +1,10 @@
-#include <interrupt.h>
-#include <irq.h>
-#include <power_control.h>
-#include <printk.h>
-#include <registers.h>
-#include <acpi_parser.h>
-#include <fadt.h>
+#include <interrupt/interrupt.h>
+#include <interrupt/irq.h>
+#include <common/power_control.h>
+#include <common/printk.h>
+#include <common/registers.h>
+#include <acpi/acpi_parser.h>
+#include <acpi/fadt.h>
 extern U64 ioapic_address;
 extern U64 localapic_address;
 extern U8 acpi_interrupt;

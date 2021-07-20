@@ -1,8 +1,8 @@
-#include <xsdt.h>
-#include <apic.h>
-#include <fadt.h>
-#include <printk.h>
-#include <kstring.h>
+#include <acpi/xsdt.h>
+#include <acpi/apic.h>
+#include <acpi/fadt.h>
+#include <common/printk.h>
+#include <common/kstring.h>
 int parse_xsdt(void* in) {
     //检测表。
     if(validate_table((U8*)in)) {
@@ -29,4 +29,13 @@ int parse_xsdt(void* in) {
         }
     }
     return (parse_fadt(acpi_table_entries[0])|parse_apic(acpi_table_entries[1]));
+}
+void* acpi_get_table_by_name(char* name) 
+{
+    for(int j=0;j<table_count;j++) {
+        if(!strcomp(acpi_table_names[j],name)) {
+            return acpi_table_entries[j];
+        }
+    }
+    return nullptr;
 }

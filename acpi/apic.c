@@ -1,5 +1,5 @@
-#include <apic.h>
-#include <printk.h>
+#include <acpi/apic.h>
+#include <common/printk.h>
 int number_of_processors;
 U64 ioapic_address=0xFFFFFFFF;
 U64 localapic_address=0xFFFFFFFF;

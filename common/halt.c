@@ -1,5 +1,5 @@
-#include <halt.h>
-#include <printk.h>
+#include <common/halt.h>
+#include <common/printk.h>
 inline void halt(void)
 {
     __asm__("hlt");

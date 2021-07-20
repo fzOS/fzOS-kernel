@@ -1,6 +1,6 @@
-#include <power_control.h>
-#include <acpi_parser.h>
-#include <fadt.h>
+#include <common/power_control.h>
+#include <acpi/acpi_parser.h>
+#include <acpi/fadt.h>
 void poweroff(void)
 {
     FADT* fadt = (FADT*)(acpi_table_entries[0]);

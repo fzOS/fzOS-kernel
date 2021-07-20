@@ -1,4 +1,4 @@
-#include <registers.h>
+#include <common/registers.h>
 U64 rdmsr(U64 opcode) 
 {
     U64 low=0,high=0;

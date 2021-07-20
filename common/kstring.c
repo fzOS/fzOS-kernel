@@ -1,4 +1,4 @@
- #include <kstring.h>
+ #include <common/kstring.h>
 int strcopy(char* dest,char* src,int n) {
     int count=0;
     for(;count<n;count++) {
@@ -18,7 +18,7 @@ int strcomp(char* first,char* second) {
         result=first[pointer]?-1:(second[pointer]?1:0);
     return result;
 }
-int memcopy(void* dest,void* src,int n)
+int memcpy(void* dest,void* src,int n)
 {
     for(int i=0;i<n;i++)
     {
@@ -26,7 +26,7 @@ int memcopy(void* dest,void* src,int n)
     }
     return n;
 }
-int memcomp(void* first,void* second,int n)
+int memcmp(void* first,void* second,int n)
 {
     U8 result=0;
     while(n&&!result)
@@ -42,7 +42,7 @@ int memmove(void* dest,void* src,int n)
 {
     if(dest<src)
     {
-        return memcopy(dest,src,n);
+        return memcpy(dest,src,n);
     }
     else //存在覆盖问题，从尾至头搬运。
     {

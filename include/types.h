@@ -23,4 +23,7 @@ typedef U8 byte;
 #define nullptr (void*) 0
 
 #define KERNEL_ADDR_OFFSET (0xFFFF800000000000ULL)
+#define KERNEL_STACK_PAGES 4
+
+#define PAGE_SIZE 4096
 #endif

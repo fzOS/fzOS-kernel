@@ -3,3 +3,4 @@ experiment/**
 build/**
 test/**
 .kdev4/**
+passwd.sh

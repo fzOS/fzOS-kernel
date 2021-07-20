@@ -1,11 +1,11 @@
 //解析ACPI的函数。
-#include <acpi_parser.h>
-#include <printk.h>
-#include <xsdt.h>
-#include <kstring.h>
-#include <fadt.h>
-#include <io.h>
-#include <power_control.h>
+#include <acpi/acpi_parser.h>
+#include <common/printk.h>
+#include <acpi/xsdt.h>
+#include <common/kstring.h>
+#include <acpi/fadt.h>
+#include <common/io.h>
+#include <common/power_control.h>
 //总共需要识别的表。
 char* acpi_table_names[]={"FACP","APIC","SSDT","BGRT","DSDT"};
 U8*   acpi_table_entries[sizeof(acpi_table_names)/8];

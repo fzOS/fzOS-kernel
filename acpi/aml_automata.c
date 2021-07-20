@@ -1,4 +1,4 @@
-#include <aml_automata.h>
+#include <acpi/aml_automata.h>
 #include <types.h>
 /*
     为了实现ACPI自动机，我们应该实现以下单词的识别：

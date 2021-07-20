@@ -1,6 +1,8 @@
-#include <fadt.h>
-#include <io.h>
-#include <dsdt.h>
+#include <acpi/fadt.h>
+#include <common/printk.h>
+#include <common/io.h>
+#include <acpi/dsdt.h>
+#include <lai/helpers/sci.h>
 U8 acpi_interrupt;
 int parse_fadt(void* in) {
     if(validate_table((U8*)in)) {
@@ -8,6 +10,7 @@ int parse_fadt(void* in) {
         return -1;
     }
     FADT* fadt = (FADT*)in;
+    acpi_table_entries[4] = (void*)(fadt->X_Dsdt|KERNEL_ADDR_OFFSET);
     if(fadt->SMI_CommandPort) {
         if(fadt->AcpiEnable||fadt->AcpiDisable) {
             debug(" Enabling ACPI.\n");

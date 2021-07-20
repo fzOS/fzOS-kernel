@@ -1,4 +1,4 @@
-#include <spinlock.h>
+#include <common/spinlock.h>
 #include <types.h>
 void acquire_spinlock(spinlock* lock)
 { 

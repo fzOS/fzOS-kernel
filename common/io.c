@@ -1,4 +1,4 @@
-#include <io.h>
+#include <common/io.h>
 inline void outb(U16 port, U8 val)
 {
     __asm__ volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );

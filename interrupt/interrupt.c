@@ -1,9 +1,9 @@
-#include <interrupt.h>
-#include <memory.h>
-#include <halt.h>
-#include <power_control.h>
-#include <irq.h>
-#include <printk.h>
+#include <interrupt/interrupt.h>
+#include <memory/memory.h>
+#include <common/halt.h>
+#include <common/power_control.h>
+#include <interrupt/irq.h>
+#include <common/printk.h>
 extern U8 acpi_poweroff_interrupt;
 static struct IDTR {
   U16 size;

@@ -1,6 +1,6 @@
-#include <gdt.h>
-#include <kstring.h>
-#include <printk.h>
+#include <memory/gdt.h>
+#include <common/kstring.h>
+#include <common/printk.h>
 #include <types.h>
 struct gdt_entry {
     U16 limit15_0;
