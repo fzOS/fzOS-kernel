@@ -4,11 +4,6 @@
 #include <memory/memorysetup.h>
 #include <memory/memorytables.h>
 #include <memory/gdt.h>
-//此文件不想再调试了。
-// --by fhh
-#undef debug
-#define debug(x...)
-U64 PML4E_base_address;
 
 void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
 {
@@ -39,11 +34,6 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
         four_level_paging_flag = four_level_paging_flag + 1;
     }
     if (four_level_paging_flag == 3) { // check if four level paging is enabled
-        PML4E_base_address = (CR3.split.base_addr)<<12;
-
-
-
-        
         // Start read UEFI page settings and creating new page tables
         memmap* memmappointer = (memmap*)memory_map;
         memmappointer = (memmap*)memory_map;

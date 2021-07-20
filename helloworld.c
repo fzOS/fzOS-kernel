@@ -18,12 +18,6 @@
 #define VERSION "0.1"
 #endif
 
-
-
-
-U64 allocate_page_for_memory_pool(enum MEM_POOL_SIZE size);
-
-
 //定义的标准输入/输出。
 char_dev stdio;
 static volatile KernelInfo bss_info;
@@ -62,9 +56,7 @@ void kernel_main_real() {
     //然后是PCI设备。
     init_pci();
 */
-you_will_never_reach_here:
-    halt();
-    goto you_will_never_reach_here;
+
 }
 void kernel_main(KernelInfo info) {
     //手动换栈。
@@ -79,4 +71,7 @@ void kernel_main(KernelInfo info) {
         :"memory"
     );
     kernel_main_real();
+you_will_never_reach_here:
+    halt();
+    goto you_will_never_reach_here;
 }

@@ -24,24 +24,18 @@ typedef struct {
 } memory_pool_node;
 #define ENTRIES_IN_A_PAGE ((MAXIMUM_POOL_SIZE-sizeof(inline_linked_list_node)-sizeof(U64))/sizeof(U64))
 
-
-extern enum MEM_POOL_SIZE {
-    MEM_POOL_32,
-    MEM_POOL_64,
-    MEM_POOL_128,
-    MEM_POOL_256,
-    MEM_POOL_512,
-    MEM_POOL_1024,
-    MEM_POOL_2048
-} MEM_POOL_SIZE;
-extern inline_linked_list mem_pool[7];
-
+//听wjs的，空闲链表信息直接保存在空闲区块里。
+typedef struct {
+    inline_linked_list_node node;
+    U64 free_mem_count;
+} inline_free_page_node;
 
 void* memalloc(U64 size);
 void memfree(void* pointer);
-U64 memset(void* pointer,byte value,int n);
-U64 allocate_page(U64 page_count);
-void free_page(U64 page_begin_address,U64 page_count);
-void print_partial_memory(void);
-void print_free_page(void);
+int memcpy(void* dest,void* src,int n);
+int memcmp(void* first,void* second,int n);
+int memmove(void* dest,void* src,int n);
+U64 memset(void* pointer,U8 value,int n);
+
+extern inline_linked_list free_page_linked_list;
 #endif
