@@ -1,6 +1,5 @@
 #include <common/linkedlist.h>
 #include <memory/memory.h>
-typedef iterator(linked_list) linked_list_iterator;
 int iterator_linked_list_next(linked_list_iterator* this)
 {
     if(this->current==this->list->tail) {

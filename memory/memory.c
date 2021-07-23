@@ -8,7 +8,9 @@
 //#undef debug
 //#define debug(x...)
 
-inline_linked_list free_page_linked_list;
+inline_linked_list free_page_linked_list = {
+    .tail = &(free_page_linked_list.head)
+};
 
 void* memalloc(U64 size)
 {

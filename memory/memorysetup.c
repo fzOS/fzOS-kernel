@@ -4,66 +4,62 @@
 #include <memory/memorysetup.h>
 #include <memory/memorytables.h>
 #include <memory/gdt.h>
-
+#include <efi/efidef.h>
 void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
 {
     CR3 CR3;
     CR0 CR0;
     CR4 CR4;
     EFER EFER;
-    RFLAGS RFLAGS;
     __asm__(
         "movq %%cr3,%0;"
         "movq %%cr4,%1;"
         "movq %%cr0,%2;"
-        //"movq %%rflags,%3;"
         "movq $0xC0000080,%%rcx;"
         "rdmsr;"
-        "movq %%rax, %4;"
-        : "=g"(CR3.raw), "=g"(CR4.raw), "=g"(CR0.raw), "=g"(RFLAGS.raw), "=g"(EFER.raw)
+        "movq %%rax, %3;"
+        : "=g"(CR3.raw), "=g"(CR4.raw), "=g"(CR0.raw), "=g"(EFER.raw)
         :
         : "%rcx", "%rax", "%rdx", "memory");
-    U8 four_level_paging_flag = 0;
-    if (EFER.split.LME) { //check ia32-EFER.LME status
-        four_level_paging_flag = four_level_paging_flag + 1;
-    }
-    if (CR4.split.PAE) { //check CR4.PAE status
-        four_level_paging_flag = four_level_paging_flag + 1;
-    }
-    if (CR0.split.PG) { //check CR0.PG status
-        four_level_paging_flag = four_level_paging_flag + 1;
-    }
-    if (four_level_paging_flag == 3) { // check if four level paging is enabled
+    if (EFER.split.LME && CR4.split.PAE && CR0.split.PG) {
         // Start read UEFI page settings and creating new page tables
         memmap* memmappointer = (memmap*)memory_map;
-        memmappointer = (memmap*)memory_map;
         int mem_map_count = mem_map_size / mem_map_descriptor_size;
-        for (int i = 0; i < mem_map_count - 1; i++) {
-            if (memmappointer[i].VirtualStart + (memmappointer[i].NumberOfPages << 12)
-                == memmappointer[i + 1].VirtualStart) {
-                if (memmappointer[i].Type == 3
-                    || memmappointer[i].Type == 4
-                    || memmappointer[i].Type == 7) {
-                    memmappointer[i].Type = 7;
-                    if (memmappointer[i + 1].Type == 3
-                        || memmappointer[i + 1].Type == 4
-                        || memmappointer[i + 1].Type == 7) {
 
-                        memmappointer[i].NumberOfPages += memmappointer[i + 1].NumberOfPages;
-                        memmove((U8*)&memmappointer[i + 1],
-                            (U8*)&memmappointer[i + 2],
-                            (mem_map_count - i) * sizeof(memmap));
-                        i--;
-                        mem_map_count--;
-                    }
-                }
-            }
-        }
-
-        memmappointer = (memmap*)memory_map;
         //To make things easy, We decide to continue using UEFI's mapping method.
         //That is, Physical address is explicitly equivalent to its virtual address.
+        //将空闲内存信息插入free_page_linked_list中。
+        //听wjs的话。
+        inline_free_page_node* node;
+        for (int i = 0; i < mem_map_count; i++) {
+            if(memmappointer[i].Type==EfiConventionalMemory
+             ||memmappointer[i].Type==EfiBootServicesCode
+             ||memmappointer[i].Type==EfiBootServicesData) {
+                node = (void*)memmappointer[i].VirtualStart;
+                node->free_mem_count = memmappointer[i].NumberOfPages;
+                insert_existing_inline_node(&free_page_linked_list,&(node->node),-1);
+            }
+        }
+        //合并连续信息。
+        node = (inline_free_page_node*)(free_page_linked_list.head.next->next);
+        inline_free_page_node* prev_node = (inline_free_page_node*)(free_page_linked_list.head.next);
+        while(node!=nullptr) {
+            if((U64)node == prev_node->free_mem_count*PAGE_SIZE+(U64)prev_node) {
+                prev_node->free_mem_count += node->free_mem_count;
+                remove_inline_node(&free_page_linked_list,&node->node);
+            }
+            else {
+                prev_node = node;
+            }
+            node = (inline_free_page_node*)node->node.next;
 
+        }
+        //测试。
+        node = (inline_free_page_node*)free_page_linked_list.head.next;
+        while(node!=nullptr) {
+            debug(" begins at %x, %x pages\n",node,node->free_mem_count);
+            node = (inline_free_page_node*)node->node.next;
+        }
     }
 
 }

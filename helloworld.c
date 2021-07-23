@@ -10,7 +10,7 @@
 #include <memory/gdt.h>
 #include <interrupt/interrupt.h>
 #include <drivers/keyboard.h>
-#include <syscall.h>
+#include <syscall/syscall.h>
 #include <drivers/pci.h>
 #include <common/kstring.h>
 
