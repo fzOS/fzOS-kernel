@@ -37,5 +37,11 @@ int memcmp(void* first,void* second,int n);
 int memmove(void* dest,void* src,int n);
 U64 memset(void* pointer,U8 value,int n);
 
+void* allocate_page(int count);
+void free_page(void* page_address,int count);
+void* memalloc(U64 size);
+void memfree(void* pointer);
+
 extern inline_linked_list free_page_linked_list;
+extern iterator(inline_linked_list) free_page_linked_list_iterator;
 #endif

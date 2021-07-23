@@ -14,7 +14,7 @@ VERSION := 0.1.3
 endif
 BASE_DIR=${PWD}
 CC:=${CC} gcc
-CFLAGS=-pie -DVERSION="\"${VERSION}\"" -isystem "${PWD}/include" -isystem "${GNUEFI_PATH}" -isystem "${GNUEFI_PATH}/x86_64" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-sse -mno-red-zone -ffreestanding
+CFLAGS=-pie -DVERSION="\"${VERSION}\"" -isystem "${PWD}/include" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-sse -mno-red-zone -ffreestanding
 SUBDIRS=drivers memory acpi common syscall interrupt threading
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \

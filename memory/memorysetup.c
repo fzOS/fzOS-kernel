@@ -5,6 +5,7 @@
 #include <memory/memorytables.h>
 #include <memory/gdt.h>
 #include <efi/efidef.h>
+static void print_linked_list();
 void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
 {
     CR3 CR3;
@@ -54,12 +55,16 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
             node = (inline_free_page_node*)node->node.next;
 
         }
-        //测试。
-        node = (inline_free_page_node*)free_page_linked_list.head.next;
-        while(node!=nullptr) {
-            debug(" begins at %x, %x pages\n",node,node->free_mem_count);
-            node = (inline_free_page_node*)node->node.next;
-        }
     }
-
+    (void)print_linked_list();
 }
+void print_linked_list()
+{
+    inline_free_page_node* node;
+    init_iterator(inline_linked_list,&free_page_linked_list_iterator,&free_page_linked_list);
+    while(free_page_linked_list_iterator.next(&free_page_linked_list_iterator)) {
+        node = (inline_free_page_node*)free_page_linked_list_iterator.current;
+        debug(" begins at %x, %x pages\n",node,node->free_mem_count);
+    }
+}
+

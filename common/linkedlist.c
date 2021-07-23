@@ -1,6 +1,6 @@
 #include <common/linkedlist.h>
 #include <memory/memory.h>
-int iterator_linked_list_next(linked_list_iterator* this)
+int iterator_linked_list_next(iterator(linked_list)* this)
 {
     if(this->current==this->list->tail) {
         return 0;
@@ -8,7 +8,7 @@ int iterator_linked_list_next(linked_list_iterator* this)
     this->current = this->current->next;
     return 1;
 }
-int iterator_linked_list_prev(linked_list_iterator* this)
+int iterator_linked_list_prev(iterator(linked_list)* this)
 {
     if(this->current==this->list->head.next) {
         return 0;
@@ -16,7 +16,7 @@ int iterator_linked_list_prev(linked_list_iterator* this)
     this->current = this->current->prev;
     return 1;
 }
-void iterator_linked_list_remove(linked_list_iterator* this)
+void iterator_linked_list_remove(iterator(linked_list)* this)
 {
     //首先，判断我们是不是在头结点。
     if(this->current!=&(this->list->head)) {
@@ -30,11 +30,7 @@ void iterator_linked_list_remove(linked_list_iterator* this)
         }
         this->current->prev->next = this->current->next;
         //向前一位。
-        linked_list_node* p = this->current;
         this->current = this->current->prev;
-        //回收内存。
-        memfree(p->data);
-        memfree(p);
     }
     else {
         return;
@@ -172,14 +168,56 @@ void remove_inline_node(inline_linked_list* list,inline_linked_list_node* node)
     }
 }
 
-
-
-
-void init_iterator_linked_list(linked_list_iterator* iterator,linked_list* source)
+int iterator_inline_linked_list_next(iterator(inline_linked_list)* this)
+{
+    if(this->current==this->list->tail) {
+        return 0;
+    }
+    this->current = this->current->next;
+    return 1;
+}
+int iterator_inline_linked_list_prev(iterator(inline_linked_list)* this)
+{
+    if(this->current==this->list->head.next) {
+        return 0;
+    }
+    this->current = this->current->prev;
+    return 1;
+}
+void iterator_inline_linked_list_remove(iterator(inline_linked_list)* this)
+{
+    //首先，判断我们是不是在头结点。
+    if(this->current!=&(this->list->head)) {
+        //如果当前不是尾部的话，修改一下下一个结点的信息。
+        if(this->current!=(this->list->tail)) {
+            this->current->next->prev = this->current->prev;
+        }
+        //如果是尾部的话，修改tail的记录信息。
+        else {
+            this->list->tail = this->current->prev;
+        }
+        this->current->prev->next = this->current->next;
+        //向前一位。
+        this->current = this->current->prev;
+    }
+    else {
+        return;
+    }
+}
+void init_iterator_inline_linked_list(iterator(inline_linked_list)* iterator, inline_linked_list* source)
 {
     iterator->list = source;
     iterator->current = &(source->head);
-    iterator->next = (void*)iterator_linked_list_next;
-    iterator->prev = (void*)iterator_linked_list_prev;
-    iterator->remove = (void*)iterator_linked_list_remove;
+    iterator->next = iterator_inline_linked_list_next;
+    iterator->prev = iterator_inline_linked_list_prev;
+    iterator->remove = iterator_inline_linked_list_remove;
+}
+
+void init_iterator_linked_list(iterator(linked_list)* iterator, linked_list* source)
+{
+    iterator->list = source;
+    iterator->current = &(source->head);
+    iterator->next = iterator_linked_list_next;
+    iterator->prev = iterator_linked_list_prev;
+    iterator->remove = iterator_linked_list_remove;
 }

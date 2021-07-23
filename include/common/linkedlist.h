@@ -31,6 +31,7 @@ typedef struct
 
 
 typedef iterator_raw(linked_list) iterator_linked_list;
+typedef iterator_raw(inline_linked_list) iterator_inline_linked_list;
 
 void insert_existing_node(linked_list* list,linked_list_node* node,int pos);
 void insert_existing_node_before_existing(linked_list* list,linked_list_node* node,linked_list_node* existing);
@@ -41,4 +42,5 @@ void insert_existing_inline_node_before_existing(inline_linked_list* list,inline
 void remove_inline_node(inline_linked_list* list,inline_linked_list_node* node);
 void remove_inline_node_pos(inline_linked_list* list,int pos);
 void init_iterator_linked_list(iterator(linked_list)* iterator,linked_list* source);
+void init_iterator_inline_linked_list(iterator(inline_linked_list)* iterator,inline_linked_list* source);
 #endif
