@@ -1,4 +1,4 @@
 #ifndef UEFIVARS
 #define UEFIVARS
-#include <efi.h>
+#include <efi/efi.h>
 #endif

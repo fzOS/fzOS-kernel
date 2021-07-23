@@ -1,8 +1,8 @@
 #ifndef _KERNEL_H_
 #define _KERNEL_H_
 
-#include <efi.h>
-#include <efilib.h>
+#include <efi/efi.h>
+#include <efi/efilib.h>
 #include <uefivars.h>
 #include <types.h>
 typedef struct {

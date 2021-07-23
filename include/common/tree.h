@@ -14,6 +14,6 @@ typedef struct tree_node {
 typedef struct {
     tree_node entry; //入口
 } tree;
-
+typedef iterator_raw(tree) iterator_tree;
 void insert_tree_node_as_child(tree_node* parent,tree_node* data);
 #endif
