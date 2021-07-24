@@ -2,6 +2,7 @@
 #define SATA_AHCI
 #include <drivers/pci.h>
 #include <drivers/blockdev.h>
+#include <drivers/devicetree.h>
 typedef enum
 {
     FIS_TYPE_REG_H2D = 0x27, // Register FIS - host to device
@@ -13,6 +14,27 @@ typedef enum
     FIS_TYPE_PIO_SETUP = 0x5F, // PIO setup FIS - device to host
     FIS_TYPE_DEV_BITS = 0xA1, // Set device bits FIS - device to host
 } FIS_TYPE;
+
+#define SATA_SIG_ATA 0x00000101 // SATA drive
+#define SATA_SIG_ATAPI 0xEB140101 // SATAPI drive
+#define SATA_SIG_SEMB 0xC33C0101 // Enclosure management bridge
+#define SATA_SIG_PM 0x96690101 // Port multiplier
+#define HBA_PxCMD_ST 0x0001
+#define HBA_PxCMD_FRE 0x0010
+#define HBA_PxCMD_FR 0x4000
+#define HBA_PxCMD_CR 0x8000
+typedef enum
+{
+    AHCI_DEV_NULL,
+    AHCI_DEV_SATA,
+    AHCI_DEV_SEMB,
+    AHCI_DEV_PM,
+    AHCI_DEV_SATAPI,
+} AHCIDeviceType;
+extern char* AHCIDeviceTypeName[];
+
+#define HBA_PORT_IPM_ACTIVE 1
+#define HBA_PORT_DET_PRESENT 3
 
 typedef volatile struct
 {
@@ -35,7 +57,7 @@ typedef volatile struct
     U32 fbs;       // 0x40, FIS-based switch control
     U32 rsv1[11];  // 0x44 ~ 0x6F, Reserved
     U32 vendor[4]; // 0x70 ~ 0x7F, vendor specific
-} HBA_PORT;
+} __attribute__((packed)) HBA_PORT;
 
 //HBA Memory Registers
 typedef volatile struct
@@ -56,12 +78,40 @@ typedef volatile struct
     U8  vendor[0x100-0xA0];
     // 0x100 - 0x10FF, Port control registers
     HBA_PORT ports[1];// 1 ~ 32
-} HBA_MEM;
+} __attribute__((packed)) HBA_MEM;
+typedef struct
+{
+    // DW0
+    U8 cfl:5; // Command FIS length in DWORDS, 2 ~ 16
+    U8 a:1; // ATAPI
+    U8 w:1; // Write, 1: H2D, 0: D2H
+    U8 p:1; // Prefetchable
+    U8 r:1; // Reset
+    U8 b:1; // BIST
+    U8 c:1; // Clear busy upon R_OK
+    U8 rsv0:1; // Reserved
+    U8 pmp:4; // Port multiplier port
+    U16 prdtl; // Physical region descriptor table length in entries
+    // DW1
+    volatile U32 prdbc; // Physical region descriptor byte count transferred
+    // DW2, 3
+    U32 ctba; // Command table descriptor base address
+    U32 ctbau; // Command table descriptor base address upper 32 bits
+    // DW4 - 7
+    U32 rsv1[4]; // Reserved
+} HBA_CMD_HEADER;
 typedef struct 
 {
     PCIDevice base;
     block_dev dev;
     HBA_MEM* ahci_bar;
+    U32 command_base;
 } AHCIDevice;
+//定义AHCI设备的设备树格式。
+typedef struct
+{
+    block_dev_node header;
+    AHCIDevice controller;
+}AHCIDeviceTreeNode;
 void sata_ahci_register(U8 bus,U8 slot,U8 func);
 #endif

@@ -5,7 +5,7 @@
 #include <memory/memorytables.h>
 #include <memory/gdt.h>
 #include <efi/efidef.h>
-static void print_linked_list();
+void print_linked_list();
 void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
 {
     CR3 CR3;
@@ -34,8 +34,9 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
         inline_free_page_node* node;
         for (int i = 0; i < mem_map_count; i++) {
             if(memmappointer[i].Type==EfiConventionalMemory
-             ||memmappointer[i].Type==EfiBootServicesCode
-             ||memmappointer[i].Type==EfiBootServicesData) {
+             //||memmappointer[i].Type==EfiBootServicesCode
+             //||memmappointer[i].Type==EfiBootServicesData
+            ) {
                 node = (void*)memmappointer[i].VirtualStart;
                 node->free_mem_count = memmappointer[i].NumberOfPages;
                 insert_existing_inline_node(&free_page_linked_list,&(node->node),-1);
@@ -56,7 +57,7 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
 
         }
     }
-    (void)print_linked_list();
+
 }
 void print_linked_list()
 {

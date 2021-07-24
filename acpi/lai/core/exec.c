@@ -14,14 +14,6 @@
 #include "util-macros.h"
 static unsigned long long stackp;
 
-#define printstack() \
-        __asm__(\
-            "movq %%rsp,%0\n"\
-            :"=g"(stackp)\
-            :\
-            :\
-        );\
-        printk("RSP is at %x.\n",stackp);\
 
 
 static int debug_opcodes = 1;
@@ -1812,15 +1804,11 @@ static int lai_exec_parse(int parse_mode, lai_state_t *state) {
         lai_nsnode_t *node = lai_create_nsnode_or_die();
         node->type = LAI_NAMESPACE_METHOD;
         lai_do_resolve_new_node(node, ctx_handle, &amln);
-        printk("resolve done.\n");
         node->method_flags = flags;
         node->amls = amls;
         node->pointer = method + nested_pc;
         node->size = pc - nested_pc;
-        printstack();
-        printk("install node.\n");
         lai_install_nsnode(node);
-        printstack();
         if (invocation)
             lai_list_link(&invocation->per_method_list, &node->per_method_item);
         break;
@@ -2359,7 +2347,6 @@ static int lai_exec_parse(int parse_mode, lai_state_t *state) {
 }
 
 int lai_populate(lai_nsnode_t *parent, struct lai_aml_segment *amls, lai_state_t *state) {
-    printk("Populate.\n");
     if (lai_exec_reserve_ctxstack(state)
             || lai_exec_reserve_blkstack(state)
             || lai_exec_reserve_stack(state))

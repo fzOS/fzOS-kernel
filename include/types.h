@@ -26,4 +26,6 @@ typedef U8 byte;
 #define KERNEL_STACK_PAGES 4
 
 #define PAGE_SIZE 4096
+
+#define PATH_SEPARATOR '/'
 #endif

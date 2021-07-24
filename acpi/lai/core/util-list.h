@@ -17,7 +17,6 @@ static inline void lai_list_init(struct lai_list *list) {
 }
 
 static inline void lai_list_link(struct lai_list *list, struct lai_list_item *item) {
-    printk("Link.\n");
     struct lai_list_item *hook = &list->hook;
     struct lai_list_item *tail = hook->prev;
     item->next = hook;

@@ -33,14 +33,6 @@ acpi_fadt_t *lai_fadt;
 
 
 static unsigned long long stackp;
-#define printstack() \
-        __asm__(\
-            "movq %%rsp,%0\n"\
-            :"=g"(stackp)\
-            :\
-            :\
-        );\
-        printk("RSP is at %x.\n",stackp);\
         
 struct lai_aml_segment *lai_load_table(void *ptr, int index);
 
@@ -92,7 +84,6 @@ void lai_install_nsnode(lai_nsnode_t *node) {
 
     // Insert the node into its parent's hash table.
     lai_nsnode_t *parent = node->parent;
-    printk("Insert the node into its parent's hash table.\n");
     if (parent) {
         int h = lai_hash_string(node->name, 4);
         struct lai_hashtable_chain chain = LAI_HASHTABLE_CHAIN_INITIALIZER;
@@ -263,11 +254,9 @@ char *lai_stringify_node_path(lai_nsnode_t *node) {
     for (current = node; current->parent; current = current->parent)
         num_segs++;
     size_t length = num_segs * 5; // Leading dot (or \) and four chars per segment.
-    printstack();
     char *str = laihost_malloc(length + 1);
     if (!str)
         lai_panic("could not allocate in lai_stringify_node_path()");
-    printstack();
     // Build the string from right to left.
     size_t n = length;
     for (current = node; current->parent; current = current->parent) {
@@ -276,7 +265,6 @@ char *lai_stringify_node_path(lai_nsnode_t *node) {
         n -= 1;
         str[n] = '.';
     }
-    printstack();
     LAI_ENSURE(!n);
     str[0] = '\\'; // Overwrites the first dot.
     str[length] = '\0';
@@ -502,14 +490,12 @@ void lai_create_namespace(void) {
     void *dsdt_table = laihost_scan("DSDT", 0);
     void *dsdt_amls = lai_load_table(dsdt_table, 0);
     lai_init_state(&state);
-    printk("Populate DSDT.\n");
     lai_populate(root_node, dsdt_amls, &state);
     lai_finalize_state(&state);
     // Load all SSDTs.
     size_t index = 0;
     acpi_aml_t *ssdt_table;
     while ((ssdt_table = laihost_scan("SSDT", index))) {
-        printk("index %d exists.\n",index);
         void *ssdt_amls = lai_load_table(ssdt_table, index);
         lai_init_state(&state);
         lai_populate(root_node, ssdt_amls, &state);

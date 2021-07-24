@@ -4,9 +4,9 @@
 #include <acpi/xsdt.h>
 #include <common/printk.h>
 #include <common/io.h>
+#include <drivers/pci.h>
 void *laihost_malloc(size_t size)
 {
-    printk("Mallocing %d.\n",size);
     return memalloc(size);
 }
 void *laihost_realloc(void * orig, size_t new)
@@ -22,8 +22,7 @@ void *laihost_realloc(void * orig, size_t new)
 }
 void laihost_free(void  *orig)
 {
-    //memfree(orig);
-    (void)orig;
+    memfree(orig);
 }
 void *laihost_map(size_t address, size_t count)
 {
@@ -45,14 +44,15 @@ void *laihost_scan(char *sig, size_t index)
 }
 void laihost_log(int level, const char *msg)
 {
-    (void)level;
-    debug("lai:");
-    debug((char*)msg);
-    debug("\n");
+    if(level==LAI_WARN_LOG) {
+        debug("lai:");
+        debug((char*)msg);
+        debug("\n");
+    }
 }
 __attribute__((noreturn)) void laihost_panic(const char *msg)
 {
-    debug("lai:");
+    debug(" lai:");
     debug((char*)msg);
     debug("\n");
     while(1) {
@@ -88,4 +88,18 @@ uint32_t laihost_ind(uint16_t port)
 void laihost_sleep(uint64_t ms)
 {
     return;
+}
+/* Read a byte/word/dword from the given device's PCI configuration space
+   at the given offset. */
+uint8_t laihost_pci_readb(uint16_t seg, uint8_t bus, uint8_t slot, uint8_t fun, uint16_t offset)
+{
+    return pci_read_byte(bus,slot,fun,offset);
+}
+uint16_t laihost_pci_readw(uint16_t seg, uint8_t bus, uint8_t slot, uint8_t fun, uint16_t offset)
+{
+    return pci_config_read_word(bus,slot,fun,offset);
+}
+uint32_t laihost_pci_readd(uint16_t seg, uint8_t bus, uint8_t slot, uint8_t fun, uint16_t offset)
+{
+    return pci_read_dword(bus,slot,fun,offset);
 }

@@ -7,13 +7,13 @@
 typedef struct tree_node {
     struct tree_node* child;
     struct tree_node* parent;
-    void* data;
     struct tree_node* sibling;
-} tree_node;
+} inline_tree_node;
 
 typedef struct {
-    tree_node entry; //入口
-} tree;
-typedef iterator_raw(tree) iterator_tree;
-void insert_tree_node_as_child(tree_node* parent,tree_node* data);
+    inline_tree_node entry; //入口
+} inline_tree;
+typedef iterator_raw(inline_tree) iterator_inline_tree;
+void init_iterator_inline_tree(iterator(inline_tree)* iterator,inline_tree* source);
+void insert_tree_node_as_child(inline_tree_node* parent,inline_tree_node* data);
 #endif

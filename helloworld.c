@@ -53,7 +53,6 @@ void kernel_main_real() {
     init_syscall();
     //然后是PCI设备。
     init_pci();
-
 }
 void kernel_main(KernelInfo info) {
     //手动换栈。

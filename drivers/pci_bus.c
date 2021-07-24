@@ -252,6 +252,18 @@ U32 pci_read_dword(U8 bus, U8 device, U8 func, U8 offset)
     U32 result = inl(0xCFC);
     return result;
 }
+U8 pci_read_byte(U8 bus, U8 device, U8 func, U8 offset)
+{
+    U32 address;
+    U32 lbus  = (U32)bus;
+    U32 ldevice = (U32)device;
+    U32 lfunc = (U32)func;
+    address = (U32)((lbus << 16) | (ldevice << 11) |
+              (lfunc << 8) | (offset & 0xfc) |  0x80<<24);
+    outl(0xCF8, address);
+    U32 result = inl(0xCFC);
+    return (U8)((result >> ((offset %4) * 8)) & 0xffff);
+}
 void pci_write_dword(U8 bus, U8 device, U8 func, U8 offset,U32 val)
 {
     U32 address;
