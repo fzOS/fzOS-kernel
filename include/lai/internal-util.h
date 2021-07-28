@@ -7,10 +7,10 @@
 
 // Even in freestanding environments, GCC requires memcpy(), memmove(), memset()
 // and memcmp() to be present. Thus, we just use them directly.
-void *memcpy(void *, const void *, size_t);
-void *memmove(void *, const void *, size_t);
-void *memset(void *, int, size_t);
-int memcmp(const void *, const void *, size_t);
+// void *memcpy(void *, const void *, uint64_t);
+// void *memmove(void *, const void *, uint64_t);
+// void *memset(void *, int, uint64_t);
+// int memcmp(const void *, const void *, uint64_t);
 
 //---------------------------------------------------------------------------------------
 // Debugging and logging functions.

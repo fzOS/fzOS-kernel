@@ -28,7 +28,6 @@ void kernel_main_real() {
     fbcon_init(&stdio);
     printk("\n Hello World! I am fzOS.\n");
     printk(" Kernel version: %s\n",VERSION);
-    printk(" Empty stack begins at %x.\n",bss_info.new_empty_stack);
     int width=bss_info.gop->Mode->Info->PixelsPerScanLine/8-1;
     for(int i=0;i<width-2;i++)
     {
@@ -57,7 +56,7 @@ void kernel_main_real() {
 void kernel_main(KernelInfo info) {
     //手动换栈。
     bss_info = info;
-    bss_info.new_empty_stack+=4096*KERNEL_STACK_PAGES; //栈反向生长。
+    bss_info.new_empty_stack+=PAGE_SIZE*KERNEL_STACK_PAGES; //栈反向生长。
     bss_info.new_empty_stack |= KERNEL_ADDR_OFFSET;//保护模式分页
     __asm__(
         "movq %0,%%rsp\n"

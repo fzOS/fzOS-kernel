@@ -19,7 +19,7 @@ typedef union {
     U32 raw[2];
     U64 total;
 } io_rediection_entry;
-extern void (*irq_handlers[IRQS_MAX])(void);
-extern void (*irq_register)(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(void));
+extern void (*irq_handlers[IRQS_MAX])(int);
+extern void (*irq_register)(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int));
 extern void (*irq_clear)(void);
 #endif

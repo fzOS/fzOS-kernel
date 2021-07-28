@@ -32,10 +32,10 @@ typedef struct {
 
 void* memalloc(U64 size);
 void memfree(void* pointer);
-int memcpy(void* dest,void* src,int n);
-int memcmp(void* first,void* second,int n);
-int memmove(void* dest,void* src,int n);
-U64 memset(void* pointer,U8 value,int n);
+int memcpy(void* dest,void* src,U64 n);
+int memcmp(const void* first,const void* second,U64 n);
+int memmove(void* dest,void* src,U64 n);
+U64 memset(void* pointer,U8 value,U64 n);
 
 void* allocate_page(int count);
 void free_page(void* page_address,int count);

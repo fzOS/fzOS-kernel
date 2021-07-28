@@ -26,7 +26,7 @@ version_update:
 kernel:
 	mkdir -p build/
 	$(RECURSIVE_MAKE)
-	@echo -e "\e[32;1m[CC]\e[0m	" build/helloworld.o
+	@echo -e "\e[32;1m[CC]\e[0m	" helloworld.c
 	@$(CC) ${CFLAGS} -c helloworld.c -o build/helloworld.o
 	@echo -e "\e[34;1m[LD]\e[0m	" kernel
 	@ld -e kernel_main build/*.o -o build/kernel -pie -no-dynamic-linker

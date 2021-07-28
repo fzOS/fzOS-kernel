@@ -3,6 +3,7 @@
 #include <drivers/pci.h>
 #include <drivers/blockdev.h>
 #include <drivers/devicetree.h>
+#include <common/semaphore.h>
 typedef enum
 {
     FIS_TYPE_REG_H2D = 0x27, // Register FIS - host to device
@@ -36,11 +37,21 @@ extern char* AHCIDeviceTypeName[];
 #define HBA_PORT_IPM_ACTIVE 1
 #define HBA_PORT_DET_PRESENT 3
 
+typedef enum
+{
+    AHCI_COMMAND_H2D,
+    AHCI_COMMAND_D2H
+} AHCIOperationType;
+typedef enum
+{
+    AHCI_COMMAND_PREFETCHABLE,
+    AHCI_COMMAND_NOT_PREFETCHABLE
+} AHCIPrefetchType;
 typedef volatile struct
 {
-    U32 clb;       // 0x00, command list base address, 1K-UINT8 aligned
+    U32 clb;       // 0x00, command list base address, 1K-U8 aligned
     U32 clbu;      // 0x04, command list base address upper 32 bits
-    U32 fb;        // 0x08, FIS base address, 256-UINT8 aligned
+    U32 fb;        // 0x08, FIS base address, 256-U8 aligned
     U32 fbu;       // 0x0C, FIS base address upper 32 bits
     U32 is;        // 0x10, interrupt status
     U32 ie;        // 0x14, interrupt enable
@@ -100,18 +111,216 @@ typedef struct
     // DW4 - 7
     U32 rsv1[4]; // Reserved
 } HBA_CMD_HEADER;
+typedef struct
+{
+    U32 dba;    // Data base address
+    U32 dbau;   // Data base address upper 32 bits
+    U32 rsv0;   // Reserved
+    // DW3
+    U32 dbc:22; // Byte count, 4M max
+    U32 rsv1:9; // Reserved
+    U32 i:1;    // Interrupt on completion
+} HBA_PRDT_ENTRY;
+typedef struct
+{
+    // 0x00
+    U8 cfis[64]; // Command FIS
+    // 0x40
+    U8 acmd[16]; // ATAPI command, 12 or 16 bytes
+    // 0x50
+    U8 rsv[48]; // Reserved
+    // 0x80
+    HBA_PRDT_ENTRY prdt_entry[1]; // Physical region descriptor table entries, 0 ~
+} HBA_CMD_TBL;
+typedef struct
+{
+    // DWORD 0
+    U8 fis_type; // FIS_TYPE_REG_H2D
+    U8 pmport:4; // Port multiplier
+    U8 rsv0:3; // Reserved
+    U8 c:1; // 1: Command, 0: Control
+    U8 command; // Command register
+    U8 featurel; // Feature register, 7:0
+    // DWORD 1
+    U8 lba0; // LBA low register, 7:0
+    U8 lba1; // LBA mid register, 15:8
+    U8 lba2; // LBA high register, 23:16
+    U8 device; // Device register
+    // DWORD 2
+    U8 lba3; // LBA register, 31:24
+    U8 lba4; // LBA register, 39:32
+    U8 lba5; // LBA register, 47:40
+    U8 featureh; // Feature register, 15:8
+    // DWORD 3
+    U8 countl; // Count register, 7:0
+    U8 counth; // Count register, 15:8
+    U8 icc; // Isochronous command completion
+    U8 control; // Control register
+    // DWORD 4
+    U8 rsv1[4]; // Reserved
+} __attribute__((packed)) FIS_REG_H2D;
+
+typedef struct
+{
+    // DWORD 0
+    U8 fis_type; // FIS_TYPE_REG_D2H
+    U8 pmport:4; // Port multiplier
+    U8 rsv0:2; // Reserved
+    U8 i:1; // Interrupt bit
+    U8 rsv1:1; // Reserved
+    U8 status; // Status register
+    U8 error; // Error register
+    // DWORD 1
+    U8 lba0; // LBA low register, 7:0
+    U8 lba1; // LBA mid register, 15:8
+    U8 lba2; // LBA high register, 23:16
+    U8 device; // Device register
+    // DWORD 2
+    U8 lba3; // LBA register, 31:24
+    U8 lba4; // LBA register, 39:32
+    U8 lba5; // LBA register, 47:40
+    U8 rsv2; // Reserved
+    // DWORD 3
+    U8 countl; // Count register, 7:0
+    U8 counth; // Count register, 15:8
+    U8 rsv3[2]; // Reserved
+    // DWORD 4
+    U8 rsv4[4]; // Reserved
+} __attribute__((packed)) FIS_REG_D2H;
 typedef struct 
 {
     PCIDevice base;
     block_dev dev;
     HBA_MEM* ahci_bar;
     U32 command_base;
-} AHCIDevice;
-//定义AHCI设备的设备树格式。
+    U32 port_count;
+} AHCIController;
+//定义AHCI控制器的设备树格式。
 typedef struct
 {
     block_dev_node header;
-    AHCIDevice controller;
+    AHCIController controller;
+}AHCIControllerTreeNode;
+//定义AHCI ATA IDENTIFY的响应格式。
+typedef struct {
+    U16  config;                                  ///< General Configuration.
+    U16  obsolete_1;
+    U16  specific_config;                         ///< Specific Configuration.
+    U16  obsolete_3;
+    U16  retired_4_5[2];
+    U16  obsolete_6;
+    U16  cfa_reserved_7_8[2];
+    U16  retired_9;
+    U8   SerialNo[20];                            ///< word 10~19
+    U16  retired_20_21[2];
+    U16  obsolete_22;
+    U8   FirmwareVer[8];                          ///< word 23~26
+    U8   ModelName[40];                           ///< word 27~46
+    U16  multi_sector_cmd_max_sct_cnt;
+    U16  trusted_computing_support;
+    U16  capabilities_49;
+    U16  capabilities_50;
+    U16  obsolete_51_52[2];
+    U16  field_validity;
+    U16  obsolete_54_58[5];
+    U16  multi_sector_setting;
+    U16  user_addressable_sectors_lo;
+    U16  user_addressable_sectors_hi;
+    U16  obsolete_62;
+    U16  multi_word_dma_mode;
+    U16  advanced_pio_modes;
+    U16  min_multi_word_dma_cycle_time;
+    U16  rec_multi_word_dma_cycle_time;
+    U16  min_pio_cycle_time_without_flow_control;
+    U16  min_pio_cycle_time_with_flow_control;
+    U16  additional_supported;                    ///< word 69
+    U16  reserved_70;
+    U16  reserved_71_74[4];                       ///< Reserved for IDENTIFY PACKET DEVICE cmd.
+    U16  queue_depth;
+    U16  serial_ata_capabilities;
+    U16  reserved_77;                             ///< Reserved for Serial ATA
+    U16  serial_ata_features_supported;
+    U16  serial_ata_features_enabled;
+    U16  major_version_no;
+    U16  minor_version_no;
+    U16  command_set_supported_82;                ///< word 82
+    U16  command_set_supported_83;                ///< word 83
+    U16  command_set_feature_extn;                ///< word 84
+    U16  command_set_feature_enb_85;              ///< word 85
+    U16  command_set_feature_enb_86;              ///< word 86
+    U16  command_set_feature_default;             ///< word 87
+    U16  ultra_dma_mode;                          ///< word 88
+    U16  time_for_security_erase_unit;
+    U16  time_for_enhanced_security_erase_unit;
+    U16  advanced_power_management_level;
+    U16  master_password_identifier;
+    U16  hardware_configuration_test_result;
+    U16  obsolete_94;
+    U16  stream_minimum_request_size;
+    U16  streaming_transfer_time_for_dma;
+    U16  streaming_access_latency_for_dma_and_pio;
+    U16  streaming_performance_granularity[2];    ///< word 98~99
+    U16  maximum_lba_for_48bit_addressing[4];     ///< word 100~103
+    U16  streaming_transfer_time_for_pio;
+    U16  max_no_of_512byte_blocks_per_data_set_cmd;
+    U16  phy_logic_sector_support;                ///< word 106
+    U16  interseek_delay_for_iso7779;
+    U16  world_wide_name[4];                      ///< word 108~111
+    U16  reserved_for_128bit_wwn_112_115[4];
+    U16  reserved_for_technical_report;
+    U16  logic_sector_size_lo;                    ///< word 117
+    U16  logic_sector_size_hi;                    ///< word 118
+    U16  features_and_command_sets_supported_ext; ///< word 119
+    U16  features_and_command_sets_enabled_ext;   ///< word 120
+    U16  reserved_121_126[6];
+    U16  obsolete_127;
+    U16  security_status;                         ///< word 128
+    U16  vendor_specific_129_159[31];
+    U16  cfa_power_mode;                          ///< word 160
+    U16  reserved_for_compactflash_161_167[7];
+    U16  device_nominal_form_factor;
+    U16  is_data_set_cmd_supported;
+    U8   additional_product_identifier[8];
+    U16  reserved_174_175[2];
+    U8   media_serial_number[60];                 ///< word 176~205
+    U16  sct_command_transport;                   ///< word 206
+    U16  reserved_207_208[2];
+    U16  alignment_logic_in_phy_blocks;           ///< word 209
+    U16  write_read_verify_sector_count_mode3[2]; ///< word 210~211
+    U16  verify_sector_count_mode2[2];
+    U16  nv_cache_capabilities;
+    U16  nv_cache_size_in_logical_block_lsw;      ///< word 215
+    U16  nv_cache_size_in_logical_block_msw;      ///< word 216
+    U16  nominal_media_rotation_rate;
+    U16  reserved_218;
+    U16  nv_cache_options;                        ///< word 219
+    U16  write_read_verify_mode;                  ///< word 220
+    U16  reserved_221;
+    U16  transport_major_revision_number;
+    U16  transport_minor_revision_number;
+    U16  reserved_224_229[6];
+    U64  extended_no_of_addressable_sectors;
+    U16  min_number_per_download_microcode_mode3; ///< word 234
+    U16  max_number_per_download_microcode_mode3; ///< word 235
+    U16  reserved_236_254[19];
+    U16  integrity_word;
+} __attribute__((packed)) ATA_IDENTIFY_DATA;
+//定义AHCI控制器端口的设备树格式。
+typedef struct {
+    HBA_PORT* port;
+    U32 port_no; //为了跳过不存在的端口。
+    U8 lba48_enabled;
+    U16 sector_size;
+    semaphore sem;
+    U64 sector_count;
+    ATA_IDENTIFY_DATA identify;
+} AHCIDevice;
+typedef struct
+{
+    block_dev_node header;
+    AHCIController* controller;
+    AHCIDevice device;
 }AHCIDeviceTreeNode;
-void sata_ahci_register(U8 bus,U8 slot,U8 func);
+
+
 #endif

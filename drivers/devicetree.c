@@ -47,6 +47,7 @@ device_tree_node* device_tree_resolve_by_path(char* full_path,DtResolveMethod me
                     debug(" %s created.\n",buf);
                 }
                 else {
+                    debug(" %s not found.\n",buf);
                     return nullptr;
                 }
             }
@@ -83,6 +84,9 @@ device_tree_node* device_tree_resolve_from_parent(device_tree_node* n,char* node
     while(node!=nullptr) {
         if(strcomp(node_name,node->name)) {
             node = (device_tree_node*)node->node.sibling;
+        }
+        else {
+            break;
         }
     }
     return node;

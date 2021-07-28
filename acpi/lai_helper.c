@@ -89,6 +89,7 @@ void laihost_sleep(uint64_t ms)
 {
     return;
 }
+
 /* Read a byte/word/dword from the given device's PCI configuration space
    at the given offset. */
 uint8_t laihost_pci_readb(uint16_t seg, uint8_t bus, uint8_t slot, uint8_t fun, uint16_t offset)
@@ -103,3 +104,16 @@ uint32_t laihost_pci_readd(uint16_t seg, uint8_t bus, uint8_t slot, uint8_t fun,
 {
     return pci_read_dword(bus,slot,fun,offset);
 }
+void laihost_pci_writeb(uint16_t seg, uint8_t bus, uint8_t slot, uint8_t fun, uint16_t offset, uint8_t val)
+{
+    pci_write_byte(bus,slot, fun, offset,val);
+}
+void laihost_pci_writew(uint16_t seg, uint8_t bus, uint8_t slot, uint8_t fun, uint16_t offset, uint16_t val)
+{
+    pci_write_word(bus,slot, fun, offset,val);
+}
+void laihost_pci_writed(uint16_t seg, uint8_t bus, uint8_t slot, uint8_t fun, uint16_t offset, uint32_t val)
+{
+    pci_write_dword(bus,slot, fun, offset,val);
+}
+

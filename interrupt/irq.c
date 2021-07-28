@@ -9,11 +9,11 @@ extern U64 ioapic_address;
 extern U64 localapic_address;
 extern U8 acpi_interrupt;
 extern void (*int_handler_irqs[IRQS_MAX])(interrupt_frame* frame);
-void (*irq_handlers[IRQS_MAX])(void);
-void (*irq_register)(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(void));
+void (*irq_handlers[IRQS_MAX])(int);
+void (*irq_register)(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int));
 void (*irq_clear)(void);
-void irq_register_ioapic(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(void));
-void irq_register_8259(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(void));
+void irq_register_ioapic(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int));
+void irq_register_8259(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int));
 void irq_clear_ioapic(void);
 void irq_clear_8259(void);
 void write_ioapic_register(U8 offset, U32 val)
@@ -65,7 +65,7 @@ void init_irq(void)
     irq_register(acpi_interrupt, 0xAC,1,1,acpi_interrupt_handler);
 }
 
-void irq_register_ioapic(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(void))
+void irq_register_ioapic(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int))
 {
     U32 begin_offset = (0x10 + 2 * irq_number);
     io_rediection_entry entry;
@@ -81,7 +81,7 @@ void irq_register_ioapic(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin
     irq_handlers[irq_number] = handler;
     debug("Mapped IRQ %b to %b.\n",irq_number,desired_int_no);
 }
-void irq_register_8259(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(void))
+void irq_register_8259(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int))
 {
     debug(" Not implemented.\n");
 }

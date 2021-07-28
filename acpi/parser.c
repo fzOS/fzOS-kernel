@@ -37,7 +37,7 @@ void parse_acpi(U8* in) {
     }
     
 }
-void acpi_interrupt_handler(void)
+void acpi_interrupt_handler(int)
 {
     debug(" Fired ACPI interrupt.\n");
     FADT* fadt = (FADT*)(acpi_table_entries[0]);

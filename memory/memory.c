@@ -100,7 +100,7 @@ void free_page(void* page_address,int count)
         }
     }
 }
-int memcpy(void* dest,void* src,int n)
+int memcpy(void* dest,void* src,U64 n)
 {
     for(int i=0;i<n;i++)
     {
@@ -108,19 +108,19 @@ int memcpy(void* dest,void* src,int n)
     }
     return n;
 }
-int memcmp(void* first,void* second,int n)
+int memcmp(const void* first,const void* second,U64 n)
 {
     U8 result=0;
     while(n&&!result)
     {
         result+=(*(U8*)first-*(U8*)second);
-        (U8*)first++;
-        (U8*)second++;
+        first++;
+        second++;
         n--;
     }
     return result;
 }
-int memmove(void* dest,void* src,int n)
+int memmove(void* dest,void* src,U64 n)
 {
     if(dest<src)
     {
@@ -138,7 +138,7 @@ int memmove(void* dest,void* src,int n)
 #ifndef __clang__
 #pragma GCC optimize 1
 #endif
-U64 memset(void* pointer,U8 value,int n)
+U64 memset(void* pointer, U8 value, U64 n)
 {
     for (int i = 0; i < n; i++) ((U8*)pointer)[i] = value;
     return n;

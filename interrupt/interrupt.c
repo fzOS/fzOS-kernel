@@ -37,7 +37,7 @@ __attribute__ ((interrupt)) void int_handler_dummy (interrupt_frame* frame)
 //用宏定义会好看一些？
 #define irq_handler_reg(x) __attribute__ ((interrupt)) void int_handler_irq_##x (interrupt_frame* frame)\
 {\
-    irq_handlers[x]();\
+    irq_handlers[x](x);\
     irq_clear();\
 }
 irq_handler_reg(0);

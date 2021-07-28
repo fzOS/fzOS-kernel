@@ -28,4 +28,15 @@ typedef U8 byte;
 #define PAGE_SIZE 4096
 
 #define PATH_SEPARATOR '/'
+
+#define FzOS_ERROR -1
+#define FzOS_SUCEESS 0
+
+typedef union {
+    U64 raw;
+    U32 dword[2];
+    U16 word[4];
+    U8 byte[8];
+}val_splitter;
+
 #endif

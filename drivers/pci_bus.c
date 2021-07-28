@@ -234,7 +234,7 @@ U16 pci_config_read_word (U8 bus, U8 device, U8 func, U8 offset)
     U32 lfunc = (U32)func;
     U16 tmp = 0;
     address = (U32)((lbus << 16) | (ldevice << 11) |
-              (lfunc << 8) | (offset & 0xfc) |  0x80<<24);
+              (lfunc << 8) | (offset & 0xff) |  0x80<<24);
     outl(0xCF8, address);
     U32 result = inl(0xCFC);
     tmp = (U16)((result >> ((offset & 2) * 8)) & 0xffff);
@@ -262,10 +262,40 @@ U8 pci_read_byte(U8 bus, U8 device, U8 func, U8 offset)
               (lfunc << 8) | (offset & 0xfc) |  0x80<<24);
     outl(0xCF8, address);
     U32 result = inl(0xCFC);
-    return (U8)((result >> ((offset %4) * 8)) & 0xffff);
+    return (U8)((result >> ((offset %4) * 8)) & 0xff);
 }
 void pci_write_dword(U8 bus, U8 device, U8 func, U8 offset,U32 val)
 {
+    U32 address;
+    U32 lbus  = (U32)bus;
+    U32 ldevice = (U32)device;
+    U32 lfunc = (U32)func;
+    address = (U32)((lbus << 16) | (ldevice << 11) |
+              (lfunc << 8) | (offset & 0xfc) |  0x80<<24);
+    outl(0xCF8, address);
+    outl(0xCFC, val);
+}
+void pci_write_word(U8 bus, U8 device, U8 func, U8 offset,U16 val)
+{
+    U32 orig_val = pci_config_read_word(bus,device,func,offset);
+    U32 mask = (0xffff << ((offset & 2) * 8));
+    orig_val &= (~mask);
+    orig_val |= (val << ((offset & 2) * 8));
+    U32 address;
+    U32 lbus  = (U32)bus;
+    U32 ldevice = (U32)device;
+    U32 lfunc = (U32)func;
+    address = (U32)((lbus << 16) | (ldevice << 11) |
+              (lfunc << 8) | (offset & 0xfc) |  0x80<<24);
+    outl(0xCF8, address);
+    outw(0xCFC, orig_val);
+}
+void pci_write_byte(U8 bus, U8 device, U8 func, U8 offset,U8 val)
+{
+    U32 orig_val = pci_read_byte(bus,device,func,offset);
+    U32 mask = (0xff << ((offset %4) * 8));
+    orig_val &= (~mask);
+    orig_val |= (val << ((offset %4) * 8));
     U32 address;
     U32 lbus  = (U32)bus;
     U32 ldevice = (U32)device;

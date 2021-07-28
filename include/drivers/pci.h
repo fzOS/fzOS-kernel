@@ -13,10 +13,15 @@ void init_pci();
 const char* pci_get_class_name(U8 class, U8 subclass);
 U16 pci_config_read_word (U8 bus, U8 device, U8 func, U8 offset);
 U32 pci_read_dword(U8 bus, U8 device, U8 func, U8 offset);
+U8 pci_read_byte(U8 bus, U8 device, U8 func, U8 offset);
+void pci_write_byte(U8 bus, U8 device, U8 func, U8 offset,U8 val);
+void pci_write_word(U8 bus, U8 device, U8 func, U8 offset,U16 val);
+void pci_write_dword(U8 bus, U8 device, U8 func, U8 offset,U32 val);
 typedef struct
 {
     U8 bus;
     U8 slot;
     U8 func;
+    U8 irq;
 } PCIDevice;
 #endif
