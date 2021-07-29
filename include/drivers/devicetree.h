@@ -21,11 +21,6 @@ typedef struct {
     DTNodeTypes type;
     char name[DT_NAME_LENGTH_MAX];
 }device_tree_node;
-//定义块设备的结构体。
-typedef struct {
-    device_tree_node base;
-    block_dev device;
-} block_dev_node;
 
 typedef enum {
     DT_CREATE_IF_NONEXIST,

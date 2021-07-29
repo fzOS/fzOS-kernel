@@ -29,17 +29,11 @@ U32 read_ioapic_register(U8 offset)
 void init_irq(void)
 {
     if (ioapic_address == 0xFFFFFFFF) {
-        debug(" No IOAPIC Found.Falling back to 8295A mode.\n");
         irq_register = irq_register_8259;
         irq_clear    = irq_clear_8259;
     } else {
-        debug(" Found IOAPIC.Start initialization.\n");
         irq_register = irq_register_ioapic;
         irq_clear    = irq_clear_ioapic;
-        U32 ioapic_version = read_ioapic_register(1);
-        debug(" IOAPIC ver.%b (%x), with %d interrupts max.\n",
-            ioapic_version & 0xFF, ioapic_version,
-            (ioapic_version & 0xFF0000) >> 16);
         //关闭8259.
         outb(0x20,0x11);
         outb(0xA0,0x11);
@@ -79,7 +73,6 @@ void irq_register_ioapic(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin
     write_ioapic_register(begin_offset + 1, entry.raw[1]);
     set_interrupt_handler(desired_int_no, (U64)(int_handler_irqs[irq_number]), INTERRUPT_GATE);
     irq_handlers[irq_number] = handler;
-    debug("Mapped IRQ %b to %b.\n",irq_number,desired_int_no);
 }
 void irq_register_8259(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int))
 {

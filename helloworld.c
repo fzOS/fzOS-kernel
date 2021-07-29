@@ -40,7 +40,6 @@ void kernel_main_real() {
     get_processor_name(buff);
     printk("%s\n",buff);
     memory_init(bss_info.mem_map_descriptor_size,bss_info.mem_map_size,bss_info.memory_map);
-    printk(" Parsing ACPI table......\n");
     parse_acpi(bss_info.rsdp_address);    
     init_gdt();
     init_interrupt();

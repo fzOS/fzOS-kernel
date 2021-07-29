@@ -13,7 +13,6 @@ int parse_fadt(void* in) {
     acpi_table_entries[4] = (void*)(fadt->X_Dsdt|KERNEL_ADDR_OFFSET);
     if(fadt->SMI_CommandPort) {
         if(fadt->AcpiEnable||fadt->AcpiDisable) {
-            debug(" Enabling ACPI.\n");
             outb(fadt->SMI_CommandPort,fadt->AcpiEnable);
         }
     }

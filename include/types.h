@@ -30,6 +30,8 @@ typedef U8 byte;
 #define PATH_SEPARATOR '/'
 
 #define FzOS_ERROR -1
+#define FzOS_BUFFER_TOO_SMALL -2
+#define FzOS_DEVICE_NOT_READY -2
 #define FzOS_SUCEESS 0
 
 typedef union {
@@ -38,5 +40,14 @@ typedef union {
     U16 word[4];
     U8 byte[8];
 }val_splitter;
+
+typedef struct {
+    U32 first;
+    U16 second;
+    U16 third;
+    U8 fourth[2];
+    U8 fifth[6];
+} __attribute__((packed)) GUID;
+
 
 #endif

@@ -5,7 +5,7 @@
 #include <drivers/devicetree.h>
 #include <common/kstring.h>
 #include <lai/helpers/pci.h>
-#define sata_debug(x...) debug(" sata ahci:" x)
+#include <drivers/gpt.h>
 #define AHCI_DEV_BUSY (1 << 7)
 #define AHCI_DEV_DRQ (1 << 3)
 #define MAX_BYTES_PER_PRDT (1 << 22)
@@ -16,6 +16,8 @@
 #define ATA_CMD_WRITE_DMA 0xCA
 #define ATA_CMD_IDENTIFY 0xEC
 void ata_port_rebase(AHCIController device, HBA_PORT *port, int portno);
+int ahci_readblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount);
+int ahci_writeblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount);
 static char* base_device_tree_template = "/Devices/";
 static char* ata_controller_tree_template = "ATAController%d";
 static char* ata_port_tree_template = "ATADevice%d";
@@ -46,6 +48,7 @@ static inline void ata_parse_identify(AHCIDevice* device)
     device->sector_count = lba_size;
     //FIXME:修正sector大小。
     device->sector_size = 512;
+    device->dev.block_size = 512;
 }
 void ata_interrupt_handler(int no)
 {
@@ -74,7 +77,7 @@ void ata_interrupt_handler(int no)
             }
         }
     }
-    printk("SATA: Cannot determine which Controller!\n");
+    printk(" SATA: Cannot determine which Controller!\n");
 }
 void sata_ahci_register(U8 bus,U8 slot,U8 func)
 {
@@ -111,11 +114,9 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
     memset(controller_node,0,sizeof(AHCIControllerTreeNode));
     sprintk(buf,ata_controller_tree_template,SATA_device_count++);
     controller_node->controller = device;
-    strcopy(controller_node->header.base.name,buf,DT_NAME_LENGTH_MAX);
+    strcopy(controller_node->header.name,buf,DT_NAME_LENGTH_MAX);
+    controller_node->header.type = DT_BLOCK_DEVICE;
     device_tree_add_from_parent((device_tree_node*)controller_node,(device_tree_node*)base_node);
-
-
-    sata_debug("This SATA Controller has %d ports.\n", port_count);
     HBA_PORT* port;
     //尝试获取中断信息。
     union {
@@ -143,7 +144,6 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
         if (det!=HBA_PORT_DET_PRESENT || ipm!=HBA_PORT_IPM_ACTIVE) {// Check drive status
             continue;
         }
-
         switch (port->sig) {
             case SATA_SIG_ATAPI: {
                 type = AHCI_DEV_SATAPI;
@@ -169,7 +169,10 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
         port_node->controller = &(controller_node->controller);
         port_node->device.port = port;
         port_node->device.port_no = i;
-        strcopy(port_node->header.base.name,buf,DT_NAME_LENGTH_MAX);
+        strcopy(port_node->header.name,buf,DT_NAME_LENGTH_MAX);
+        port_node->header.type = DT_BLOCK_DEVICE;
+        port_node->device.dev.readblock = ahci_readblock;
+        port_node->device.dev.writeblock = ahci_writeblock;
         device_tree_add_from_parent((device_tree_node*)port_node,(device_tree_node*)controller_node);
         ata_port_rebase(device,port,i);
         ATA_IDENTIFY_DATA* identify_buffer = &(port_node->device.identify);
@@ -190,12 +193,13 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
             }
             ata_parse_identify(&port_node->device);
             printk(" AHCI %d-%d:%s device %s,%d bytes.\n",SATA_device_count-1,i, AHCIDeviceTypeName[type],name_buf,port_node->device.sector_count*port_node->device.sector_size);
+            //测试。
+            get_gpt_partition_count(&port_node->device.dev);
         }
         else {
             printk(" AHCI %d-%d:%s device.\n",SATA_device_count-1,i,AHCIDeviceTypeName[type]);
         }
     }
-    print_device_tree();
 }
 
 static int find_command_slot(HBA_PORT *port)
@@ -207,8 +211,7 @@ static int find_command_slot(HBA_PORT *port)
             return i;
         }
     }
-    printk(" AHCI:Cannot find free command list entry.\n");
-    return -1;
+    return FzOS_ERROR;
 }
 int ahci_begin_command(HBA_PORT *port)
 {
@@ -225,8 +228,7 @@ int ahci_issue_command(HBA_PORT* port, int slot)
         spin++;
     }
     if (spin == 1000000) {
-        printk(" AHCI:Port is hung\n");
-        return FzOS_ERROR;
+        return FzOS_DEVICE_NOT_READY;
     }
 
     port->serr = 0xFFFFFFFF;
@@ -234,13 +236,9 @@ int ahci_issue_command(HBA_PORT* port, int slot)
     port->ci |= 1 << slot;
     while (port->ci & (1 << slot)) {
         //FIXME:Use Semaphore.
-
     }
-
     return FzOS_SUCEESS;
 }
-
-
 // Start command engine
 void ata_start_cmd(HBA_PORT *port)
 {
@@ -368,4 +366,63 @@ int sata_identify(HBA_PORT* port, void *buffer) {
     command_fis->command = ATA_CMD_IDENTIFY;
     command_fis->device = 0;
     return ahci_issue_command(port, slot);
+}
+
+
+void ahci_set_command_fis_lba(FIS_REG_H2D *command_fis, U64 address,
+                              U64 block_count) {
+    val_splitter splitter;
+    splitter.raw = address;
+    command_fis->lba0 = splitter.byte[0];
+    command_fis->lba1 = splitter.byte[1];
+    command_fis->lba2 = splitter.byte[2];
+    command_fis->device = 1 << 6;  // LBA mode;
+
+    command_fis->lba3 = splitter.byte[3];
+    command_fis->lba4 = splitter.byte[4];
+    command_fis->lba5 = splitter.byte[5];
+
+    splitter.raw = block_count;
+    command_fis->countl = splitter.byte[0];
+    command_fis->counth = splitter.byte[1];
+}
+int sata_rw_command(ATAOperationType type, AHCIDevice *device,
+                                     U64 address, U64 block_count,
+                                     void *buffer, U64 buffer_size) {
+    buffer = (void*)((U64)buffer&(~KERNEL_ADDR_OFFSET));
+    if (buffer_size < block_count * device->sector_size) {
+        return FzOS_BUFFER_TOO_SMALL;
+    }
+
+    const int slot = ahci_begin_command(device->port);
+    if (slot == -1) {
+        return FzOS_DEVICE_NOT_READY;
+    }
+
+    // Setup command
+    U64 requested_bytes = block_count * device->sector_size;
+    FIS_REG_H2D *command_fis = ahci_initialize_command_fis(
+        device->port, slot,(type==ATA_OPERATION_WRITE?AHCI_COMMAND_D2H:AHCI_COMMAND_H2D),AHCI_COMMAND_PREFETCHABLE, requested_bytes, buffer, 0, NULL);
+
+    if (device->lba48_enabled) {
+        command_fis->command = (type==ATA_OPERATION_WRITE) ? ATA_CMD_WRITE_DMA_EX : ATA_CMD_READ_DMA_EX;
+    } else {
+        command_fis->command = (type==ATA_OPERATION_WRITE) ? ATA_CMD_WRITE_DMA : ATA_CMD_READ_DMA;
+    }
+
+    ahci_set_command_fis_lba(command_fis, address, block_count);
+    return ahci_issue_command(device->port, slot) ? FzOS_SUCEESS
+                                            : FzOS_DEVICE_NOT_READY;
+}
+int ahci_readblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
+{
+    AHCIDevice* device = (AHCIDevice*) dev;
+    return sata_rw_command(ATA_OPERATION_READ, device, offset, blockcount, buffer,
+                         buffer_size);
+}
+int ahci_writeblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
+{
+    AHCIDevice* device = (AHCIDevice*) dev;
+    return sata_rw_command(ATA_OPERATION_WRITE, device, offset, blockcount, buffer,
+                         buffer_size);
 }

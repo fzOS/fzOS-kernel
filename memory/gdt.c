@@ -91,6 +91,5 @@ void init_gdt()
     gdt_table.tss_low.base31_24 = (tss_base >> 24) & 0xff;
     gdt_table.tss_low.limit15_0 = sizeof(tss);
     gdt_table.tss_high.limit15_0 = (tss_base >> 32) & 0xffff;
-    debug(" Loading GDT...\n");
     gdt_flush_c(&gdt_ptr);
 }

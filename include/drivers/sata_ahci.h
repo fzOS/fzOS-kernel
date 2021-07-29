@@ -47,6 +47,11 @@ typedef enum
     AHCI_COMMAND_PREFETCHABLE,
     AHCI_COMMAND_NOT_PREFETCHABLE
 } AHCIPrefetchType;
+typedef enum
+{
+    ATA_OPERATION_READ,
+    ATA_OPERATION_WRITE
+} ATAOperationType;
 typedef volatile struct
 {
     U32 clb;       // 0x00, command list base address, 1K-U8 aligned
@@ -189,8 +194,8 @@ typedef struct
 } __attribute__((packed)) FIS_REG_D2H;
 typedef struct 
 {
-    PCIDevice base;
     block_dev dev;
+    PCIDevice base;
     HBA_MEM* ahci_bar;
     U32 command_base;
     U32 port_count;
@@ -198,7 +203,7 @@ typedef struct
 //定义AHCI控制器的设备树格式。
 typedef struct
 {
-    block_dev_node header;
+    device_tree_node header;
     AHCIController controller;
 }AHCIControllerTreeNode;
 //定义AHCI ATA IDENTIFY的响应格式。
@@ -307,6 +312,7 @@ typedef struct {
 } __attribute__((packed)) ATA_IDENTIFY_DATA;
 //定义AHCI控制器端口的设备树格式。
 typedef struct {
+    block_dev dev;
     HBA_PORT* port;
     U32 port_no; //为了跳过不存在的端口。
     U8 lba48_enabled;
@@ -317,9 +323,9 @@ typedef struct {
 } AHCIDevice;
 typedef struct
 {
-    block_dev_node header;
-    AHCIController* controller;
+    device_tree_node header;
     AHCIDevice device;
+    AHCIController* controller;
 }AHCIDeviceTreeNode;
 
 

@@ -44,10 +44,8 @@ device_tree_node* device_tree_resolve_by_path(char* full_path,DtResolveMethod me
                     node->node.sibling = parent->node.child;
                     node->node.parent = (inline_tree_node*)parent;
                     parent->node.child = (inline_tree_node*)node;
-                    debug(" %s created.\n",buf);
                 }
                 else {
-                    debug(" %s not found.\n",buf);
                     return nullptr;
                 }
             }
@@ -69,7 +67,6 @@ device_tree_node* device_tree_resolve_by_path(char* full_path,DtResolveMethod me
             new_parent->node.sibling = parent->node.child;
             new_parent->node.parent = (inline_tree_node*)parent;
             parent->node.child = &(new_parent->node);
-            debug(" %s created.\n",buf);
         }
         else {
             return nullptr;

@@ -46,3 +46,8 @@ install:
 	umount /media && \
 	losetup -d $$a
 	@su - fhh -c 'VBoxManage startvm "UEFITest" -E VBOX_GUI_DBG_ENABLED=true' #-E VBOX_GUI_DBG_AUTO_SHOW=true
+stat:
+	@a=$$(eval echo $$(wc -l `find acpi/*.c interrupt/ syscall/ drivers/ memory/ common/ threading/ include/ | grep -v "lai" | grep -v "asciifont"` 2>/dev/null |  tail -n 1)) && \
+	echo -e "\e[36;1m[LINES]\e[0m\t$$a"
+	@b=$$(git log | grep "^Author: " | wc -l) && \
+	echo -e "\e[33;1m[COMMIT]\e[0m$$b"
