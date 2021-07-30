@@ -8,7 +8,7 @@ extern char_dev stdio;
 
 
 
-int printk(char* format,...);
+int printk(const char* format,...);
 
 //如果我们在DEBUG模式下，启用debug函数。
 #ifdef FZOS_DEBUG_SWITCH

@@ -1,6 +1,7 @@
 #include <drivers/gpt.h>
 #include <memory/memory.h>
 #include <common/printk.h>
+#include <common/kstring.h>
 #include <drivers/devicetree.h>
 const GUID FzOS_ROOT_PARTITION_GUID = {
     .first = 0x12345678,
@@ -9,7 +10,25 @@ const GUID FzOS_ROOT_PARTITION_GUID = {
     .fourth = {0x23,0x33},
     .fifth = {0x66,0x66,0x66,0x66,0x66,0x66}
 };
-int get_gpt_partition_count(block_dev* dev)
+static const char* partition_name_template = "Partition%d";
+int gpt_readblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
+{
+    GPTPartition* partition = (GPTPartition*)dev;
+    if(offset+blockcount>(partition->end_lba)) {
+        return FzOS_POSITION_OVERFLOW;
+    }
+    return partition->parent->readblock(dev,offset+partition->begin_lba,buffer,buffer_size,blockcount);
+}
+int gpt_writeblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
+{
+    GPTPartition* partition = (GPTPartition*)dev;
+    if(offset+blockcount>(partition->end_lba)) {
+        return FzOS_POSITION_OVERFLOW;
+    }
+    return partition->parent->writeblock(dev,offset+partition->begin_lba,buffer,buffer_size,blockcount);
+}
+
+int gpt_partition_init(block_dev* dev,device_tree_node* parent)
 {
     //首先，分配缓冲，读一块。
     char* buffer = allocate_page(1);
@@ -23,6 +42,9 @@ int get_gpt_partition_count(block_dev* dev)
     int entry_count_in_a_block = dev->block_size/header->partition_entry_size;
     U64 gpt_entry_count = header->partition_entry_count;
     U64 gpt_entry_begin_lba = header->partition_entry_lba;
+    //直接在这里就初始化了。
+    GPTPartitionTreeNode* node;
+    char buf[DT_NAME_LENGTH_MAX];
     GPTEntry* entry_buffer = (GPTEntry*)header;
     GPTEntry* entry;
     for(i=0;i<gpt_entry_count/entry_count_in_a_block;i++) {
@@ -32,6 +54,19 @@ int get_gpt_partition_count(block_dev* dev)
             if(!memcmp(entry->partition_type_guid,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",16)) {
                 goto out;
             }
+            node = allocate_page((sizeof(GPTPartitionTreeNode)-1)/PAGE_SIZE +1);
+            memset(node,0,sizeof(GPTPartitionTreeNode));
+            node->node.type = DT_BLOCK_DEVICE;
+            sprintk(buf,partition_name_template,i*entry_count_in_a_block+j);
+            memcpy(node->node.name,buf,DT_NAME_LENGTH_MAX);
+            node->partition.parent = dev;
+            node->partition.begin_lba = entry->starting_lba;
+            node->partition.end_lba   = entry->ending_lba;
+            memcpy(&node->partition.type,entry->partition_type_guid,sizeof(GUID));
+            node->partition.header.block_size=dev->block_size;
+            node->partition.header.readblock = gpt_readblock;
+            node->partition.header.writeblock = gpt_writeblock;
+            device_tree_add_from_parent(&node->node,parent);
         }
     }
 out:

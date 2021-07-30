@@ -191,10 +191,13 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
                 name_buf[k] = name_buf[k-1];
                 name_buf[k-1] = c;
             }
+            if(name_buf[k]==' ') {
+                name_buf[k]='\0';
+            }
             ata_parse_identify(&port_node->device);
             printk(" AHCI %d-%d:%s device %s,%d bytes.\n",SATA_device_count-1,i, AHCIDeviceTypeName[type],name_buf,port_node->device.sector_count*port_node->device.sector_size);
             //测试。
-            get_gpt_partition_count(&port_node->device.dev);
+           gpt_partition_init(&port_node->device.dev,&port_node->header);
         }
         else {
             printk(" AHCI %d-%d:%s device.\n",SATA_device_count-1,i,AHCIDeviceTypeName[type]);

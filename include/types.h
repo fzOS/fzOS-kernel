@@ -31,7 +31,8 @@ typedef U8 byte;
 
 #define FzOS_ERROR -1
 #define FzOS_BUFFER_TOO_SMALL -2
-#define FzOS_DEVICE_NOT_READY -2
+#define FzOS_DEVICE_NOT_READY -3
+#define FzOS_POSITION_OVERFLOW -4
 #define FzOS_SUCEESS 0
 
 typedef union {

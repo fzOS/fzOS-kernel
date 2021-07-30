@@ -12,10 +12,11 @@ VERSION := $(shell echo git-`git rev-parse --short HEAD`)
 else
 VERSION := 0.1.3
 endif
+THIS_YEAR := $(shell date +"%Y")
 BASE_DIR=${PWD}
 CC:=${CC} gcc
-CFLAGS=-pie -DVERSION="\"${VERSION}\"" -isystem "${PWD}/include" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-sse -mno-red-zone -ffreestanding
-SUBDIRS=drivers memory acpi common syscall interrupt threading
+CFLAGS=-pie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-sse -mno-red-zone -ffreestanding
+SUBDIRS=drivers memory acpi common syscall interrupt threading filesystem
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
         ( cd $$subdir && $(MAKE) all -f Makefile -e CC="${CC}" -e BASE_DIR=${BASE_DIR} -e CFLAGS='${CFLAGS}') || exit 1; \

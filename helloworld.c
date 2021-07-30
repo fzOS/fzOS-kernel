@@ -13,7 +13,7 @@
 #include <syscall/syscall.h>
 #include <drivers/pci.h>
 #include <common/kstring.h>
-
+#include <drivers/rtc.h>
 #ifndef VERSION
 #define VERSION "0.1"
 #endif
@@ -51,6 +51,11 @@ void kernel_main_real() {
     init_syscall();
     //然后是PCI设备。
     init_pci();
+    //查找根分区并挂载。
+    //mount_root_partition();
+    RTCTime time;
+    read_rtc(&time);
+    printk(" %d-%d-%d %d:%d:%d\n",time.year,time.month,time.day,time.hour,time.minute,time.second);
 }
 void kernel_main(KernelInfo info) {
     //手动换栈。

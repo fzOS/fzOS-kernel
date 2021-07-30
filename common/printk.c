@@ -95,12 +95,12 @@ void putnum(U64 num)
     }
     stdio.putchar((char) tempint);
 }
-int printk(char* format,...)
+int printk(const char* format,...)
 {
     int count=0;
     va_list arg;
     va_start(arg, format);
-    char* pointer = format;
+    const char* pointer = format;
     while(*pointer!='\0')
     {
         if(*pointer=='%')

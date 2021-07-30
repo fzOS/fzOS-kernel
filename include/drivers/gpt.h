@@ -1,6 +1,7 @@
 #ifndef GPT_H
 #define GPT_H
 #include <drivers/blockdev.h>
+#include <drivers/devicetree.h>
 typedef struct {
     char signature[8];//EFI PART
     U8  revision[4];//0x00 0x01 0x00 0x00
@@ -26,7 +27,18 @@ typedef struct {
     U8 partname[72];
 }__attribute__((packed)) GPTEntry;
 
+typedef struct {
+    block_dev header;
+    block_dev* parent;
+    U64 begin_lba;
+    U64 end_lba;
+    GUID type;
+}GPTPartition;
+typedef struct {
+    device_tree_node node;
+    GPTPartition partition;
+}GPTPartitionTreeNode;
 extern const GUID FzOS_ROOT_PARTITION_GUID;
 
-int get_gpt_partition_count(block_dev* dev);
+int gpt_partition_init(block_dev* dev,device_tree_node* parent);
 #endif
