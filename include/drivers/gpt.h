@@ -2,6 +2,7 @@
 #define GPT_H
 #include <drivers/blockdev.h>
 #include <drivers/devicetree.h>
+#define FzOS_ROOT_PARTITION_FOUND 0x40000000
 typedef struct {
     char signature[8];//EFI PART
     U8  revision[4];//0x00 0x01 0x00 0x00

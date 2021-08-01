@@ -1,8 +1,9 @@
 #include <drivers/gpt.h>
 #include <memory/memory.h>
-#include <common/printk.h>
 #include <common/kstring.h>
 #include <drivers/devicetree.h>
+
+#include <drivers/sata_ahci.h>
 const GUID FzOS_ROOT_PARTITION_GUID = {
     .first = 0x12345678,
     .second = 0x8765,
@@ -17,7 +18,7 @@ int gpt_readblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blo
     if(offset+blockcount>(partition->end_lba)) {
         return FzOS_POSITION_OVERFLOW;
     }
-    return partition->parent->readblock(dev,offset+partition->begin_lba,buffer,buffer_size,blockcount);
+    return partition->parent->readblock(partition->parent,offset+partition->begin_lba,buffer,buffer_size,blockcount);
 }
 int gpt_writeblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
 {
@@ -25,7 +26,7 @@ int gpt_writeblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 bl
     if(offset+blockcount>(partition->end_lba)) {
         return FzOS_POSITION_OVERFLOW;
     }
-    return partition->parent->writeblock(dev,offset+partition->begin_lba,buffer,buffer_size,blockcount);
+    return partition->parent->writeblock(partition->parent,offset+partition->begin_lba,buffer,buffer_size,blockcount);
 }
 
 int gpt_partition_init(block_dev* dev,device_tree_node* parent)
@@ -42,6 +43,7 @@ int gpt_partition_init(block_dev* dev,device_tree_node* parent)
     int entry_count_in_a_block = dev->block_size/header->partition_entry_size;
     U64 gpt_entry_count = header->partition_entry_count;
     U64 gpt_entry_begin_lba = header->partition_entry_lba;
+    U64 ret = FzOS_SUCEESS;
     //直接在这里就初始化了。
     GPTPartitionTreeNode* node;
     char buf[DT_NAME_LENGTH_MAX];
@@ -67,9 +69,13 @@ int gpt_partition_init(block_dev* dev,device_tree_node* parent)
             node->partition.header.readblock = gpt_readblock;
             node->partition.header.writeblock = gpt_writeblock;
             device_tree_add_from_parent(&node->node,parent);
+            if(!memcmp(entry->partition_type_guid,&FzOS_ROOT_PARTITION_GUID,16)) {
+                ret = (i*entry_count_in_a_block+j) | FzOS_ROOT_PARTITION_FOUND;
+            }
+
         }
     }
 out:
     free_page(buffer,1);
-    return 0;
+    return ret;
 }

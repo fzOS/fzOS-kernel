@@ -1,11 +1,19 @@
 #ifndef FHHFS_H
 #define FHHFS_H
-#include <types.h>
+#include <filesystem/filesystem.h>
+#include <drivers/gpt.h>
 //从我一年之前的作业那里嫖来的。
 //Salute!
 #define FHHFS_CRC_MAGIC_NUMBER 189050311
-typedef struct
-{
+
+typedef struct {
+    filesystem generic;
+    U64 node_total;
+    U64 node_used;
+    U64 node_table_entry;
+}fhhfsFileSystem;
+
+typedef struct {
     U8  magic_id[7]; //"fhhfs!" + '\0',0x00~0x06
     U8  version:7; //文件系统版本，0x07
     U8  dirty_mark:1; //"文件系统脏"标记，当文件系统未被正确卸载时，此标记为1，与version共用一个字节
@@ -24,8 +32,7 @@ typedef struct
     当next为0时，该节点没有后继节点。
     当next具有实际值时，在读取数据时将会自动跳转至下一节点，并将数据附在当前节点的数据之后。
 */
-typedef struct
-{
+typedef struct {
     // unsigned long long next; //隐式链表已被废弃。
     byte data[0];//写0是为了运行时确定。
 }  __attribute__((packed)) node;
@@ -35,8 +42,7 @@ typedef struct
     （这样只需第一个物理结构存储文件信息就好了）
     （四舍五入就是省了一个T啊哈哈哈哈）
 */
-typedef struct
-{
+typedef struct {
     U64 create_timestamp;
     U64 modify_timestamp;
     U64 open_timestamp;
@@ -48,4 +54,11 @@ typedef struct
     U32 group_id;
     U64 filesize;
 } __attribute__((packed)) file_header;
+
+int fhhfs_mount(GPTPartition* partition,const char* destination);
+int fhhfs_open(char* filename,struct file* file);
+int fhhfs_read(struct file* file,void* buf,U64 buflen);
+int fhhfs_seek(struct file* file,U64 offset,SeekDirection direction);
+int fhhfs_close(struct file* file);
+
 #endif

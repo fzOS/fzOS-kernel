@@ -4,6 +4,7 @@
 #include <memory/memory.h>
 #include <drivers/devicetree.h>
 #include <common/kstring.h>
+#include <filesystem/filesystem.h>
 #include <lai/helpers/pci.h>
 #include <drivers/gpt.h>
 #define AHCI_DEV_BUSY (1 << 7)
@@ -197,7 +198,10 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
             ata_parse_identify(&port_node->device);
             printk(" AHCI %d-%d:%s device %s,%d bytes.\n",SATA_device_count-1,i, AHCIDeviceTypeName[type],name_buf,port_node->device.sector_count*port_node->device.sector_size);
             //测试。
-           gpt_partition_init(&port_node->device.dev,&port_node->header);
+            U64 ret = gpt_partition_init(&port_node->device.dev,&port_node->header);
+            if(ret&FzOS_ROOT_PARTITION_FOUND) {
+                sprintk(root_device_path,"/Devices/ATAController%d/ATADevice%d/Partition%d",SATA_device_count-1,i,ret&0x3FFFFFFF);
+            }
         }
         else {
             printk(" AHCI %d-%d:%s device.\n",SATA_device_count-1,i,AHCIDeviceTypeName[type]);
@@ -225,6 +229,7 @@ int ahci_begin_command(HBA_PORT *port)
 // Attempt to issue command, true when completed, false if error
 int ahci_issue_command(HBA_PORT* port, int slot)
 {
+
     // Wait until the port is free
     int spin = 0;
     while ((port->tfd & (AHCI_DEV_BUSY | AHCI_DEV_DRQ)) && spin < 1000000) {

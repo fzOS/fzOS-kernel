@@ -14,6 +14,7 @@
 #include <drivers/pci.h>
 #include <common/kstring.h>
 #include <drivers/rtc.h>
+#include <filesystem/filesystem.h>
 #ifndef VERSION
 #define VERSION "0.1"
 #endif
@@ -52,10 +53,13 @@ void kernel_main_real() {
     //然后是PCI设备。
     init_pci();
     //查找根分区并挂载。
-    //mount_root_partition();
-    RTCTime time;
-    read_rtc(&time);
-    printk(" %d-%d-%d %d:%d:%d\n",time.year,time.month,time.day,time.hour,time.minute,time.second);
+    if(mount_root_partition()!=FzOS_SUCEESS) {
+        printk(" Error!No root partition found. FzOS cannot continue.\n");
+        while(1) {
+            halt();
+        }
+    };
+
 }
 void kernel_main(KernelInfo info) {
     //手动换栈。

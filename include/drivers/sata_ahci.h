@@ -328,5 +328,12 @@ typedef struct
     AHCIController* controller;
 }AHCIDeviceTreeNode;
 
-
+//打印一个扇区的内容
+#define print_sector(x) \
+    for(int i=0;i<512;i++) { \
+        if(!(i%16)) { \
+            printk("\n"); \
+        } \
+        printk("%b ",x[i]); \
+    }
 #endif

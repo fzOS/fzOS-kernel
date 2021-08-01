@@ -58,18 +58,21 @@ device_tree_node* device_tree_resolve_by_path(char* full_path,DtResolveMethod me
         //如果不以/结尾，那么说明还有残存的数据。
         memcpy(buf,front+1,rear-front-1);
         buf[rear-front-1]='\0';
+
         node = device_tree_resolve_from_parent(node,buf);
-        if(method==DT_CREATE_IF_NONEXIST) {
-            device_tree_node* new_parent = allocate_page(1);
-            new_parent->type = DT_BRANCH;
-            memset(new_parent,0,sizeof(device_tree_node));
-            strcopy(new_parent->name,buf,DT_NAME_LENGTH_MAX);
-            new_parent->node.sibling = parent->node.child;
-            new_parent->node.parent = (inline_tree_node*)parent;
-            parent->node.child = &(new_parent->node);
-        }
-        else {
-            return nullptr;
+        if(node==nullptr) {
+            if(method==DT_CREATE_IF_NONEXIST) {
+                device_tree_node* new_parent = allocate_page(1);
+                new_parent->type = DT_BRANCH;
+                memset(new_parent,0,sizeof(device_tree_node));
+                strcopy(new_parent->name,buf,DT_NAME_LENGTH_MAX);
+                new_parent->node.sibling = parent->node.child;
+                new_parent->node.parent = (inline_tree_node*)parent;
+                parent->node.child = &(new_parent->node);
+            }
+            else {
+                return nullptr;
+            }
         }
     }
     return node;

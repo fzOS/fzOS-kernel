@@ -22,7 +22,7 @@ void read_rtc(RTCTime* time) {
     U8 last_year;
     U8 last_century;
     U8 registerB;
-    while (get_update_in_progress_flag());                // Make sure an update isn't in progress
+    while (get_update_in_progress_flag());
     time->second = get_RTC_register(0x00);
     time->minute = get_RTC_register(0x02);
     time->hour = get_RTC_register(0x04);
@@ -37,8 +37,7 @@ void read_rtc(RTCTime* time) {
         last_month = time->month;
         last_year = time->year;
         last_century = time->century;
-        while (get_update_in_progress_flag())
-            ;           // Make sure an update isn't in progress
+        while (get_update_in_progress_flag());
         time->second = get_RTC_register(0x00);
         time->minute = get_RTC_register(0x02);
         time->hour = get_RTC_register(0x04);
@@ -46,9 +45,9 @@ void read_rtc(RTCTime* time) {
         time->month = get_RTC_register(0x08);
         time->year = get_RTC_register(0x09);
       }
-    while( (last_second != time->second) || (last_minute != time->minute) || (last_hour != time->hour) ||
+    while((last_second != time->second) || (last_minute != time->minute) || (last_hour != time->hour) ||
             (last_day != time->day) || (last_month != time->month) || (last_year != time->year) ||
-            (last_century != time->century) );
+            (last_century != time->century));
     registerB = get_RTC_register(0x0B);
     // Convert BCD to binary values if necessary
     if (!(registerB & 0x04)) {
