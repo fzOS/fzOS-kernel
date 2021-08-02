@@ -26,6 +26,10 @@ int fhhfs_mount(GPTPartition* partition,const char* destination)
         device_tree_node* old_node = device_tree_resolve_by_path(destination,DT_CREATE_IF_NONEXIST);
         memcpy(new_node->node.name,old_node->name,DT_NAME_LENGTH_MAX);
         device_tree_replace_node(old_node,&(new_node->node),DT_DESTROY_AFTER_REPLACE);
+
+        //测试。
+        file file;
+        new_node->fs.generic.open(&(new_node->fs.generic),"/",&file);
         return FzOS_SUCEESS;
     }
     return FzOS_ERROR;
@@ -35,8 +39,7 @@ int fhhfs_open(filesystem* fs,char* filename,struct file* file)
 {
     fhhfs_filesystem* fsl = (fhhfs_filesystem*)fs;
     printk(" Opening %s;begin at %x.\n",filename,fsl->node_table_entry);
-    memcpy(&(file->filesystem),fs,sizeof(fhhfs_filesystem));
-    file->device = fs->dev;
+    file->filesystem = fs;
 
     return FzOS_SUCEESS;
 }
