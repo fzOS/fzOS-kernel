@@ -41,14 +41,12 @@ void kernel_main_real() {
     get_processor_name(buff);
     printk("%s\n",buff);
     memory_init(bss_info.mem_map_descriptor_size,bss_info.mem_map_size,bss_info.memory_map);
-    parse_acpi(bss_info.rsdp_address);    
+    parse_acpi(bss_info.rsdp_address);
     init_gdt();
     init_interrupt();
-    
+    init_device_tree();
     init_keyboard();
     __asm__("sti");
-    //reset();
-    //poweroff();
     init_syscall();
     //然后是PCI设备。
     init_pci();
@@ -59,6 +57,7 @@ void kernel_main_real() {
             halt();
         }
     };
+    print_device_tree();
 
 }
 void kernel_main(KernelInfo info) {

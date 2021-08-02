@@ -8,11 +8,15 @@
 
 typedef struct {
     filesystem generic;
+    U64 node_size;
     U64 node_total;
     U64 node_used;
     U64 node_table_entry;
-}fhhfsFileSystem;
-
+}fhhfs_filesystem;
+typedef struct {
+    device_tree_node node;
+    fhhfs_filesystem fs;
+} fhhfs_tree_node;
 typedef struct {
     U8  magic_id[7]; //"fhhfs!" + '\0',0x00~0x06
     U8  version:7; //文件系统版本，0x07
@@ -56,9 +60,9 @@ typedef struct {
 } __attribute__((packed)) file_header;
 
 int fhhfs_mount(GPTPartition* partition,const char* destination);
-int fhhfs_open(char* filename,struct file* file);
-int fhhfs_read(struct file* file,void* buf,U64 buflen);
-int fhhfs_seek(struct file* file,U64 offset,SeekDirection direction);
-int fhhfs_close(struct file* file);
+int fhhfs_open(struct filesystem* fs,char* filename,struct file* file);
+int fhhfs_read(struct filesystem* fs,struct file* file,void* buf,U64 buflen);
+int fhhfs_seek(struct filesystem* fs,struct file* file,U64 offset,SeekDirection direction);
+int fhhfs_close(struct filesystem* fs,struct file* file);
 
 #endif

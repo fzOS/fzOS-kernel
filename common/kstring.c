@@ -9,7 +9,7 @@ int strcopy(char* dest,char* src,int n) {
     dest[n]=0;
     return ++count;
 }
-int strcomp(char* first,char* second) {
+int strcomp(const char* first,const char* second) {
     int result =0;
     int pointer=0;
     while((!result)&&first[pointer]&&second[pointer]) {

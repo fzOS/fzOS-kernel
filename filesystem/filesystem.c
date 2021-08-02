@@ -33,9 +33,9 @@ int mount_root_partition()
         return FzOS_ERROR;
     }
 
-    U64 ret = mount(&partition->partition,"/Root");
+    U64 ret = mount(&partition->partition,"/");
     if(ret == FzOS_SUCEESS) {
-        printk(" Mounted root on %s\n",root_device_path);
+        printk(" Got root at %s.\n",root_device_path);
         return FzOS_SUCEESS;
     }
     return FzOS_ERROR;
