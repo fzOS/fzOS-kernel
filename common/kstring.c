@@ -5,8 +5,11 @@ int strcopy(char* dest,char* src,int n) {
     int count=0;
     for(;count<n;count++) {
         dest[count]=src[count];
+        if(dest[count]=='\0') {
+            break;
+        }
     }
-    dest[n]=0;
+    dest[count]=0;
     return ++count;
 }
 int strcomp(const char* first,const char* second) {
@@ -31,7 +34,7 @@ static void sputnum(char* buf,U64 num) {
 }
 
 
-void sputU64hex(char* buf,U64 data)
+static void sputU64hex(char* buf,U64 data)
 {
     U8 tempint;
     U8 temp1,temp2;
@@ -64,7 +67,7 @@ void sputU64hex(char* buf,U64 data)
         }
     }
 }
-void sputU16hex(char* buf,U16 data)
+static void sputU16hex(char* buf,U16 data)
 {
     U8 tempint;
     U8 temp1,temp2;
@@ -97,7 +100,7 @@ void sputU16hex(char* buf,U16 data)
         }
     }
 }
-void sputU8hex(char* buf,U8 data)
+static void sputU8hex(char* buf,U8 data)
 {
     U8 temp1,temp2;
     *buf = '0';
@@ -128,7 +131,7 @@ void sputU8hex(char* buf,U8 data)
 
 
 
-void sputstring(char* buf,char *str)
+static void sputstring(char* buf,char *str)
 {
     while (*str != '\0'){
         *buf=*str;
@@ -171,4 +174,28 @@ int sprintk(char* buf, const char* format,...)
     *bufp='\0';
     return count;
 
+}
+char* strchr(char* str,char delim)
+{
+    char* p = str;
+    while(*p!='\0' && *p!=delim) {
+        p++;
+    }
+    if(*p=='\0') {
+        p = nullptr;
+    }
+    return p;
+}
+int strmid(char* buffer,int buflen,char* last_position,char delim)
+{
+    char* p = last_position;
+    while(*p!='\0' && *p!=delim) {
+        p++;
+    }
+    int len = p-last_position;
+    if(len>=buflen) {
+        return FzOS_BUFFER_TOO_SMALL;
+    }
+    strcopy(buffer,last_position,len);
+    return len;
 }
