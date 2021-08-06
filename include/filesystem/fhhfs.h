@@ -2,13 +2,14 @@
 #define FHHFS_H
 #include <filesystem/filesystem.h>
 #include <drivers/gpt.h>
+#include <common/file.h>
 //从我一年之前的作业那里嫖来的。
 //Salute!
 #define FHHFS_CRC_MAGIC_NUMBER 189050311
 
 typedef struct {
     filesystem generic;
-    U64 node_size;
+    U64 physical_blocks_per_node;
     U64 node_total;
     U64 node_used;
     U64 node_table_entry;
@@ -50,7 +51,7 @@ typedef struct {
     U64 create_timestamp;
     U64 modify_timestamp;
     U64 open_timestamp;
-    U32 file_type:4; //文件类型，0:普通文件,1:目录文件,2:块设备,3:软链接,其他：还没想好
+    FileType file_type:4; //文件类型，0:普通文件,1:目录文件,2:块设备,3:软链接,其他：还没想好
     U32 owner_priv:4; //拥有者的权限+Set UID
     U32 group_priv:4; //用户所在的群组的权限+Set GID
     U32 other_priv:4; //其他用户的权限+Sticky

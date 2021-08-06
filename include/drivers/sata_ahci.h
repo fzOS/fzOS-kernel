@@ -334,6 +334,6 @@ typedef struct
         if(!(i%16)) { \
             printk("\n"); \
         } \
-        printk("%b ",x[i]); \
+        printk("%b ",((U8*)x)[i]); \
     }
 #endif
