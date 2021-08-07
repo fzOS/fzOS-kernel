@@ -34,7 +34,6 @@ U64 fhhfs_get_node_from_dir(char* filename,void* buffer,U64 length) {
         node_id = *(U64*)(p);
         p+= sizeof(U64);
         p+= strcopy(name,p,FILENAME_MAX);
-        printk("%s/%s\n",filename,name);
         if(!strcomp(name,filename)) {
             //找到了！
             return node_id;
@@ -52,7 +51,7 @@ inline int fhhfs_stat(fhhfs_filesystem* fs,file* file)
 {
     //file中的node必须存在。
     fhhfs_file_header* buf = allocate_page(1);
-    fhhfs_readnode(fs,1,buf,1);
+    fhhfs_readnode(fs,file->fs_entry_node,buf,1);
     file->type = buf->file_type;
     file->offset = 0;
     file->size = buf->filesize;
@@ -62,7 +61,7 @@ inline int fhhfs_stat(fhhfs_filesystem* fs,file* file)
 //这里的buffer共享时可以节省内存分配开销。
 U64 fhhfs_get_next_node_id(fhhfs_filesystem* fs,U64 prev_id,void* buffer) {
     U64 dest_node_page = prev_id/fs->node_size;
-    fhhfs_readnode(fs,dest_node_page,buffer,1);
+    fhhfs_readnode(fs,dest_node_page+fs->node_table_entry,buffer,1);
     return ((U64*)buffer)[prev_id%(fs->node_size/sizeof(U64))];
 }
 int fhhfs_mount(GPTPartition* partition,const char* destination)
@@ -88,13 +87,6 @@ int fhhfs_mount(GPTPartition* partition,const char* destination)
         device_tree_node* old_node = device_tree_resolve_by_path(destination,DT_CREATE_IF_NONEXIST);
         memcpy(new_node->node.name,old_node->name,DT_NAME_LENGTH_MAX);
         device_tree_replace_node(old_node,&(new_node->node),DT_DESTROY_AFTER_REPLACE);
-
-        //测试。
-        file file;
-        new_node->fs.generic.open(&(new_node->fs.generic),"/a/test2",&file);
-        U64 length = new_node->fs.generic.read(&(new_node->fs.generic),&file,buf,PAGE_SIZE);
-        ((U8*)buf)[length] = '\0';
-        printk("%s\n",buf);
         free_page(buf,1);
         return FzOS_SUCEESS;
     }
@@ -137,10 +129,8 @@ int fhhfs_open(filesystem* fs,char* filename,struct file* file)
         file->fs_entry_node = fhhfs_get_node_from_dir(bufname,buf,file->size);
         if(file->fs_entry_node == FzOS_FILE_NOT_FOUND) {
                 free_page(buf,buf_size);
-                printk("Cannot find %s.\n",bufname);
                 return FzOS_FILE_NOT_FOUND;
         }
-        printk("Got %s on %d.\n",bufname,file->fs_entry_node);
         fhhfs_stat(fsl,file);
     }
     while(buf_str_len=strmid(bufname,FILENAME_MAX,p,PATH_SEPARATOR),buf_str_len);
