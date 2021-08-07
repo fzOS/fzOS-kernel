@@ -1,4 +1,7 @@
+![](logo.png)
+
 # fzOS-kernel
+
 Kernel source code for fzOS.
 
 ## 开发路线
@@ -24,7 +27,7 @@ Kernel source code for fzOS.
 + <limit.h> 定义了当前系统的一些限制;
 
 ## common
-  
+
 ### cpuid.c;
 + 实现cpu信息的获取;
 
@@ -50,7 +53,7 @@ Kernel source code for fzOS.
 + msr寄存器的操作;
 
 ## drivers
-  
+
 ### graphics.c;
 + 初始化屏幕;
 + 实现清屏;
