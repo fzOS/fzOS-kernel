@@ -331,7 +331,7 @@ typedef struct
 //打印一个扇区的内容
 #define print_sector(x) \
     for(int i=0;i<512;i++) { \
-        if(!(i%16)) { \
+        if(!(i%32)) { \
             printk("\n"); \
         } \
         printk("%b ",((U8*)x)[i]); \

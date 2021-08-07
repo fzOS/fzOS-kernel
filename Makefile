@@ -52,3 +52,8 @@ stat:
 	echo -e "\e[36;1m[LINES]\e[0m\t$$a"
 	@b=$$(git log | grep "^Author: " | wc -l) && \
 	echo -e "\e[33;1m[COMMIT]\e[0m$$b"
+mount:
+	@a=$$(losetup -f) && \
+	echo "Mounting at $${a}p1" && \
+	losetup -f -P '/home/fhh/VirtualBox VMs/UEFITest/raw.img' && \
+	mount -t auto $${a}p1 /media

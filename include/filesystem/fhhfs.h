@@ -9,6 +9,7 @@
 
 typedef struct {
     filesystem generic;
+    U64 node_size;
     U64 physical_blocks_per_node;
     U64 node_total;
     U64 node_used;
@@ -58,7 +59,7 @@ typedef struct {
     U32 user_id;
     U32 group_id;
     U64 filesize;
-} __attribute__((packed)) file_header;
+} __attribute__((packed)) fhhfs_file_header;
 
 int fhhfs_mount(GPTPartition* partition,const char* destination);
 int fhhfs_open(struct filesystem* fs,char* filename,struct file* file);
