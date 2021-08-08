@@ -24,18 +24,19 @@ typedef struct {
 
 typedef enum {
     DT_CREATE_IF_NONEXIST,
-    DT_RETURN_IF_NONEXIST
+    DT_RETURN_IF_NONEXIST,
+    DT_RETURN_LAST_PARENT
 } DtResolveMethod;
 
 typedef enum {
     DT_DESTROY_AFTER_REPLACE,
     DT_KEEP_AFTER_REPLACE
 } DtDestroyMethod;
-void init_device_tree();
+void init_device_tree(void);
 void device_tree_add_from_parent(device_tree_node* n,device_tree_node* parent);
-device_tree_node* device_tree_resolve_by_path(const char* full_path,DtResolveMethod method);
+device_tree_node* device_tree_resolve_by_path(const char* full_path,const char** remaining, DtResolveMethod method);
 void device_tree_add_by_path(device_tree_node* n,char* c);
 int device_tree_replace_node(device_tree_node* old,device_tree_node* new,DtDestroyMethod method);
 device_tree_node* device_tree_resolve_from_parent(device_tree_node* n,char* node_name);
-void print_device_tree();
+void print_device_tree(void);
 #endif

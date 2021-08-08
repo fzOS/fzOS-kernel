@@ -28,7 +28,7 @@ int mount_root_partition()
     if(root_device_path[0]=='\0') {
         return FzOS_ERROR;
     }
-    GPTPartitionTreeNode* partition = (GPTPartitionTreeNode*)device_tree_resolve_by_path(root_device_path,DT_RETURN_IF_NONEXIST);
+    GPTPartitionTreeNode* partition = (GPTPartitionTreeNode*)device_tree_resolve_by_path(root_device_path,nullptr,DT_RETURN_IF_NONEXIST);
     if(partition==nullptr) {
         return FzOS_ERROR;
     }

@@ -63,8 +63,8 @@ typedef struct {
 
 int fhhfs_mount(GPTPartition* partition,const char* destination);
 int fhhfs_open(struct filesystem* fs,char* filename,struct file* file);
-int fhhfs_read(struct filesystem* fs,struct file* file,void* buf,U64 buflen);
-int fhhfs_seek(struct filesystem* fs,struct file* file,U64 offset,SeekDirection direction);
-int fhhfs_close(struct filesystem* fs,struct file* file);
+int fhhfs_read(struct file* file,void* buf,U64 buflen);
+int fhhfs_seek(struct file* file,U64 offset,SeekDirection direction);
+int fhhfs_close(struct file* file);
 
 #endif

@@ -70,7 +70,6 @@ int fhhfs_mount(GPTPartition* partition,const char* destination)
     partition->header.readblock(&partition->header,0,buf,PAGE_SIZE,1);
     fhhfs_magic_head* head = (fhhfs_magic_head*) buf;
     if(!memcmp(head->magic_id,"fhhfs!",7)) {
-        printk(" Got correct fhhfs:%s,%d nodes / %d bytes in total.\n",head->label,head->node_total,head->node_total*head->node_size);
         fhhfs_tree_node* new_node = allocate_page((sizeof(fhhfs_tree_node)/PAGE_SIZE)+1);
         new_node->fs.generic.open = fhhfs_open;
         new_node->fs.generic.read = fhhfs_read;
@@ -84,10 +83,10 @@ int fhhfs_mount(GPTPartition* partition,const char* destination)
         new_node->fs.node_used = head->node_used;
         new_node->node.type = DT_FILESYSTEM;
         //如果有之前的设备树结点，换下来。
-        device_tree_node* old_node = device_tree_resolve_by_path(destination,DT_CREATE_IF_NONEXIST);
+        device_tree_node* old_node = device_tree_resolve_by_path(destination,nullptr,DT_CREATE_IF_NONEXIST);
         memcpy(new_node->node.name,old_node->name,DT_NAME_LENGTH_MAX);
         device_tree_replace_node(old_node,&(new_node->node),DT_DESTROY_AFTER_REPLACE);
-        free_page(buf,1);
+
         return FzOS_SUCEESS;
     }
     free_page(buf,1);
@@ -125,7 +124,7 @@ int fhhfs_open(filesystem* fs,char* filename,struct file* file)
             buf_size = (file->size/PAGE_SIZE)+1;
             buf=allocate_page(buf_size);
         }
-        fhhfs_read(fs,file,buf,file->size);
+        fhhfs_read(file,buf,file->size);
         file->fs_entry_node = fhhfs_get_node_from_dir(bufname,buf,file->size);
         if(file->fs_entry_node == FzOS_FILE_NOT_FOUND) {
                 free_page(buf,buf_size);
@@ -138,10 +137,10 @@ open_finish:
     free_page(buf,buf_size);
     return FzOS_SUCEESS;
 }
-int fhhfs_read(filesystem* fs,struct file* file,void* buf,U64 buflen)
+int fhhfs_read(struct file* file,void* buf,U64 buflen)
 {
     U64 count = 0;
-    fhhfs_filesystem* fsl = (fhhfs_filesystem*)fs;
+    fhhfs_filesystem* fsl = (fhhfs_filesystem*)file->filesystem;
     if(file->offset >= file->size) {
         return FzOS_ERROR;
     }
@@ -169,11 +168,38 @@ int fhhfs_read(filesystem* fs,struct file* file,void* buf,U64 buflen)
     file->offset+=count;
     return count;
 }
-int fhhfs_seek(filesystem* fs,struct file* file,U64 offset,SeekDirection direction)
+int fhhfs_seek(struct file* file,U64 offset,SeekDirection direction)
 {
+    switch(direction) {
+        case SEEK_FROM_BEGINNING:{
+            file->offset = offset;
+            if(file->size<=offset) {
+                file->offset = file->size;
+                return FzOS_POSITION_OVERFLOW;
+            }
+            break;
+        }
+        case SEEK_FROM_CURRENT: {
+            file->offset += offset;
+            if(file->size<=offset) {
+                file->offset = file->size;
+                return FzOS_POSITION_OVERFLOW;
+            }
+            break;
+        }
+        case SEEK_FROM_END: {
+            file->offset = file->size-offset;
+            if(file->offset<0) {
+                file->offset = 0;
+                return FzOS_POSITION_OVERFLOW;
+            }
+            break;
+        }
+    }
     return FzOS_SUCEESS;
 }
-int fhhfs_close(filesystem* fs,struct file* file)
+int fhhfs_close(struct file* f)
 {
+    memset(f,0,sizeof(file));
     return FzOS_SUCEESS;
 }

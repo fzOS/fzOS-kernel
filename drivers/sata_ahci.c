@@ -57,7 +57,7 @@ void ata_interrupt_handler(int no)
     char buf[200];
     for(int i=0;i<SATA_device_count;i++) {
         sprintk(buf,"/Devices/ATAController%d/",i);
-        AHCIControllerTreeNode* node = (AHCIControllerTreeNode*)device_tree_resolve_by_path(buf,DT_RETURN_IF_NONEXIST);
+        AHCIControllerTreeNode* node = (AHCIControllerTreeNode*)device_tree_resolve_by_path(buf,nullptr,DT_RETURN_IF_NONEXIST);
         if(node != nullptr) {
             if(node->controller.base.irq!=no) {
                 continue;
@@ -110,7 +110,7 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
     //扫描端口。
     U32 port_count = popcount(device.ahci_bar->pi);
     device.port_count = port_count;
-    device_tree_node* base_node = device_tree_resolve_by_path(base_device_tree_template,DT_CREATE_IF_NONEXIST);
+    device_tree_node* base_node = device_tree_resolve_by_path(base_device_tree_template,nullptr,DT_CREATE_IF_NONEXIST);
     AHCIControllerTreeNode* controller_node = allocate_page(1);
     memset(controller_node,0,sizeof(AHCIControllerTreeNode));
     sprintk(buf,ata_controller_tree_template,SATA_device_count++);

@@ -3,7 +3,7 @@
 #include <memory/memory.h>
 #include <common/printk.h>
 inline_tree device_tree;
-void init_device_tree()
+void init_device_tree(void)
 {
     //采用了有头结点的格式，所以需要新建一个child.
     device_tree.entry.child = allocate_page(1);
@@ -15,7 +15,7 @@ void init_device_tree()
 void device_tree_add_by_path(device_tree_node* n,char* c)
 {
     //首先，解析。
-    device_tree_node* parent = device_tree_resolve_by_path(c,DT_CREATE_IF_NONEXIST);
+    device_tree_node* parent = device_tree_resolve_by_path(c,nullptr,DT_CREATE_IF_NONEXIST);
     //偷懒，直接插入。
     n->node.sibling = parent->node.child;
     n->node.parent = (inline_tree_node*)parent;
@@ -28,10 +28,15 @@ void device_tree_add_from_parent(device_tree_node* n,device_tree_node* parent)
     n->node.parent = (inline_tree_node*)parent;
     parent->node.child = (inline_tree_node*)n;
 }
-device_tree_node* device_tree_resolve_by_path(const char* full_path,DtResolveMethod method)
+device_tree_node* device_tree_resolve_by_path(const char* full_path,const char** remaining,DtResolveMethod method)
 {
     //Revision Using strmid().
     if(!strcomp(full_path,"/")) {
+        if(method==DT_RETURN_LAST_PARENT) {
+            if(remaining!=nullptr) {
+                *remaining = full_path+1;
+            }
+        }
         return (device_tree_node*)device_tree.entry.child;
     }
     char buf[FILENAME_MAX];
@@ -46,17 +51,26 @@ device_tree_node* device_tree_resolve_by_path(const char* full_path,DtResolveMet
         }
         node = device_tree_resolve_from_parent(node,buf);
         if(node==nullptr) {
-            if(method==DT_CREATE_IF_NONEXIST) {
-                node = allocate_page(1);
-                memset(node,0,sizeof(device_tree_node));
-                node->type = DT_BRANCH;
-                strcopy(node->name,buf,DT_NAME_LENGTH_MAX);
-                node->node.sibling = parent->node.child;
-                node->node.parent = (inline_tree_node*)parent;
-                parent->node.child = (inline_tree_node*)node;
-            }
-            else {
-                return nullptr;
+            switch(method) {
+                case DT_CREATE_IF_NONEXIST: {
+                    node = allocate_page(1);
+                    memset(node,0,sizeof(device_tree_node));
+                    node->type = DT_BRANCH;
+                    strcopy(node->name,buf,DT_NAME_LENGTH_MAX);
+                    node->node.sibling = parent->node.child;
+                    node->node.parent = (inline_tree_node*)parent;
+                    parent->node.child = (inline_tree_node*)node;
+                    return node;
+                }
+                case DT_RETURN_IF_NONEXIST: {
+                    return nullptr;
+                }
+                case DT_RETURN_LAST_PARENT: {
+                    if(remaining!=nullptr) {
+                        *remaining = p;
+                        return parent;
+                    }
+                }
             }
         }
         parent = node;
@@ -67,6 +81,11 @@ device_tree_node* device_tree_resolve_by_path(const char* full_path,DtResolveMet
         else {
             break;
         }
+    }
+    if(method==DT_RETURN_LAST_PARENT) {
+         if(remaining!=nullptr) {
+            *remaining = p;
+         }
     }
     return node;
 }
@@ -84,7 +103,7 @@ device_tree_node* device_tree_resolve_from_parent(device_tree_node* n,char* node
     }
     return node;
 }
-void print_device_tree()
+void print_device_tree(void)
 {
     iterator(inline_tree) iter;
     init_iterator(inline_tree,&iter,&device_tree);

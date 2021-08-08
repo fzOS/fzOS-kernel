@@ -15,6 +15,7 @@
 #include <common/kstring.h>
 #include <drivers/rtc.h>
 #include <filesystem/filesystem.h>
+#include <common/file.h>
 #ifndef VERSION
 #define VERSION "0.1"
 #endif
@@ -57,8 +58,14 @@ void kernel_main_real() {
             halt();
         }
     };
-    print_device_tree();
-
+    //显示Banner.
+    file banner_file;
+    generic_open("/banner",&banner_file);
+    void* buf = allocate_page(banner_file.size/PAGE_SIZE+1);
+    U64 length =banner_file.filesystem->read(&banner_file,buf,(banner_file.size/PAGE_SIZE+1)*PAGE_SIZE);
+    ((U8*)buf)[length] = '\0';
+    printk("%s\n",buf);
+    free_page(buf,(banner_file.size/PAGE_SIZE+1));
 }
 void kernel_main(KernelInfo info) {
     //手动换栈。

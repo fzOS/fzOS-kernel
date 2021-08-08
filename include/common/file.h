@@ -15,4 +15,5 @@ typedef struct file{
     U64 fs_entry_node;
     FileType type;
 } file;
+int generic_open(char* filename,file* file);
 #endif
