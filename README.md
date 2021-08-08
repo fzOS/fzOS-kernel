@@ -1,4 +1,4 @@
-![](logo.png)
+<div align="center"><img src="logo.png" style="zoom:75%;" />
 
 # fzOS-kernel
 
@@ -14,8 +14,11 @@ Kernel source code for fzOS.
 + [x]Step3: 实现CPU段表的设置, 接管内存分配;
 + [x]Step4: 实现基础的中断程序和TSS任务表设置;
 + [&ensp;]Step5: 实现基础的键盘驱动程序;
-+ [&ensp;]Step6: 实现完整的ACPI支持，完成“高级电源管理”;
-+ [&ensp;]Step7: 实现文件系统;
++ [x]Step6: 实现完整的ACPI支持，完成“高级电源管理”;
++ [x]Step7: 实现文件系统;
++ [x]Step8: 实现设备树;
++ [&ensp;]Step9: 实现JVM的类加载器;
++ [&ensp;]Step10: 实现JVM的基础指令;
 + [&ensp;]后面看着办先
 
 # File Structure
