@@ -21,13 +21,12 @@
 #endif
 
 //定义的标准输入/输出。
-char_dev stdio;
 static volatile KernelInfo bss_info;
 void kernel_main_real() {
         __asm__("cli");
     graphics_init(bss_info.gop);
     graphics_clear_screen(0x001e1e1e);
-    fbcon_init(&stdio);
+    fbcon_init();
     printk("\n Hello World! I am fzOS.\n");
     printk(" Kernel version: %s\n",VERSION);
     int width=bss_info.gop->Mode->Info->PixelsPerScanLine/8-1;
@@ -46,6 +45,7 @@ void kernel_main_real() {
     init_gdt();
     init_interrupt();
     init_device_tree();
+    fbcon_add_to_device_tree();
     init_keyboard();
     __asm__("sti");
     init_syscall();
@@ -58,6 +58,7 @@ void kernel_main_real() {
             halt();
         }
     };
+
     //显示Banner.
     file banner_file;
     generic_open("/banner",&banner_file);
@@ -66,6 +67,9 @@ void kernel_main_real() {
     ((U8*)buf)[length] = '\0';
     printk("%s\n",buf);
     free_page(buf,(banner_file.size/PAGE_SIZE+1));
+
+    print_device_tree();
+
 }
 void kernel_main(KernelInfo info) {
     //手动换栈。

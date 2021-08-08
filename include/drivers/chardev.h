@@ -2,9 +2,9 @@
 #define CHARDEV
 #include <types.h>
 //字符型设备的定义。
-typedef struct {
-    U8*(*getchar)(void);
-    void(*putchar)(U8 data);
+typedef struct char_dev{
+    U8*(*getchar)(struct char_dev*);
+    void(*putchar)(struct char_dev*,U8 data);
 } char_dev;
 //就先这两个吧。
 #endif

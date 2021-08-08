@@ -19,7 +19,7 @@
 void ata_port_rebase(AHCIController device, HBA_PORT *port, int portno);
 int ahci_readblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount);
 int ahci_writeblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount);
-static char* base_device_tree_template = "/Devices/";
+
 static char* ata_controller_tree_template = "ATAController%d";
 static char* ata_port_tree_template = "ATADevice%d";
 static U8 SATA_device_count = 0;
@@ -110,7 +110,7 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
     //扫描端口。
     U32 port_count = popcount(device.ahci_bar->pi);
     device.port_count = port_count;
-    device_tree_node* base_node = device_tree_resolve_by_path(base_device_tree_template,nullptr,DT_CREATE_IF_NONEXIST);
+    device_tree_node* base_node = device_tree_resolve_by_path(BASE_DEVICE_TREE_TEMPLATE,nullptr,DT_CREATE_IF_NONEXIST);
     AHCIControllerTreeNode* controller_node = allocate_page(1);
     memset(controller_node,0,sizeof(AHCIControllerTreeNode));
     sprintk(buf,ata_controller_tree_template,SATA_device_count++);

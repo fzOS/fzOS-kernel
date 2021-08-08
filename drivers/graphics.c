@@ -1,9 +1,5 @@
 #include <drivers/graphics.h>
 #include <types.h>
-U32 KERNEL_CONSOLE_FONT_POSITION_Y;
-U32 KERNEL_CONSOLE_FONT_POSITION_X;
-U32 KERNEL_CONSOLE_FONT_MAX_X;
-U32 KERNEL_CONSOLE_FONT_MAX_Y;
 g_data graphics_data;
 //初始化gop接口
 void graphics_init(EFI_GRAPHICS_OUTPUT_PROTOCOL *gop) {

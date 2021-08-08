@@ -3,6 +3,7 @@
 #include <memory/memory.h>
 #include <common/printk.h>
 inline_tree device_tree;
+char* BASE_DEVICE_TREE_TEMPLATE = "/Devices/";
 void init_device_tree(void)
 {
     //采用了有头结点的格式，所以需要新建一个child.

@@ -3,8 +3,8 @@ void putU64hex(U64 data)
 {
     U8 tempint;
     U8 temp1,temp2;
-    stdio.putchar('0');
-    stdio.putchar('x');
+    default_console->common.putchar(&default_console->common,'0');
+    default_console->common.putchar(&default_console->common,'x');
     for (int i = 0; i < 8; i++){
         /* code */
         tempint = (data&(0xff00000000000000 >> (8*i)) ) >> (56-8*i);
@@ -12,17 +12,17 @@ void putU64hex(U64 data)
         temp2 = tempint&0x0f;
         if (temp1 < 10){
             temp1 = temp1 + 48;
-            stdio.putchar(temp1);
+             default_console->common.putchar(&default_console->common,temp1);
         }else{
             temp1 = temp1 + 87;
-            stdio.putchar(temp1);
+             default_console->common.putchar(&default_console->common,temp1);
         }
         if (temp2 < 10){
             temp2 = temp2 + 48;
-            stdio.putchar(temp2);
+             default_console->common.putchar(&default_console->common,temp2);
         }else{
             temp2 = temp2 + 87;
-            stdio.putchar(temp2);
+             default_console->common.putchar(&default_console->common,temp2);
         }
     }
 }
@@ -30,8 +30,8 @@ void putU16hex(U16 data)
 {
     U8 tempint;
     U8 temp1,temp2;
-    stdio.putchar('0');
-    stdio.putchar('x');
+     default_console->common.putchar(&default_console->common,'0');
+     default_console->common.putchar(&default_console->common,'x');
     for (int i = 0; i < 2; i++){
         /* code */
         tempint = (data&(0xff00 >> (8*i)) ) >> (8-8*i);
@@ -39,40 +39,40 @@ void putU16hex(U16 data)
         temp2 = tempint&0x0f;
         if (temp1 < 10){
             temp1 = temp1 + 48;
-            stdio.putchar(temp1);
+             default_console->common.putchar(&default_console->common,temp1);
         }else{
             temp1 = temp1 + 87;
-            stdio.putchar(temp1);
+             default_console->common.putchar(&default_console->common,temp1);
         }
         if (temp2 < 10){
             temp2 = temp2 + 48;
-            stdio.putchar(temp2);
+             default_console->common.putchar(&default_console->common,temp2);
         }else{
             temp2 = temp2 + 87;
-            stdio.putchar(temp2);
+             default_console->common.putchar(&default_console->common,temp2);
         }
     }
 }
 void putU8hex(U8 data)
 {
     U8 temp1,temp2;
-    stdio.putchar('0');
-    stdio.putchar('x');
+     default_console->common.putchar(&default_console->common,'0');
+     default_console->common.putchar(&default_console->common,'x');
     temp1 = (data&0xf0) >> 4;
     temp2 = data&0x0f;
     if (temp1 < 10){
         temp1 = temp1 + 48;
-        stdio.putchar(temp1);
+         default_console->common.putchar(&default_console->common,temp1);
     }else{
         temp1 = temp1 + 87;
-        stdio.putchar(temp1);
+         default_console->common.putchar(&default_console->common,temp1);
     }
     if (temp2 < 10){
         temp2 = temp2 + 48;
-        stdio.putchar(temp2);
+         default_console->common.putchar(&default_console->common,temp2);
     }else{
         temp2 = temp2 + 87;
-        stdio.putchar(temp2);
+         default_console->common.putchar(&default_console->common,temp2);
     }
 }
 
@@ -81,7 +81,7 @@ void putU8hex(U8 data)
 void putstring(char *str)
 {
     while (*str != '\0'){
-        stdio.putchar(*str);        
+         default_console->common.putchar(&default_console->common,*str);
         str++;
     }
 }
@@ -93,7 +93,7 @@ void putnum(U64 num)
     if ((num / 10) != 0){
         putnum((num/10));
     }
-    stdio.putchar((char) tempint);
+     default_console->common.putchar(&default_console->common,(char) tempint);
 }
 int printk(const char* format,...)
 {
@@ -109,7 +109,7 @@ int printk(const char* format,...)
             pointer++;
             switch(*pointer)
             {
-                case 'c':{stdio.putchar(va_arg(arg,int));break;}
+                case 'c':{ default_console->common.putchar(&default_console->common,va_arg(arg,int));break;}
                 case 'd':{putnum(va_arg(arg,U64));break;}
                 case 'x':{putU64hex(va_arg(arg,U64));break;}
                 case 'b':{putU8hex(va_arg(arg,int));break;}
@@ -120,7 +120,7 @@ int printk(const char* format,...)
         }
         else
         {
-            stdio.putchar(*pointer);
+             default_console->common.putchar(&default_console->common,*pointer);
         }
         pointer++;
     }

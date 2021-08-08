@@ -1,9 +1,9 @@
 #include <common/semaphore.h>
 void acquire_semaphore(semaphore* sem)
 {
-    while(sem<0) {
+    while(sem<=0) {
         //TODO:giveup();
-        __asm__ ("pause");
+        __asm__ ("hlt");
     }
     __sync_fetch_and_sub(sem,1);
 }

@@ -14,10 +14,14 @@ int iterator_inline_tree_next(iterator(inline_tree)* this)
         this->current = this->current->sibling;
         return 1;
     }
-    if(this->current->parent->sibling) {
-        this->current = this->current->parent->sibling;
+    //FIXME:sibling of root node.
+    while(this->current->parent!=nullptr) {
+        if(this->current->sibling) {
+            this->current = this->current->sibling;
+            return 1;
+        }
+        this->current = this->current->parent;
         this->count--;
-        return 1;
     }
     return 0;
 }

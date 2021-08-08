@@ -39,4 +39,5 @@ void device_tree_add_by_path(device_tree_node* n,char* c);
 int device_tree_replace_node(device_tree_node* old,device_tree_node* new,DtDestroyMethod method);
 device_tree_node* device_tree_resolve_from_parent(device_tree_node* n,char* node_name);
 void print_device_tree(void);
+extern  char* BASE_DEVICE_TREE_TEMPLATE;
 #endif

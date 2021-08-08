@@ -10,10 +10,6 @@ typedef struct {
   U32 default_background_color;
 } g_data; 
 
-extern U32 KERNEL_CONSOLE_FONT_POSITION_Y;
-extern U32 KERNEL_CONSOLE_FONT_POSITION_X;
-extern U32 KERNEL_CONSOLE_FONT_MAX_X;
-extern U32 KERNEL_CONSOLE_FONT_MAX_Y;
 extern g_data graphics_data;
 void graphics_init(EFI_GRAPHICS_OUTPUT_PROTOCOL *gop);
 void graphics_clear_screen(U32 color);
