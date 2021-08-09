@@ -13,6 +13,7 @@ void fbcon_init(void)
     fbcon_node.con.current_y = 0;
     fbcon_node.con.current_x = 0;
     fbcon_node.con.con.common.putchar = fbcon_putchar;
+    fbcon_node.con.con.common.flush = fbcon_flush;
     fbcon_node.con.con.input_buffer.queue.bufsize = BUFFER_MAX;
     fbcon_node.con.con.output_buffer.queue.bufsize = BUFFER_MAX;
     fbcon_node.node.type = DT_CHAR_DEVICE;
@@ -42,35 +43,54 @@ void kernel_log_line_break(){
 }
 void fbcon_putchar(char_dev* dev, U8 c){
     (void) dev;
-    if(c=='\n') {
-        kernel_log_line_break();
+    queue_in_single(&fbcon_node.con.con.output_buffer.queue,c);
+    release_semaphore(&fbcon_node.con.con.output_sem);
+    if(c==LINE_SEPARATOR||fbcon_node.con.con.output_sem>fbcon_node.con.con.output_buffer.queue.bufsize) {
+        fbcon_flush(dev);
+    }
+}
+void fbcon_flush(char_dev* dev) {
+    (void) dev;
+    char c;
+    if(fbcon_node.con.output_in_progress) {
+        //已经在执行刷新工作;退出。
         return;
     }
-    unsigned const char* dots = fontdata_8x16 + c * 16;
-    if ((fbcon_node.con.current_x / 8) < fbcon_node.con.max_x){
-        fbcon_node.con.current_x = fbcon_node.con.current_x + 8;
-    }else{
-        fbcon_node.con.current_x = 0;
-        fbcon_node.con.current_y = fbcon_node.con.current_y + 16;
-    }
-    if (fbcon_node.con.max_y < (fbcon_node.con.current_y + 16)){
-        kernel_display_move_up();
-    }
-    unsigned char data;	/*定义字符类型变量*/
-    int bit;		/*定义bit，用来下方取出8位数组元素中的某一位*/
-    int i,j;
-    for(j=fbcon_node.con.current_y;j<fbcon_node.con.current_y+16;j++)
-    {
-        data=*dots++;		/*指向下一个字符*/
-        bit = 7;			/*从最高位第七位开始*/
-        for(i=fbcon_node.con.current_x;i<fbcon_node.con.current_x+8;i++)		/*从高到底显示出8位的每一位*/
+    acquire_semaphore(&fbcon_node.con.output_in_progress);
+    while(fbcon_node.con.con.output_sem>0) {
+        c = queue_out_single(&fbcon_node.con.con.output_buffer.queue);
+        acquire_semaphore(&fbcon_node.con.con.output_sem);
+        if(c==LINE_SEPARATOR) {
+            kernel_log_line_break();
+            break;
+        }
+        unsigned const char* dots = fontdata_8x16 + c * 16;
+        if ((fbcon_node.con.current_x / 8) < fbcon_node.con.max_x){
+            fbcon_node.con.current_x = fbcon_node.con.current_x + 8;
+        }else{
+            fbcon_node.con.current_x = 0;
+            fbcon_node.con.current_y = fbcon_node.con.current_y + 16;
+        }
+        if (fbcon_node.con.max_y < (fbcon_node.con.current_y + 16)){
+            kernel_display_move_up();
+        }
+        unsigned char data;	/*定义字符类型变量*/
+        int bit;		/*定义bit，用来下方取出8位数组元素中的某一位*/
+        int i,j;
+        for(j=fbcon_node.con.current_y;j<fbcon_node.con.current_y+16;j++)
         {
-                if(data&(1<<bit)){
-                    graphics_draw_pixel(i,j,0xFFFFFFFF);	/*调用显示点函数，在此位置显示点*/
-                }
-                bit--;			/*指向低一位*/
+            data=*dots++;		/*指向下一个字符*/
+            bit = 7;			/*从最高位第七位开始*/
+            for(i=fbcon_node.con.current_x;i<fbcon_node.con.current_x+8;i++)		/*从高到底显示出8位的每一位*/
+            {
+                    if(data&(1<<bit)){
+                        graphics_draw_pixel(i,j,0xFFFFFFFF);	/*调用显示点函数，在此位置显示点*/
+                    }
+                    bit--;			/*指向低一位*/
+            }
         }
     }
+    release_semaphore(&fbcon_node.con.output_in_progress);
 }
 void fbcon_add_to_device_tree(void)
 {

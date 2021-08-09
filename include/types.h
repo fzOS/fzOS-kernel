@@ -28,6 +28,7 @@ typedef U8 byte;
 #define PAGE_SIZE 4096
 
 #define PATH_SEPARATOR '/'
+#define LINE_SEPARATOR '\n'
 
 #define FzOS_ERROR -1
 #define FzOS_BUFFER_TOO_SMALL -2

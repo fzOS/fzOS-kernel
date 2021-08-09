@@ -10,6 +10,7 @@ typedef struct {
     U64 max_y;
     U64 current_x;
     U64 current_y;
+    semaphore output_in_progress;
 } fbcon;
 typedef struct {
     device_tree_node node;
@@ -19,4 +20,5 @@ typedef struct {
 void fbcon_putchar(char_dev* dev, U8 c);
 void fbcon_init(void);
 void fbcon_add_to_device_tree(void);
+void fbcon_flush(char_dev* dev);
 #endif

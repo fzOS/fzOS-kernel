@@ -125,6 +125,9 @@ int printk(const char* format,...)
         pointer++;
     }
     va_end(arg);
+    if(*(pointer-1)!=LINE_SEPARATOR) {
+        default_console->common.flush(&default_console->common);
+    }
     return count;
     
 }
