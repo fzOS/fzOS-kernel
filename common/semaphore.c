@@ -1,7 +1,7 @@
 #include <common/semaphore.h>
 void acquire_semaphore(semaphore* sem)
 {
-    while(sem<=0) {
+    while(*sem<=0) {
         //TODO:giveup();
         __asm__ ("hlt");
     }

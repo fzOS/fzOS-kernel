@@ -56,7 +56,7 @@ void fbcon_flush(char_dev* dev) {
         //已经在执行刷新工作;退出。
         return;
     }
-    acquire_semaphore(&fbcon_node.con.output_in_progress);
+    release_semaphore(&fbcon_node.con.output_in_progress);
     while(fbcon_node.con.con.output_sem>0) {
         c = queue_out_single(&fbcon_node.con.con.output_buffer.queue);
         acquire_semaphore(&fbcon_node.con.con.output_sem);
@@ -90,7 +90,7 @@ void fbcon_flush(char_dev* dev) {
             }
         }
     }
-    release_semaphore(&fbcon_node.con.output_in_progress);
+    acquire_semaphore(&fbcon_node.con.output_in_progress);
 }
 void fbcon_add_to_device_tree(void)
 {
