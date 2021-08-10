@@ -4,6 +4,10 @@
 
 Kernel source code for fzOS.
 
+## External Libraries
+
+LAI(https://github.com/managarm/lai/) for ACPI Parsing
+
 ## 开发路线
 ### 这块现在理清了
 #### 领袖说过：自己动手，丰衣足食。
