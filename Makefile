@@ -15,8 +15,8 @@ endif
 THIS_YEAR := $(shell date +"%Y")
 BASE_DIR=${PWD}
 CC:=${CC} gcc
-CFLAGS=-pie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-sse -mno-red-zone -ffreestanding
-SUBDIRS=drivers memory acpi common syscall interrupt threading filesystem
+CFLAGS=-pie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-red-zone -ffreestanding
+SUBDIRS=drivers memory acpi common syscall interrupt threading filesystem coldpoint
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
         ( cd $$subdir && $(MAKE) all -f Makefile -e CC="${CC}" -e BASE_DIR=${BASE_DIR} -e CFLAGS='${CFLAGS}') || exit 1; \
