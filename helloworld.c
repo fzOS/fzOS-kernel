@@ -67,10 +67,7 @@ void kernel_main_real() {
     ((U8*)buf)[length] = '\0';
     printk("%s\n",buf);
     free_page(buf,(banner_file.size/PAGE_SIZE+1));
-    print_device_tree();
-    while(1) {
-        printk("%c",default_console->common.getchar(&default_console->common));
-    }
+
 }
 void kernel_main(KernelInfo info) {
     //手动换栈。

@@ -16,21 +16,37 @@ void init_keyboard(void)
 void keyboard_getkey(int no)
 {
     static U8 shift=0;
+    static U8 caps=0;
+    /*
+     shift=0,caps=0 小写
+     shift=1,caps=1 小写
+     shift=0,caps=1 大写
+     shift=1,caps=0 小写
+
+     result = shift^caps
+     */
+
     (void)no;
     U8 scancode = inb(0x60);
     if (scancode & KEY_RELEASE) {
         scancode = scancode & ~KEY_RELEASE;
-        if (scancode == 0x2a || scancode == 0x36) {
+        if (scancode == KEY_LSHIFT || scancode == KEY_RSHIFT) {
            shift = 0;
         }
     }
     else {
-        if (scancode == 0x2a || scancode == 0x36) {
+        if (scancode == KEY_LSHIFT || scancode == KEY_RSHIFT) {
             shift = 1;
+        }
+        if (scancode == KEY_CAPS) {
+            caps = !caps;
         }
         else {
             char pressed_char;
-            if (shift) {
+            if(scancode>=sizeof(SCAN_CODE_MAPPING)) {
+                return;
+            }
+            if (shift^caps) {
                 pressed_char = SCAN_CODE_MAPPING_SHIFTED[scancode];
             }
             else {
