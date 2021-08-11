@@ -41,7 +41,7 @@ void* allocate_page(int count);
 void free_page(void* page_address,int count);
 void* memalloc(U64 size);
 void memfree(void* pointer);
-
+void* memrealloc(void* pointer, U64 new_size);
 extern inline_linked_list free_page_linked_list;
 extern iterator(inline_linked_list) free_page_linked_list_iterator;
 #endif

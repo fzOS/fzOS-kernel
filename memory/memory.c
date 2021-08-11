@@ -17,6 +17,15 @@ void* memalloc(U64 size)
     return p+sizeof(U64);
 }
 
+void* memrealloc(void* pointer, U64 new_size)
+{
+    void* p = memalloc(new_size);
+    U64 old_page_count = *(U64*)(pointer-sizeof(U64));
+    memcpy(p,pointer,old_page_count*PAGE_SIZE-sizeof(U64));
+    memfree(pointer);
+    return p;
+}
+
 void memfree(void* pointer)
 {
     U64 page_count = *(U64*)(pointer-sizeof(U64));

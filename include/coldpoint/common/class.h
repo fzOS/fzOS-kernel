@@ -1,8 +1,30 @@
 #ifndef CLASS_H
 #define CLASS_H
+#include <types.h>
 typedef struct {
-
-
+    U8 type;
+    U64 offset;
+} constant_entry;
+typedef struct {
+    U16 access_flags;
+    U16 name_index;
+    U16 desc_index;
+    U16 attributes;
+    void* attributes_entry;
+    void* bytecode;
+} method_entry;
+typedef struct {
+    //由于JVM的奇怪的特性，只能用静态结构+索引的方式进行数据存储了……
+    U64 constant_entry_offset;
+    U64 method_pool_entry_offset;
+    U64 annotation_pool_entry_offset;
+    U64 fileds_pool_entry_offset;
+    U16 constant_pool_entry_count;
+    U16 method_pool_entry_count;
+    U16 annotation_pool_entry_count;
+    U16 fields_pool_entry_count;
+    U16 access_flag,this_class,suoer_class;
+    U8 buffer[0];
 } class;
 typedef enum {
     CONSTANT_UTF8=1,
