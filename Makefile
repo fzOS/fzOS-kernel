@@ -1,9 +1,7 @@
 #if we are debugging
 DEBUG=1
 GNUEFI_PATH=/usr/include/efi
-ifneq '$(USER)' 'fhh'
-
-else
+ifeq '$(USER)' 'fhh'
 export PATH:=/home/fhh/.ccache/:${PATH}
 CC= ccache 
 endif
