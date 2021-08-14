@@ -17,11 +17,11 @@ class* loadclass(void* buf)
 {
     U8* p = buf;
     //首先，校验class的文件头。
-    if(*(U32*)p== __builtin_bswap32(0xCAFEBABE)) {
+    if(*(U32*)p== bswap32(0xCAFEBABE)) {
         p+=sizeof(U32);
-        printk("Version %d.%d.\n",__builtin_bswap16(*((U16*)(p+2))),__builtin_bswap16(*((U16*)p)));
+        printk("Version %d.%d.\n",bswap16(*((U16*)(p+2))),bswap16(*((U16*)p)));
         p+=sizeof(U16)*2;
-        U16 const_pool_count = __builtin_bswap16(*((U16*)p));
+        U16 const_pool_count = bswap16(*((U16*)p));
         printk("Constant Pool Count:%d\n",const_pool_count);
         p+=sizeof(U16);
         ClassConstantType const_type=0;
@@ -31,8 +31,13 @@ class* loadclass(void* buf)
             printk("Const #%d,",i);
             printk("%b %b %b\n",*p,*(p+1),*(p+2));
             switch(const_type) {
+                case CONSTANT_NULL:{
+                    printk("type=null.\n");
+                    break;
+                }
+
                 case CONSTANT_UTF8:{
-                    U16 size = __builtin_bswap16(*((U16*)p));
+                    U16 size = bswap16(*((U16*)p));
                     p+=sizeof(U16);
                     printk("type=utf-8,size:%d,val=",size);
                     for(U16 j=0;j<size;j++) {
@@ -43,7 +48,7 @@ class* loadclass(void* buf)
                     break;
                 }
                 case CONSTANT_INT: {
-                    printk("type=int,val=%d\n",__builtin_bswap32(*((U32*)p)));
+                    printk("type=int,val=%d\n",bswap32(*((U32*)p)));
                     p+=sizeof(U32);
                     break;
                 }
@@ -53,7 +58,7 @@ class* loadclass(void* buf)
                     break;
                 }
                 case CONSTANT_LONG: {
-                    printk("type=long,val=%ld\n",__builtin_bswap64(*((U64*)p)));
+                    printk("type=long,val=%ld\n",bswap64(*((U64*)p)));
                     p+=sizeof(U64);
                     break;
                 }
@@ -63,38 +68,42 @@ class* loadclass(void* buf)
                     break;
                 }
                 case CONSTANT_CLASS: {
-                    printk("type=class,index=%d\n",__builtin_bswap16(*((U16*)p)));
+                    printk("type=class,index=%d\n",bswap16(*((U16*)p)));
                     p+=sizeof(U16);
                     break;
                 }
                 case CONSTANT_STRING: {
-                    printk("type=string,val=%d\n",__builtin_bswap16(*((U16*)p)));
+                    printk("type=string,val=%d\n",bswap16(*((U16*)p)));
                     p+=sizeof(U16);
                     break;
                 }
                 case CONSTANT_FIELDREF: {
-                    printk("type=field,class index=%d,name&type index=%d\n",__builtin_bswap16(*((U16*)p)),__builtin_bswap16(*((U16*)(p+2))));
+                    printk("type=field,class index=%d,name&type index=%d\n",bswap16(*((U16*)p)),bswap16(*((U16*)(p+2))));
                     p+=sizeof(U16)*2;
                     break;
                 }
                 case CONSTANT_METHODREF: {
-                    printk("type=method,class index=%d,name&type index=%d\n",__builtin_bswap16(*((U16*)p)),__builtin_bswap16(*((U16*)(p+2))));
+                    printk("type=method,class index=%d,name&type index=%d\n",bswap16(*((U16*)p)),bswap16(*((U16*)(p+2))));
                     p+=sizeof(U16)*2;
                     break;
                 }
                 case CONSTANT_INTERFACEMETHODREF: {
-                    printk("type=interface method,class index=%d,name&type index=%d\n",__builtin_bswap16(*((U16*)p)),__builtin_bswap16(*((U16*)(p+2))));
+                    printk("type=interface method,class index=%d,name&type index=%d\n",bswap16(*((U16*)p)),bswap16(*((U16*)(p+2))));
                     p+=sizeof(U16)*2;
                     break;
                 }
                 case CONSTANT_NAMEANDTYPE: {
-                    printk("type=name and type,class name index=%d,type index=%d\n",__builtin_bswap16(*((U16*)p)),__builtin_bswap16(*((U16*)(p+2))));
+                    printk("type=name and type,class name index=%d,type index=%d\n",bswap16(*((U16*)p)),bswap16(*((U16*)(p+2))));
                     p+=sizeof(U16)*2;
                     break;
                 }
+                default: {
+                    printk("Unknown.\n");
+                    p++;
+                }
             }
         }
-        U16 access_flag = __builtin_bswap16(*((U16*)p));
+        U16 access_flag = bswap16(*((U16*)p));
         p+=sizeof(U16);
         printk("flags:");
         for(int j=0;j<15;j++) {
@@ -103,38 +112,38 @@ class* loadclass(void* buf)
             }
         }
         printk("\n");
-        U16 class=__builtin_bswap16(*((U16*)p));
+        U16 class=bswap16(*((U16*)p));
         p+=sizeof(U16);
         printk("This class:%d\n",class);
-        class=__builtin_bswap16(*((U16*)p));
+        class=bswap16(*((U16*)p));
         p+=sizeof(U16);
         printk("Super class:%d\n",class);
-        U16 interface_count=__builtin_bswap16(*((U16*)p));
+        U16 interface_count=bswap16(*((U16*)p));
         p+=sizeof(U16);
         printk("Interfaces:%d\n",interface_count);
         //FIXME:interface!
-        U16 field_count=__builtin_bswap16(*((U16*)p));
+        U16 field_count=bswap16(*((U16*)p));
         p+=sizeof(U16);
         printk("Fields:%d\n",field_count);
         if(field_count>0) {
             for(int j=0;j<field_count;j++) {
-                U16 access_flag = __builtin_bswap16(*((U16*)p));
+                U16 access_flag = bswap16(*((U16*)p));
                 printk("flags:");
                 for(int j=0;j<15;j++) {
                     if(access_flag&access_flags[j]) {
                         printk("%s ",access_flag_names[j]);
                     }
                 }
-                U16 attributes_count = __builtin_bswap16(*((U16*)(p+6)));
+                U16 attributes_count = bswap16(*((U16*)(p+6)));
                 printk(",name index:%d,descriptor index:%d,attributes_count:%d\n",\
-                    __builtin_bswap16(*((U16*)(p+2))),\
-                    __builtin_bswap16(*((U16*)(p+4))),attributes_count
+                    bswap16(*((U16*)(p+2))),\
+                    bswap16(*((U16*)(p+4))),attributes_count
                 );
                 p+=sizeof(U16)*4;
                 if(attributes_count>0) {
                     for(int k=0;k<attributes_count;k++) {
-                        U32 attribute_length=__builtin_bswap32(*((U32*)(p+2)));
-                        printk("name:%d,length:%d, value:",__builtin_bswap16(*((U16*)p)),attribute_length);
+                        U32 attribute_length=bswap32(*((U32*)(p+2)));
+                        printk("name:%d,length:%d, value:",bswap16(*((U16*)p)),attribute_length);
                         p += sizeof(U16)+sizeof(U32);
                         for(int l=0;l<attribute_length;l++) {
                             printk("%b ",*p);
@@ -146,28 +155,28 @@ class* loadclass(void* buf)
 
             }
         }
-        U16 method_count=__builtin_bswap16(*((U16*)p));
+        U16 method_count=bswap16(*((U16*)p));
         p+=sizeof(U16);
         printk("Methods:%d\n",method_count);
             if(method_count>0) {
             for(int j=0;j<method_count;j++) {
-                U16 access_flag = __builtin_bswap16(*((U16*)p));
+                U16 access_flag = bswap16(*((U16*)p));
                 printk("flags:");
                 for(int j=0;j<15;j++) {
                     if(access_flag&access_flags[j]) {
                         printk("%s ",access_flag_names[j]);
                     }
                 }
-                U16 attributes_count = __builtin_bswap16(*((U16*)(p+6)));
+                U16 attributes_count = bswap16(*((U16*)(p+6)));
                 printk(",name index:%d,descriptor index:%d,attributes_count:%d\n",\
-                    __builtin_bswap16(*((U16*)p)),__builtin_bswap16(*((U16*)(p+2))),\
-                    __builtin_bswap16(*((U16*)(p+4))),attributes_count
+                    bswap16(*((U16*)p)),bswap16(*((U16*)(p+2))),\
+                    bswap16(*((U16*)(p+4))),attributes_count
                 );
                 p+=sizeof(U16)*4;
                 if(attributes_count>0) {
                     for(int k=0;k<attributes_count;k++) {
-                        U32 attribute_length=__builtin_bswap32(*((U32*)(p+2)));
-                        printk("name:%d,length:%d, value:",__builtin_bswap16(*((U16*)p)),attribute_length);
+                        U32 attribute_length=bswap32(*((U32*)(p+2)));
+                        printk("name:%d,length:%d, value:",bswap16(*((U16*)p)),attribute_length);
                         p += sizeof(U16)+sizeof(U32);
                         for(int l=0;l<attribute_length;l++) {
                             printk("%b ",*p);
@@ -182,141 +191,119 @@ class* loadclass(void* buf)
     }
     return nullptr;
 }
-class* loadclass_ng(void* buf)
+class* loadclass_ng(void* class_file)
 {
     class* c = memalloc(PAGE_SIZE-sizeof(U64));
-    memset(c,0,sizeof(class));
-    U64 size_needed = sizeof(class);
-    U64 size_allocated = PAGE_SIZE-sizeof(U64);
-    U8* p = buf;
-//     U64 buffer_size=0;
-    //首先，校验class的文件头。
-   if(*(U32*)p== __builtin_bswap32(0xCAFEBABE)) {
+    memset(c,0,PAGE_SIZE-sizeof(U64));
+    U64 allocated_size = PAGE_SIZE;
+    U64 needed_size = sizeof(class);
+    U8* p = class_file;
+    if(*(U32*)p== bswap32(0xCAFEBABE)) {
         p+=sizeof(U32);
-        printk("Version %d.%d.\n",__builtin_bswap16(*((U16*)(p+2))),__builtin_bswap16(*((U16*)p)));
         p+=sizeof(U16)*2;
-        U16 const_pool_count = __builtin_bswap16(*((U16*)p));
-        c->constant_pool_entry_count = const_pool_count;
-        c->constant_entry_offset = 0;
+        U16 const_pool_count = bswap16(*((U16*)p));
         printk("Constant Pool Count:%d\n",const_pool_count);
-        size_needed += sizeof(constant_entry)*const_pool_count;
-        if(size_needed>=size_allocated) {
-            size_allocated += PAGE_SIZE;
-            c = memrealloc(c,size_allocated);
-        }
         p+=sizeof(U16);
-        constant_entry* c_entry = (constant_entry*)((c->buffer)+c->constant_entry_offset);
-        U64 buffer_off=sizeof(constant_entry)*const_pool_count;
-        ClassConstantType const_type=0;
-        for(U16 i=1;i<const_pool_count;i++) {
-            c_entry[i].type=*p;
-            c_entry[i].offset=buffer_off;
-            const_type=*p;
+        c->constant_entry_offset=0;
+        c->constant_pool_entry_count = const_pool_count;
+        c->buffer_size += sizeof(constant_entry)*const_pool_count;
+        needed_size+=sizeof(constant_entry)*const_pool_count;
+        if(needed_size>=allocated_size) {
+            allocated_size = ((needed_size/PAGE_SIZE)+1)*PAGE_SIZE;
+            c = memrealloc(c,allocated_size);
+        }
+        c->constant_entry_offset=0;
+        constant_entry* const_entry = (constant_entry*)(c->buffer+c->constant_entry_offset);
+        constant_entry* this_const_entry;
+        for(int i=1;i<const_pool_count;i++) {
+            this_const_entry = &const_entry[i];
+            this_const_entry->type=*p;
             p++;
-            printk("Const #%d,",i);
-            switch(const_type) {
+            switch(this_const_entry->type) {
                 case CONSTANT_UTF8:{
-                    U16 size = __builtin_bswap16(*((U16*)p));
-                    *((U16*)(c->buffer+buffer_off)) = size;
+                    ((UTF8InfoConstant*)this_const_entry)->length = bswap16(*((U16*)p));
+                    ((UTF8InfoConstant*)this_const_entry)->buffer_offset = c->buffer_size;
                     p+=sizeof(U16);
-                    buffer_off+=sizeof(U16);
-                    printk("type=utf-8,size:%d,val=",size);
-                    for(U16 j=0;j<size;j++) {
-                        *((c->buffer+buffer_off)) = *p;
-                        printk("%c",*p);
-                        p++;
-                        buffer_off++;
+                    needed_size += ((UTF8InfoConstant*)this_const_entry)->length +1;
+                    if(needed_size>=allocated_size) {
+                        allocated_size = ((needed_size/PAGE_SIZE)+1)*PAGE_SIZE;
+                        c = memrealloc(c,allocated_size);
+                        const_entry = (constant_entry*)(c->buffer+c->constant_entry_offset);
+                        this_const_entry = &const_entry[i];
                     }
-                    printk("\n");
+                    for(U16 j=0;j<((UTF8InfoConstant*)this_const_entry)->length;j++) {
+                        c->buffer[c->buffer_size]=*p;
+                        p++;
+                        c->buffer_size++;
+                    }
+                    //结尾补上C风格\0，确保可以被直接printk.
+                    c->buffer[c->buffer_size]='\0';
+                    c->buffer_size++;
                     break;
                 }
                 case CONSTANT_INT: {
-                    printk("type=int,val=%d\n",__builtin_bswap32(*((U32*)p)));
-                    *((U32*)(c->buffer+buffer_off)) = __builtin_bswap32(*((U32*)p));
+                    ((IntegerInfoConstant*)this_const_entry)->val = bswap32(*((U32*)p));
                     p+=sizeof(U32);
-                    buffer_off+=sizeof(U32);
                     break;
                 }
                 case CONSTANT_FLOAT: {
-                    printk("type=float,val=%f\n",bswap32f(*((float*)p)));
-                    *((float*)(c->buffer+buffer_off)) = bswap32f(*((float*)p));
+                    ((FloatInfoConstant*)this_const_entry)->val = bswap32f(*((float*)p));
                     p+=sizeof(float);
-                    buffer_off+=sizeof(float);
                     break;
                 }
                 case CONSTANT_LONG: {
-                    printk("type=long,val=%ld\n",__builtin_bswap64(*((U64*)p)));
-                    *((U64*)(c->buffer+buffer_off)) = __builtin_bswap64(*((U64*)p));
+                    ((LongInfoConstant*)this_const_entry)->val = bswap64(*((U64*)p));
                     p+=sizeof(U64);
-                    buffer_off+=sizeof(U64);
                     break;
                 }
                 case CONSTANT_DOUBLE: {
-                    printk("type=double,val=%lf\n",bswap64f(*((double*)p)));
-                    *((double*)(c->buffer+buffer_off)) = bswap64f(*((double*)p));
+                    ((DoubleInfoConstant*)this_const_entry)->val = bswap64f(*((double*)p));
                     p+=sizeof(double);
-                    buffer_off+=sizeof(double);
                     break;
                 }
                 case CONSTANT_CLASS: {
-                    *((U16*)(c->buffer+buffer_off)) = __builtin_bswap16(*((U16*)p));
-                    printk("type=class,index=%d\n",__builtin_bswap16(*((U16*)p)));
+                    ((ClassInfoConstant*)this_const_entry)->name_index = bswap16(*((U16*)p));
                     p+=sizeof(U16);
-                    buffer_off+=sizeof(U16);
                     break;
                 }
                 case CONSTANT_STRING: {
-                    *((U16*)(c->buffer+buffer_off)) = __builtin_bswap16(*((U16*)p));
-                    printk("type=string,val=%d\n",__builtin_bswap16(*((U16*)p)));
+                    ((StringInfoConstant*)this_const_entry)->string_index = bswap16(*((U16*)p));
                     p+=sizeof(U16);
-                    buffer_off+=sizeof(U16);
                     break;
                 }
                 case CONSTANT_FIELDREF: {
-                    printk("type=field,class index=%d,name&type index=%d\n",__builtin_bswap16(*((U16*)p)),__builtin_bswap16(*((U16*)(p+2))));
-                    *((U16*)(c->buffer+buffer_off)) = __builtin_bswap16(*((U16*)p));
-                    buffer_off+=sizeof(U16);
-                    *((U16*)(c->buffer+buffer_off)) = __builtin_bswap16(*((U16*)p+2));
-                    buffer_off+=sizeof(U16);
+                    ((FieldRefConstant*)this_const_entry)->class_index = bswap16(*((U16*)p));
+                    ((FieldRefConstant*)this_const_entry)->name_and_type_index = bswap16(*((U16*)(p+2)));
                     p+=sizeof(U16)*2;
                     break;
                 }
                 case CONSTANT_METHODREF: {
-                    printk("type=method,class index=%d,name&type index=%d\n",__builtin_bswap16(*((U16*)p)),__builtin_bswap16(*((U16*)(p+2))));
-                    *((U16*)(c->buffer+buffer_off)) = __builtin_bswap16(*((U16*)p));
-                    buffer_off+=sizeof(U16);
-                    *((U16*)(c->buffer+buffer_off)) = __builtin_bswap16(*((U16*)p+2));
-                    buffer_off+=sizeof(U16);
+                    ((MethodRefConstant*)this_const_entry)->class_index = bswap16(*((U16*)p));
+                    ((MethodRefConstant*)this_const_entry)->name_and_type_index = bswap16(*((U16*)(p+2)));
                     p+=sizeof(U16)*2;
                     break;
                 }
                 case CONSTANT_INTERFACEMETHODREF: {
-                    printk("type=interface method,class index=%d,name&type index=%d\n",__builtin_bswap16(*((U16*)p)),__builtin_bswap16(*((U16*)(p+2))));
-                    *((U16*)(c->buffer+buffer_off)) = __builtin_bswap16(*((U16*)p));
-                    buffer_off+=sizeof(U16);
-                    *((U16*)(c->buffer+buffer_off)) = __builtin_bswap16(*((U16*)p+2));
-                    buffer_off+=sizeof(U16);
+                    ((InterfaceRefConstant*)this_const_entry)->class_index = bswap16(*((U16*)p));
+                    ((InterfaceRefConstant*)this_const_entry)->name_and_type_index = bswap16(*((U16*)(p+2)));
                     p+=sizeof(U16)*2;
                     break;
                 }
                 case CONSTANT_NAMEANDTYPE: {
-                    printk("type=name and type,class name index=%d,type index=%d\n",__builtin_bswap16(*((U16*)p)),__builtin_bswap16(*((U16*)(p+2))));
-                    *((U16*)(c->buffer+buffer_off)) = __builtin_bswap16(*((U16*)p));
-                    buffer_off+=sizeof(U16);
-                    *((U16*)(c->buffer+buffer_off)) = __builtin_bswap16(*((U16*)p+2));
-                    buffer_off+=sizeof(U16);
+                    ((NameAndTypeInfoConstant*)this_const_entry)->name_index = bswap16(*((U16*)p));
+                    ((NameAndTypeInfoConstant*)this_const_entry)->descriptor_index = bswap16(*((U16*)(p+2)));
                     p+=sizeof(U16)*2;
                     break;
                 }
+                default: {
+                    p++;
+                }
             }
         }
-        U16 access_flag = __builtin_bswap16(*((U16*)p));
-        p+=sizeof(U16);
-        printk("flags:%x\n",access_flag);
-
     }
     return c;
 }
+
 int init_classloader(void)
 {
     file file;
@@ -334,16 +321,6 @@ int init_classloader(void)
         return FzOS_ERROR;
     }
     class* c = loadclass_ng(buf);
-    printk(" Class consant count:%d.\n",c->constant_pool_entry_count);
-    constant_entry* entry = (constant_entry*)(c->buffer+c->constant_entry_offset);
-    for(int i=0;i<c->constant_pool_entry_count;i++) {
-        printk("Entry #%d,type %d,%b%b%b.\n",i,entry[i].type,entry[i].offset,\
-                                            (c->buffer[entry[i].offset]),\
-                                            (c->buffer[entry[i].offset+1]),\
-                                            (c->buffer[entry[i].offset+2])
-        );
-    }
-
-    (void)entry;
+    print_class_constants(c);
     return FzOS_SUCEESS;
 }
