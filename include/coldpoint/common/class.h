@@ -17,13 +17,13 @@ typedef struct {
     //由于JVM的奇怪的特性，只能用静态结构+索引的方式进行数据存储了……
     U64 constant_entry_offset;
     U64 method_pool_entry_offset;
-    U64 annotation_pool_entry_offset;
-    U64 fileds_pool_entry_offset;
+    U64 interface_pool_entry_offset;
+    U64 fields_pool_entry_offset;
     U16 constant_pool_entry_count;
     U16 method_pool_entry_count;
-    U16 annotation_pool_entry_count;
+    U16 interface_pool_entry_count;
     U16 fields_pool_entry_count;
-    U16 access_flag,this_class,suoer_class;
+    U16 access_flag,this_class,super_class;
     U64 buffer_size;
     U8 buffer[0];
 } class;
@@ -139,6 +139,21 @@ typedef enum {
     ACCESS_ANNOTATION=0x2000,
     ACCESS_ENUM=0x4000,
 } ClassAccessFlag;
+typedef struct {
+    U16 access_flags;
+    U16 name_index;
+    U16 descriptor_index;
+    U16 attribute_count;
+    U64 attribute_info_entry_offset;
+} field_info_entry,method_info_entry;
+typedef struct {
+    U16 attribute_name_index;
+    U16 attribute_length;
+    U64 info_offset;
+} attribute_info_entry;
 void print_class_constants(const class* c);
+void print_class_info(const class* c);
 const U8* class_get_utf8_string(const class* c,int no);
+const U16 class_get_class_name_index(const class* c,int no);
+void print_field_and_method_info(const class* c);
 #endif
