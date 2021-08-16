@@ -1,5 +1,7 @@
 #include <coldpoint/common/class.h>
 #include <common/printk.h>
+#include <common/bswap.h>
+#include <common/kstring.h>
 int access_flags[] = {ACCESS_ABSTRACT,ACCESS_ANNOTATION,ACCESS_BRIDGE,ACCESS_ENUM,\
                       ACCESS_FINAL,ACCESS_INTERFACE,ACCESS_NATIVE,ACCESS_PRIVATE,\
                       ACCESS_PROTECTED,ACCESS_PUBLIC,ACCESS_STATIC,ACCESS_STRICT,\
@@ -101,6 +103,41 @@ const U16 class_get_class_name_index(const class* c,int no)
     }
     return const_entry[no].name_index;
 }
+U16 class_get_utf8_string_index(const class* c,const U8* name)
+{
+    UTF8InfoConstant* const_entry = (UTF8InfoConstant*)(c->buffer+c->constant_entry_offset);
+    for(int i=0;i<c->constant_pool_entry_count;i++) {
+        if(const_entry->type==CONSTANT_UTF8) {
+            if(!strcomp((char*)&c->buffer[const_entry->buffer_offset],(char*)name)) {
+                return i;
+            }
+        }
+        const_entry++;
+    }
+    return 0;
+}
+attribute_info_entry* class_get_class_attribute_by_name(const class* c,U16 name_index)
+{
+    attribute_info_entry* a = (attribute_info_entry*)&c->buffer[c->class_attributes_entry_offset];
+    for(int i=0;i<c->class_attributes_entry_count;i++) {
+        if(a->attribute_name_index==name_index) {
+            return a;
+        }
+        a++;
+    }
+    return nullptr;
+}
+method_entry* class_get_method_by_name_and_desc(const class* c,U16 name_index,U16 desc_index)
+{
+    method_entry* m = (method_entry*)&c->buffer[c->method_pool_entry_offset];
+    for(int i=0;i<c->method_pool_entry_count;i++) {
+        if(m->name_index==name_index&&m->desc_index==desc_index) {
+            return m;
+        }
+        m++;
+    }
+    return nullptr;
+}
 void print_field_and_method_info(const class* c)
 {
     field_info_entry* field_entry = (field_info_entry*)&(c->buffer[c->fields_pool_entry_offset]);
@@ -154,6 +191,12 @@ void print_field_and_method_info(const class* c)
 }
 void print_class_info(const class* c)
 {
+    U64 source_file_name_index = class_get_utf8_string_index(c,(U8*)"SourceFile");
+    if(source_file_name_index) {
+        attribute_info_entry* e = class_get_class_attribute_by_name(c,source_file_name_index);
+        U16 file_name = bswap16(*(U16*)&(c->buffer[e->info_offset]));
+        printk("Source File:%s\n",class_get_utf8_string(c,file_name));
+    }
     for(int j=0;j<15;j++) {
         if(c->access_flag&access_flags[j]) {
             printk("%s ",access_flag_names[j]);

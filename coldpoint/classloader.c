@@ -5,7 +5,7 @@
 #include <common/printk.h>
 #include <memory/memory.h>
 
-class* loadclass_ng(void* class_file)
+class* loadclass(void* class_file)
 {
     class* c = memalloc(PAGE_SIZE-sizeof(U64));
     memset(c,0,PAGE_SIZE-sizeof(U64));
@@ -16,7 +16,6 @@ class* loadclass_ng(void* class_file)
         p+=sizeof(U32);
         p+=sizeof(U16)*2;
         U16 const_pool_count = bswap16(*((U16*)p));
-        printk("Constant Pool Count:%d\n",const_pool_count);
         p+=sizeof(U16);
         c->constant_entry_offset=0;
         c->constant_pool_entry_count = const_pool_count;
@@ -240,6 +239,35 @@ class* loadclass_ng(void* class_file)
                 method_entry++;
             }
         }
+                c->class_attributes_entry_count=bswap16(*((U16*)p));
+        p+=sizeof(U16);
+        c->class_attributes_entry_offset = c->buffer_size;
+        if(c->class_attributes_entry_count) {
+            c->buffer_size+=sizeof(attribute_info_entry)*c->class_attributes_entry_count;
+            needed_size+=sizeof(attribute_info_entry)*c->class_attributes_entry_count;
+            if(needed_size>=allocated_size) {
+                allocated_size = ((needed_size/PAGE_SIZE)+1)*PAGE_SIZE;
+                c = memrealloc(c,allocated_size);
+            }
+            attribute_info_entry* class_attribute_entry = (attribute_info_entry*)&(c->buffer[c->class_attributes_entry_offset]);
+            for(int k=0;k<c->class_attributes_entry_count;k++) {
+                class_attribute_entry->attribute_name_index = bswap16(*((U16*)p));
+                class_attribute_entry->attribute_length = bswap32(*((U32*)(p+2)));
+                class_attribute_entry->info_offset = c->buffer_size;
+                p += sizeof(U16)+sizeof(U32);
+                needed_size+=class_attribute_entry->attribute_length;
+                if(needed_size>=allocated_size) {
+                    allocated_size = ((needed_size/PAGE_SIZE)+1)*PAGE_SIZE;
+                    c = memrealloc(c,allocated_size);
+                }
+                for(int l=0;l<class_attribute_entry->attribute_length;l++) {
+                    c->buffer[c->buffer_size]=*p;
+                    p++;
+                    c->buffer_size++;
+                }
+                class_attribute_entry++;
+            }
+        }
     }
     return c;
 }
@@ -260,7 +288,8 @@ int init_classloader(void)
         printk(" Read Init fail: %d!\n",ret);
         return FzOS_ERROR;
     }
-    class* c = loadclass_ng(buf);
+    class* c = loadclass(buf);
+    memfree(buf);
     print_class_info(c);
     print_class_constants(c);
     print_field_and_method_info(c);

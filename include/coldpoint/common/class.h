@@ -19,10 +19,12 @@ typedef struct {
     U64 method_pool_entry_offset;
     U64 interface_pool_entry_offset;
     U64 fields_pool_entry_offset;
+    U64 class_attributes_entry_offset;
     U16 constant_pool_entry_count;
     U16 method_pool_entry_count;
     U16 interface_pool_entry_count;
     U16 fields_pool_entry_count;
+    U16 class_attributes_entry_count;
     U16 access_flag,this_class,super_class;
     U64 buffer_size;
     U8 buffer[0];
@@ -155,5 +157,9 @@ void print_class_constants(const class* c);
 void print_class_info(const class* c);
 const U8* class_get_utf8_string(const class* c,int no);
 const U16 class_get_class_name_index(const class* c,int no);
+attribute_info_entry* class_get_class_attribute_by_name(const class* c,U16 name_index);
+
+U16 class_get_utf8_string_index(const class* c,const U8* name);
+method_entry* class_get_method_by_name_and_desc(const class* c,U16 name_index,U16 desc_index);
 void print_field_and_method_info(const class* c);
 #endif
