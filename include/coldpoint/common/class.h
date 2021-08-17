@@ -6,14 +6,6 @@ typedef struct {
     U64 padding;
 } __attribute__((packed)) constant_entry;
 typedef struct {
-    U16 access_flags;
-    U16 name_index;
-    U16 desc_index;
-    U16 attributes;
-    void* attributes_entry;
-    void* bytecode;
-} method_entry;
-typedef struct {
     //由于JVM的奇怪的特性，只能用静态结构+索引的方式进行数据存储了……
     U64 constant_entry_offset;
     U64 method_pool_entry_offset;
@@ -153,13 +145,20 @@ typedef struct {
     U16 attribute_length;
     U64 info_offset;
 } attribute_info_entry;
+typedef struct {
+    U16 max_stack;
+    U16 max_locals;
+    U32 code_length;
+    U8 code[];
+    //下面的暂时不解析。
+}code_attribute;
 void print_class_constants(const class* c);
 void print_class_info(const class* c);
 const U8* class_get_utf8_string(const class* c,int no);
 const U16 class_get_class_name_index(const class* c,int no);
 attribute_info_entry* class_get_class_attribute_by_name(const class* c,U16 name_index);
-
+attribute_info_entry* class_get_method_attribute_by_name(const class* c,const method_info_entry* entry,U16 name_index);
 U16 class_get_utf8_string_index(const class* c,const U8* name);
-method_entry* class_get_method_by_name_and_desc(const class* c,U16 name_index,U16 desc_index);
+method_info_entry* class_get_method_by_name_and_desc(const class* c,U16 name_index,U16 desc_index);
 void print_field_and_method_info(const class* c);
 #endif

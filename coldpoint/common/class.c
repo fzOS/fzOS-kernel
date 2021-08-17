@@ -127,11 +127,11 @@ attribute_info_entry* class_get_class_attribute_by_name(const class* c,U16 name_
     }
     return nullptr;
 }
-method_entry* class_get_method_by_name_and_desc(const class* c,U16 name_index,U16 desc_index)
+method_info_entry* class_get_method_by_name_and_desc(const class* c,U16 name_index,U16 desc_index)
 {
-    method_entry* m = (method_entry*)&c->buffer[c->method_pool_entry_offset];
+    method_info_entry* m = (method_info_entry*)&c->buffer[c->method_pool_entry_offset];
     for(int i=0;i<c->method_pool_entry_count;i++) {
-        if(m->name_index==name_index&&m->desc_index==desc_index) {
+        if(m->name_index==name_index&&m->descriptor_index==desc_index) {
             return m;
         }
         m++;
@@ -159,6 +159,7 @@ void print_field_and_method_info(const class* c)
 
     }
     method_info_entry* method_entry = (method_info_entry*)&(c->buffer[c->method_pool_entry_offset]);
+    U16 code_name_index = class_get_utf8_string_index(c,(U8*)"Code");
     if(c->method_pool_entry_count) {
         printk("Methods:\n");
     }
@@ -169,7 +170,6 @@ void print_field_and_method_info(const class* c)
                 printk("%s ",access_flag_names[j]);
             }
         }
-
         printk("%s %s,attributes_count:%d\n",\
                class_get_utf8_string(c,method_entry[i].name_index),\
                class_get_utf8_string(c,method_entry[i].descriptor_index),\
@@ -178,11 +178,24 @@ void print_field_and_method_info(const class* c)
         if(method_entry[i].attribute_count) {
             attribute_info_entry* attribute_entry = (attribute_info_entry*)&(c->buffer[method_entry[i].attribute_info_entry_offset]);
             for(int j=0;j<method_entry[i].attribute_count;j++) {
-                printk("%s:length:%d, value:\n",class_get_utf8_string(c,attribute_entry->attribute_name_index),attribute_entry->attribute_length);
-                const U8* val = &c->buffer[attribute_entry->info_offset];
-                for(int k=0;k<attribute_entry->attribute_length;k++) {
-                    printk("%b ",*val);
-                    val++;
+                 if(code_name_index!=0&&attribute_entry->attribute_name_index==code_name_index) {
+                    code_attribute* attr = (code_attribute*)&c->buffer[attribute_entry->info_offset];
+                    U32 code_count = bswap32(attr->code_length);
+                    printk("Code,max stack:%d,max local var:%d,length:%d\n",\
+                            bswap16(attr->max_stack),\
+                            bswap16(attr->max_locals),\
+                            code_count);
+                    for(int k=0;k<code_count;k++) {
+                        printk("%b ",attr->code[k]);
+                    }
+                }
+                else {
+                    printk("%s:length:%d, value:\n",class_get_utf8_string(c,attribute_entry->attribute_name_index),attribute_entry->attribute_length);
+                    const U8* val = &c->buffer[attribute_entry->info_offset];
+                    for(int k=0;k<attribute_entry->attribute_length;k++) {
+                        printk("%b ",*val);
+                        val++;
+                    }
                 }
                 printk("\n");
             }
@@ -213,4 +226,15 @@ void print_class_info(const class* c)
     }
     printk("\n");
 
+}
+attribute_info_entry* class_get_method_attribute_by_name(const class* c,const method_info_entry* entry,U16 name_index)
+{
+    attribute_info_entry* a = (attribute_info_entry*)&c->buffer[entry->attribute_info_entry_offset];
+    for(int i=0;i<c->class_attributes_entry_count;i++) {
+        if(a->attribute_name_index==name_index) {
+            return a;
+        }
+        a++;
+    }
+    return nullptr;
 }

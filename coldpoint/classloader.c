@@ -4,7 +4,7 @@
 #include <common/file.h>
 #include <common/printk.h>
 #include <memory/memory.h>
-
+#include <coldpoint/threading/thread.h>
 class* loadclass(void* class_file)
 {
     class* c = memalloc(PAGE_SIZE-sizeof(U64));
@@ -293,5 +293,6 @@ int init_classloader(void)
     print_class_info(c);
     print_class_constants(c);
     print_field_and_method_info(c);
+    thread_test(c);
     return FzOS_SUCEESS;
 }
