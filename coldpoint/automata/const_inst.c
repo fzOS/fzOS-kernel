@@ -13,33 +13,38 @@ cpstatus opcode_aconst_null(thread* t) {
 }
 cpstatus opcode_dconst_0(thread* t) {
     print_opcode("dconst_0\n");
-    *(double*)(&t->stack[t->rsp])=0.0;
+    double* sp = (double*)(&t->stack[t->rsp]);
+    *sp=0.0;
     t->rsp++;
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_dconst_1(thread* t) {
     print_opcode("dconst_1\n");
-    *(double*)(&t->stack[t->rsp])=1.0;
+    double* sp = (double*)(&t->stack[t->rsp]);
+    *sp=1.0;
     t->rsp++;
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_fconst_0(thread* t) {
     print_opcode("fconst_0\n");
-    *(double*)(&t->stack[t->rsp])=0.0;
+    double* sp = (double*)(&t->stack[t->rsp]);
+    *sp=0.0;
     t->rsp++;
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_fconst_1(thread* t) {
 
     print_opcode("fconst_1\n");
-    *(double*)(&t->stack[t->rsp])=1.0;
+    double* sp = (double*)(&t->stack[t->rsp]);
+    *sp=1.0;
     t->rsp++;
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_fconst_2(thread* t) {
 
     print_opcode("fconst_2\n");
-    *(double*)(&t->stack[t->rsp])=2.0;
+    double* sp = (double*)(&t->stack[t->rsp]);
+    *sp=2.0;
     t->rsp++;
     return COLD_POINT_SUCCESS;
 }
