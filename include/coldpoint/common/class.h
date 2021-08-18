@@ -1,6 +1,7 @@
 #ifndef CLASS_H
 #define CLASS_H
 #include <types.h>
+#include <coldpoint/common/status.h>
 typedef struct {
     U8 type;
     U64 padding;
