@@ -1,5 +1,7 @@
 #include <coldpoint/automata/const_inst.h>
 #include <common/bswap.h>
+_Static_assert(sizeof(double)==sizeof(U64),"sizeof(Double)!=sizeof(U64)");
+_Static_assert(sizeof(float)==sizeof(U32),"sizeof(float)!=sizeof(U32)");
 cpstatus opcode_nop(thread* t) {
     print_opcode("nop\n");
     (void)t;
@@ -27,7 +29,7 @@ cpstatus opcode_dconst_1(thread* t) {
 }
 cpstatus opcode_fconst_0(thread* t) {
     print_opcode("fconst_0\n");
-    double* sp = (double*)(&t->stack[t->rsp]);
+    float* sp = (float*)(&t->stack[t->rsp]);
     *sp=0.0;
     t->rsp++;
     return COLD_POINT_SUCCESS;
@@ -35,7 +37,7 @@ cpstatus opcode_fconst_0(thread* t) {
 cpstatus opcode_fconst_1(thread* t) {
 
     print_opcode("fconst_1\n");
-    double* sp = (double*)(&t->stack[t->rsp]);
+    float* sp = (float*)(&t->stack[t->rsp]);
     *sp=1.0;
     t->rsp++;
     return COLD_POINT_SUCCESS;
@@ -43,7 +45,7 @@ cpstatus opcode_fconst_1(thread* t) {
 cpstatus opcode_fconst_2(thread* t) {
 
     print_opcode("fconst_2\n");
-    double* sp = (double*)(&t->stack[t->rsp]);
+    float* sp = (float*)(&t->stack[t->rsp]);
     *sp=2.0;
     t->rsp++;
     return COLD_POINT_SUCCESS;
