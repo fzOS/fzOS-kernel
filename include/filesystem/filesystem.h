@@ -18,7 +18,9 @@ typedef struct filesystem{
     int (*open)(struct filesystem* fs,char* filename,struct file* file);
     int (*read)(struct file* file,void* buf,U64 buflen);
     int (*seek)(struct file* file,U64 offset,SeekDirection direction);
+    int (*write)(struct file* file,void* buf,U64 buflen);
     int (*close)(struct file* file);
+    int (*unmount)(struct filesystem* fs);
     block_dev* dev;
 } filesystem;
 
@@ -27,5 +29,6 @@ typedef struct {
     filesystem fs;
 } file_system_tree_node;
 int mount(GPTPartition* partition,const char* position);
+int unmount_all_mounted_filesystems();
 int mount_root_partition();
 #endif

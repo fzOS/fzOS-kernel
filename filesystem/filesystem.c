@@ -40,3 +40,14 @@ int mount_root_partition()
     }
     return FzOS_ERROR;
 }
+//人可以，至少先应该卸载根目录。
+int unmount_all_mounted_filesystems()
+{
+    int result=FzOS_SUCEESS;
+    //TODO:卸载全部其他文件系统！
+    file_system_tree_node* rootfs_node = (file_system_tree_node*)device_tree_resolve_by_path("/",nullptr,DT_RETURN_IF_NONEXIST);
+    if(rootfs_node!=nullptr&&rootfs_node->node.type==DT_FILESYSTEM) {
+        result = rootfs_node->fs.unmount(&(rootfs_node->fs));
+    }
+    return result;
+}

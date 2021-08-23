@@ -47,6 +47,12 @@ inline int fhhfs_readnode(fhhfs_filesystem* fs,U64 node_id,void* buffer,U64 bloc
                        node_id*fs->physical_blocks_per_node,
                        buffer,block_count*fs->node_size,block_count*fs->physical_blocks_per_node);
 }
+inline int fhhfs_writenode(fhhfs_filesystem* fs,U64 node_id,void* buffer,U64 block_count)
+{
+    return fs->generic.dev->writeblock(fs->generic.dev,
+                       node_id*fs->physical_blocks_per_node,
+                       buffer,block_count*fs->node_size,block_count*fs->physical_blocks_per_node);
+}
 inline int fhhfs_stat(fhhfs_filesystem* fs,file* file)
 {
     //file中的node必须存在。
@@ -70,11 +76,19 @@ int fhhfs_mount(GPTPartition* partition,const char* destination)
     partition->header.readblock(&partition->header,0,buf,PAGE_SIZE,1);
     fhhfs_magic_head* head = (fhhfs_magic_head*) buf;
     if(!memcmp(head->magic_id,"fhhfs!",7)) {
+        if(head->dirty_mark) {
+            printk(" %s:File system is dirty.Remember to unmount next time.\n",destination);
+        }
+        //挂载时写入“文件系统脏”标记。
+        head->dirty_mark=1;
+        partition->header.writeblock(&partition->header,0,buf,PAGE_SIZE,1);
         fhhfs_tree_node* new_node = allocate_page((sizeof(fhhfs_tree_node)/PAGE_SIZE)+1);
         new_node->fs.generic.open = fhhfs_open;
         new_node->fs.generic.read = fhhfs_read;
+        new_node->fs.generic.write = fhhfs_write;
         new_node->fs.generic.close = fhhfs_close;
         new_node->fs.generic.seek = fhhfs_seek;
+        new_node->fs.generic.unmount = fhhfs_unmount;
         new_node->fs.generic.dev = &(partition->header);
         new_node->fs.node_table_entry = head->main_node_table_entry;
         new_node->fs.node_size = head->node_size;
@@ -92,7 +106,17 @@ int fhhfs_mount(GPTPartition* partition,const char* destination)
     free_page(buf,1);
     return FzOS_ERROR;
 }
-
+int fhhfs_unmount(filesystem* fs)
+{
+    fhhfs_filesystem* fsl = (fhhfs_filesystem*) fs;
+    void* buf = allocate_page(1);
+    fhhfs_readnode(fsl,0,buf,1);
+    fhhfs_magic_head* head = (fhhfs_magic_head*) buf;
+    head->dirty_mark = 0;
+    fhhfs_writenode(fsl,0,buf,1);
+    free_page(buf,1);
+    return FzOS_SUCEESS;
+}
 int fhhfs_open(filesystem* fs,char* filename,struct file* file)
 {
     //输入格式：
@@ -201,5 +225,36 @@ int fhhfs_seek(struct file* file,U64 offset,SeekDirection direction)
 int fhhfs_close(struct file* f)
 {
     memset(f,0,sizeof(file));
+    return FzOS_SUCEESS;
+}
+int fhhfs_write(struct file* file,void* buf,U64 buflen)
+{
+    U64 count = 0;
+    fhhfs_filesystem* fsl = (fhhfs_filesystem*)file->filesystem;
+    //由于Block device的特点，需要读出原始块，覆盖，写入原始块。
+    U64 file_offset = file->offset+sizeof(fhhfs_file_header);
+    //count = (buflen>(file->size-file->offset))?(file->size-file->offset):buflen;
+    U64 node_count = (((file_offset%fsl->node_size)+count)/fsl->node_size)+1;
+    void* read_buffer = allocate_page(1);//由于只要写入，因此只要写一块就行了。
+    void* fat_buffer = allocate_page(1);
+    U64 begin_node = (file_offset)/fsl->node_size;
+    U64 current_node = file->fs_entry_node;
+    while(begin_node--) {
+        current_node = fhhfs_get_next_node_id(fsl,current_node,fat_buffer);
+    }
+    void* bufp = buf;
+    //然后，把涉及到的block依次读进来。
+    while(node_count--) {
+        //FIXME:多块写入时申请新块。
+
+        U64 override_size = (fsl->node_size-(file_offset%fsl->node_size))<=buflen?
+                            (fsl->node_size-(file_offset%fsl->node_size)):buflen;
+        fhhfs_readnode(fsl,current_node,read_buffer,1);
+        memcpy(read_buffer+(file_offset%fsl->node_size),bufp,override_size);
+        fhhfs_writenode(fsl,current_node,read_buffer,1);
+        file_offset+=override_size;
+        current_node = fhhfs_get_next_node_id(fsl,current_node,fat_buffer);
+    }
+    file->offset+=buflen;
     return FzOS_SUCEESS;
 }

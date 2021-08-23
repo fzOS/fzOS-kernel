@@ -70,7 +70,7 @@ void kernel_main_real() {
     free_page(buf,(banner_file.size/PAGE_SIZE+1));
 
     //启动jvm！
-    init_classloader();
+    //init_classloader();
 }
 void kernel_main(KernelInfo info) {
     //手动换栈。
