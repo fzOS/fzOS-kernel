@@ -16,6 +16,7 @@
 #include <drivers/rtc.h>
 #include <filesystem/filesystem.h>
 #include <common/file.h>
+#include <common/random.h>
 #include <coldpoint/classloader.h>
 #ifndef VERSION
 #define VERSION "0.1"
@@ -48,12 +49,16 @@ void kernel_main_real() {
     init_device_tree();
     fbcon_add_to_device_tree();
     init_keyboard();
+    init_random();
+    for(int i=0;i<20;i++) {
+        printk("%x %x %x %x\n",random_get_u8(),random_get_u16(),random_get_u32(),random_get_u64());
+    }
     __asm__("sti");
     init_syscall();
     //然后是PCI设备。
     init_pci();
     //查找根分区并挂载。
-    if(mount_root_partition()!=FzOS_SUCEESS) {
+    if(mount_root_partition()!=FzOS_SUCCESS) {
         printk(" Error!No root partition found. FzOS cannot continue.\n");
         while(1) {
             halt();

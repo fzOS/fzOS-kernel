@@ -2,7 +2,7 @@
 #define FBCON
 #include <drivers/console.h>
 #include <drivers/graphics.h>
-#include <drivers/asciifont.h>
+
 #include <drivers/devicetree.h>
 typedef struct {
     console con;

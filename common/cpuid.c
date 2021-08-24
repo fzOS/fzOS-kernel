@@ -14,15 +14,18 @@ int do_cpuid(void)
 {
     __asm__(
         "movq %0,%%rax;"
+        "movq %1,%%rbx;"
+        "movq %2,%%rcx;"
+        "movq %3,%%rdx;"
         "cpuid;"
         "movq %%rax, %0;"
         "movq %%rbx, %1;"
         "movq %%rcx, %2;"
         "movq %%rdx, %3;"
         : "=g"(rax.raw), "=g"(rbx.raw), "=g"(rcx.raw), "=g"(rdx.raw)
-        : "r"(rax.raw)
+        : "r"(rax.raw), "r"(rbx.raw), "r"(rcx.raw), "r"(rdx.raw)
         : "%rax","%rbx","%rcx","%rdx","memory");
-    return 0;
+    return FzOS_SUCCESS;
 }
 int get_processor_vendor(char* buff)
 {
@@ -42,6 +45,16 @@ int get_processor_vendor(char* buff)
         buff[i]=rcx.split.data[i-8];
     }
     return 0;
+}
+int get_processor_rdseed_support(void)
+{
+    rcx.raw=0;
+    rax.raw=7;
+    do_cpuid();
+    if(rbx.raw&(1<<18)) {
+        return FzOS_SUCCESS;
+    }
+    return FzOS_NOT_IMPLEMENTED;
 }
 int get_processor_name(char* buff)
 {
@@ -66,7 +79,7 @@ int get_processor_name(char* buff)
             buff[i+16*j]=rdx.split.data[i-12];
         }
     }
-    return 0;
+    return FzOS_SUCCESS;
 
 }
 

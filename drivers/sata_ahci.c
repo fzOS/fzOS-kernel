@@ -242,7 +242,7 @@ int ahci_issue_command(HBA_PORT* port, int slot)
     while (port->ci & (1 << slot)) {
         //FIXME:Use Semaphore.
     }
-    return FzOS_SUCEESS;
+    return FzOS_SUCCESS;
 }
 // Start command engine
 void ata_start_cmd(HBA_PORT *port)
@@ -416,7 +416,7 @@ int sata_rw_command(ATAOperationType type, AHCIDevice *device,
     }
 
     ahci_set_command_fis_lba(command_fis, address, block_count);
-    return ahci_issue_command(device->port, slot) ? FzOS_SUCEESS
+    return ahci_issue_command(device->port, slot) ? FzOS_SUCCESS
                                             : FzOS_DEVICE_NOT_READY;
 }
 int ahci_readblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)

@@ -27,5 +27,5 @@ int generic_open(char* filename,file* file)
             return fs_node->fs.open(&(fs_node->fs),(char*)(remaining-1),file);
         }
     }
-    return FzOS_SUCEESS;
+    return FzOS_SUCCESS;
 }

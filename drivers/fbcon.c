@@ -1,6 +1,6 @@
 #include <drivers/fbcon.h>
 #include <memory/memory.h>
-
+#include <drivers/asciifont.h>
 void fbcon_putchar(char_dev* dev, U8 c);
 //定义一个特殊的结点。
 //因为设备树还没初始化，所以只能这么写了。

@@ -36,7 +36,8 @@ typedef U8 byte;
 #define FzOS_POSITION_OVERFLOW -4
 #define FzOS_FILE_NOT_FOUND -5
 #define FzOS_NOT_IMPLEMENTED -6
-#define FzOS_SUCEESS 0
+#define FzOS_NO_SPACE_LEFT -7
+#define FzOS_SUCCESS 0
 
 typedef union {
     U64 raw;

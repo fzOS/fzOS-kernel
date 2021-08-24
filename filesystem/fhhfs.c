@@ -6,23 +6,8 @@
 #include <common/kstring.h>
 
 #include <drivers/sata_ahci.h>
+#include <common/random.h>
 
-
-//列举出文件下的所有文件。
-//测试用。
-//注意，buffer中不包含文件头。
-void ls(void* buffer,U64 length) {
-    void* p = buffer;
-    char name[FILENAME_MAX];
-    U64 node_id;
-    printk("Node ID/Name\n");
-    while(p<buffer+length) {
-        node_id = *(U64*)(p);
-        p+= sizeof(U64);
-        p+= strcopy(name,p,FILENAME_MAX);
-        printk("%d/%s\n",node_id,name);
-    }
-}
 
 U64 fhhfs_get_node_from_dir(char* filename,void* buffer,U64 length) {
 
@@ -62,7 +47,7 @@ inline int fhhfs_stat(fhhfs_filesystem* fs,file* file)
     file->offset = 0;
     file->size = buf->filesize;
     free_page(buf,1);
-    return FzOS_SUCEESS;
+    return FzOS_SUCCESS;
 }
 //这里的buffer共享时可以节省内存分配开销。
 U64 fhhfs_get_next_node_id(fhhfs_filesystem* fs,U64 prev_id,void* buffer) {
@@ -70,6 +55,59 @@ U64 fhhfs_get_next_node_id(fhhfs_filesystem* fs,U64 prev_id,void* buffer) {
     fhhfs_readnode(fs,dest_node_page+fs->node_table_entry,buffer,1);
     return ((U64*)buffer)[prev_id%(fs->node_size/sizeof(U64))];
 }
+//定义写入下个id的函数。
+int fhhfs_write_node_id(fhhfs_filesystem* fs,U64 node,U64 value,void* buf)
+{
+    //首先，查找node分配表.
+    U64 dest_node_page = node / fs->node_size;
+    fhhfs_readnode(fs,(fs->node_table_entry+dest_node_page),buf,1);
+    //写入数据。
+    U64* node_id_page = buf;
+    node_id_page[node%(2048/sizeof(unsigned long long))] = value;
+    fhhfs_writenode(fs,(fs->node_table_entry+dest_node_page),buf,1);
+    return FzOS_SUCCESS;
+}
+//定义分配新节点的函数。
+//当占用率小于30%时，首个节点采取随机分配。
+//当占用率大于30%时，首个节点采取顺序分配。
+int fhhfs_allocate_node(fhhfs_filesystem* fs,U64* dest,int n)
+{
+    //如果剩余空间不足，那么直接退出。
+    if(fs->node_used+n>fs->node_total) {
+        return FzOS_NO_SPACE_LEFT;
+    }
+    unsigned long long tmp;
+    void* buf = allocate_page(1);
+    if(fs->node_used*1.0/fs->node_total>0.3) {
+        //顺序分配。
+        tmp = 0;
+        while(fhhfs_get_next_node_id(fs,++tmp,buf)!=0);
+    }
+    else {
+        //随机分配。
+        while(fhhfs_get_next_node_id(fs,(tmp = (random_get_u16()*1.0/0x10000)*fs->node_total,tmp),buf)!=0);
+    }
+    for(int i=0;i<n;i++) {
+        dest[i]=tmp;
+        while(fhhfs_get_next_node_id(fs,++tmp,buf)!=0) {
+            if(tmp >= fs->node_total) {
+                tmp = tmp - fs->node_total;
+            }
+        }
+    }
+    if(n>1) {
+        for(int i=0;i<n-1;i++) {
+            fhhfs_write_node_id(fs,dest[i],(dest[i+1]),buf);
+        }
+        fhhfs_write_node_id(fs,dest[n-1],1,buf);
+    }
+    else {
+        fhhfs_write_node_id(fs,dest[0],1,buf);
+    }
+    free_page(buf,1);
+    return FzOS_SUCCESS;
+}
+
 int fhhfs_mount(GPTPartition* partition,const char* destination)
 {
     void* buf = allocate_page(1);
@@ -101,7 +139,7 @@ int fhhfs_mount(GPTPartition* partition,const char* destination)
         memcpy(new_node->node.name,old_node->name,DT_NAME_LENGTH_MAX);
         device_tree_replace_node(old_node,&(new_node->node),DT_DESTROY_AFTER_REPLACE);
 
-        return FzOS_SUCEESS;
+        return FzOS_SUCCESS;
     }
     free_page(buf,1);
     return FzOS_ERROR;
@@ -115,7 +153,7 @@ int fhhfs_unmount(filesystem* fs)
     head->dirty_mark = 0;
     fhhfs_writenode(fsl,0,buf,1);
     free_page(buf,1);
-    return FzOS_SUCEESS;
+    return FzOS_SUCCESS;
 }
 int fhhfs_open(filesystem* fs,char* filename,struct file* file)
 {
@@ -159,7 +197,7 @@ int fhhfs_open(filesystem* fs,char* filename,struct file* file)
     while(buf_str_len=strmid(bufname,FILENAME_MAX,p,PATH_SEPARATOR),buf_str_len);
 open_finish:
     free_page(buf,buf_size);
-    return FzOS_SUCEESS;
+    return FzOS_SUCCESS;
 }
 int fhhfs_read(struct file* file,void* buf,U64 buflen)
 {
@@ -220,12 +258,12 @@ int fhhfs_seek(struct file* file,U64 offset,SeekDirection direction)
             break;
         }
     }
-    return FzOS_SUCEESS;
+    return FzOS_SUCCESS;
 }
 int fhhfs_close(struct file* f)
 {
     memset(f,0,sizeof(file));
-    return FzOS_SUCEESS;
+    return FzOS_SUCCESS;
 }
 int fhhfs_write(struct file* file,void* buf,U64 buflen)
 {
@@ -234,7 +272,7 @@ int fhhfs_write(struct file* file,void* buf,U64 buflen)
     //由于Block device的特点，需要读出原始块，覆盖，写入原始块。
     U64 file_offset = file->offset+sizeof(fhhfs_file_header);
     //count = (buflen>(file->size-file->offset))?(file->size-file->offset):buflen;
-    U64 node_count = (((file_offset%fsl->node_size)+count)/fsl->node_size)+1;
+    I64 node_count = (((file_offset%fsl->node_size)+count)/fsl->node_size)+1;
     void* read_buffer = allocate_page(1);//由于只要写入，因此只要写一块就行了。
     void* fat_buffer = allocate_page(1);
     U64 begin_node = (file_offset)/fsl->node_size;
@@ -245,8 +283,6 @@ int fhhfs_write(struct file* file,void* buf,U64 buflen)
     void* bufp = buf;
     //然后，把涉及到的block依次读进来。
     while(node_count--) {
-        //FIXME:多块写入时申请新块。
-
         U64 override_size = (fsl->node_size-(file_offset%fsl->node_size))<=buflen?
                             (fsl->node_size-(file_offset%fsl->node_size)):buflen;
         fhhfs_readnode(fsl,current_node,read_buffer,1);
@@ -254,7 +290,21 @@ int fhhfs_write(struct file* file,void* buf,U64 buflen)
         fhhfs_writenode(fsl,current_node,read_buffer,1);
         file_offset+=override_size;
         current_node = fhhfs_get_next_node_id(fsl,current_node,fat_buffer);
+        if(current_node==1) {
+            break;
+        }
+    }
+    if(node_count>0) {
+        U64 new_node_pos[node_count];
+        fhhfs_allocate_node(fsl,new_node_pos,node_count);
+        for(int i=0;i<node_count;i++) {
+            U64 override_size = (fsl->node_size-(file_offset%fsl->node_size))<=buflen?
+                                (fsl->node_size-(file_offset%fsl->node_size)):buflen;
+            memcpy(read_buffer+(file_offset%fsl->node_size),bufp,override_size);
+            fhhfs_writenode(fsl,new_node_pos[i],read_buffer,1);
+            file_offset+=override_size;
+        }
     }
     file->offset+=buflen;
-    return FzOS_SUCEESS;
+    return FzOS_SUCCESS;
 }

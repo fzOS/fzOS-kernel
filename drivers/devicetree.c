@@ -124,5 +124,5 @@ int device_tree_replace_node(device_tree_node* old,device_tree_node* new,DtDestr
     if(method==DT_DESTROY_AFTER_REPLACE) {
         free_page(old,1);
     }
-    return FzOS_SUCEESS;
+    return FzOS_SUCCESS;
 }

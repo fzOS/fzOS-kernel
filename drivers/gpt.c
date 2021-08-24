@@ -43,7 +43,7 @@ int gpt_partition_init(block_dev* dev,device_tree_node* parent)
     int entry_count_in_a_block = dev->block_size/header->partition_entry_size;
     U64 gpt_entry_count = header->partition_entry_count;
     U64 gpt_entry_begin_lba = header->partition_entry_lba;
-    U64 ret = FzOS_SUCEESS;
+    U64 ret = FzOS_SUCCESS;
     //直接在这里就初始化了。
     GPTPartitionTreeNode* node;
     char buf[DT_NAME_LENGTH_MAX];
