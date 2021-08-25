@@ -28,7 +28,7 @@ kernel:
 	@echo -e "\e[32;1m[CC]\e[0m	" helloworld.c
 	@$(CC) ${CFLAGS} -c helloworld.c -o build/helloworld.o
 	@echo -e "\e[34;1m[LD]\e[0m	" kernel
-	@ld -e kernel_main build/*.o -o build/kernel -pie -no-dynamic-linker
+	@ld -e kernel_main build/*.o -o build/kernel -pie -no-dynamic-linker -Ttext-segment=0x1000 #跳过中断向量表 --fix qemu loader problem
 	@echo -e "\e[37;1m[NM]\e[0m	" symbols
 	@nm -n build/kernel > build/symbols
 	@echo -e "\e[35;1m[STRIP]\e[0m	" kernel

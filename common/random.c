@@ -28,6 +28,7 @@ int init_random(void)
     }
     //在这里初始化一个设备树结点……？
     random_device_tree_node* random_node = allocate_page(1);
+    memset(random_node,0,sizeof(random_device_tree_node));
     random_node->node.type=DT_CHAR_DEVICE;
     memcpy(&(random_node->node.name),"RandomGenerator",DT_NAME_LENGTH_MAX);
     random_node->dev.getchar=random_getchar;

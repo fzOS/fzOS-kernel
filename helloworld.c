@@ -50,9 +50,6 @@ void kernel_main_real() {
     fbcon_add_to_device_tree();
     init_keyboard();
     init_random();
-    for(int i=0;i<20;i++) {
-        printk("%x %x %x %x\n",random_get_u8(),random_get_u16(),random_get_u32(),random_get_u64());
-    }
     __asm__("sti");
     init_syscall();
     //然后是PCI设备。
@@ -73,7 +70,6 @@ void kernel_main_real() {
     ((U8*)buf)[length] = '\0';
     printk("%s\n",buf);
     free_page(buf,(banner_file.size/PAGE_SIZE+1));
-
     //启动jvm！
     //init_classloader();
 }
