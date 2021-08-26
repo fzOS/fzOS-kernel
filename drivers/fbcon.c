@@ -10,6 +10,7 @@ void fbcon_init(void)
 {
     fbcon_node.con.max_x = graphics_data.pixels_per_line / 8 - 1;
     fbcon_node.con.max_y = graphics_data.gop->Mode->Info->VerticalResolution;
+    fbcon_node.con.color = 0xFFFFFFFF;
     fbcon_node.con.current_y = 0;
     fbcon_node.con.current_x = 0;
     fbcon_node.con.con.common.putchar = fbcon_putchar;
@@ -18,6 +19,10 @@ void fbcon_init(void)
     fbcon_node.con.con.output_buffer.queue.bufsize = BUFFER_MAX;
     fbcon_node.node.type = DT_CHAR_DEVICE;
     memcpy(fbcon_node.node.name,"Console",8);
+}
+void fbcon_set_color(U32 color)
+{
+    fbcon_node.con.color = color;
 }
 void kernel_display_move_up(){
     int upPix,newLine;
@@ -49,6 +54,22 @@ void fbcon_putchar(char_dev* dev, U8 c){
         fbcon_flush(dev);
     }
 }
+
+inline U8 char2u8(char c) {
+    if ((c >= 'a') && (c <= 'f')) {
+        c -= 32;
+    }
+    if ((c >= 'A') && (c <= 'F')) {
+        return c - 'A' + 10;
+    }
+    if ((c >= '0') && (c <= '9')) {
+        return c - '0';
+    }
+    else {
+        return 255;//不是一个有效的数位。
+    }
+}
+
 void fbcon_flush(char_dev* dev) {
     (void) dev;
     char c;
@@ -64,6 +85,22 @@ void fbcon_flush(char_dev* dev) {
             kernel_log_line_break();
             break;
         }
+        if(c==COLOR_SWITCH_CHAR) {
+            U32 color=0;
+            U8 d;
+            //切换颜色！
+            for(int i=0;i<6;i++) {
+                c= queue_out_single(&fbcon_node.con.con.output_buffer.queue);
+                d = char2u8(c);
+                if(d==255) {
+                    goto normal_print_char;
+                }
+                color |= (d<<((5-i)*4));
+            }
+            fbcon_set_color(color);
+            continue;
+        }
+normal_print_char:;
         unsigned const char* dots = fontdata_8x16 + c * 16;
         if ((fbcon_node.con.current_x / 8) < fbcon_node.con.max_x){
             fbcon_node.con.current_x = fbcon_node.con.current_x + 8;
@@ -84,7 +121,7 @@ void fbcon_flush(char_dev* dev) {
             for(i=fbcon_node.con.current_x;i<fbcon_node.con.current_x+8;i++)		/*从高到底显示出8位的每一位*/
             {
                     if(data&(1<<bit)){
-                        graphics_draw_pixel(i,j,0xFFFFFFFF);	/*调用显示点函数，在此位置显示点*/
+                        graphics_draw_pixel(i,j,fbcon_node.con.color);	/*调用显示点函数，在此位置显示点*/
                     }
                     bit--;			/*指向低一位*/
             }

@@ -1,4 +1,5 @@
 #include <common/printk.h>
+
 void putU64hex(U64 data)
 {
     U8 tempint;
@@ -95,6 +96,7 @@ void putnum(U64 num)
     }
      default_console->common.putchar(&default_console->common,(char) tempint);
 }
+
 int printk(const char* format,...)
 {
     int count=0;
@@ -109,12 +111,25 @@ int printk(const char* format,...)
             pointer++;
             switch(*pointer)
             {
-                case 'c':{ default_console->common.putchar(&default_console->common,va_arg(arg,int));break;}
+                case 'c':{default_console->common.putchar(&default_console->common,va_arg(arg,int));break;}
                 case 'd':{putnum(va_arg(arg,U64));break;}
                 case 'x':{putU64hex(va_arg(arg,U64));break;}
                 case 'b':{putU8hex(va_arg(arg,int));break;}
                 case 'w':{putU16hex(va_arg(arg,int));break;}
                 case 's':{putstring(va_arg(arg,char*));break;}
+                //我们支持全彩色了！
+                //支持的颜色设置格式：
+                //%#RRGGBB
+                case '#':{
+                    //只有屏幕终端显示颜色。
+                    if(default_console->common.putchar!=fbcon_putchar) {
+                        pointer+=6;
+                        break;
+                    }
+                    //放入神奇的颜色转换代码！
+                    fbcon_putchar(&default_console->common,COLOR_SWITCH_CHAR);
+                    break;
+                }
                 default:{count--;break;}
             }
         }
