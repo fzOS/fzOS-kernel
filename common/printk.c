@@ -81,10 +81,8 @@ void putU8hex(U8 data)
 
 void putstring(char *str)
 {
-    while (*str != '\0'){
-         default_console->common.putchar(&default_console->common,*str);
-        str++;
-    }
+    //为什么不递归呢？？？？
+    printk(str);
 }
 
 void putnum(U64 num)

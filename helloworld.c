@@ -64,16 +64,16 @@ void kernel_main_real() {
 
     //显示Banner.
     file banner_file;
-    generic_open("/banner",&banner_file);
+    generic_open("/banner_color",&banner_file);
     void* buf = allocate_page(banner_file.size/PAGE_SIZE+1);
     U64 length =banner_file.filesystem->read(&banner_file,buf,(banner_file.size/PAGE_SIZE+1)*PAGE_SIZE);
     ((U8*)buf)[length] = '\0';
     printk("%s\n",buf);
     free_page(buf,(banner_file.size/PAGE_SIZE+1));
 
-    printk(CONSOLE_COLOR_RED "red " CONSOLE_COLOR_ORANGE "orange " CONSOLE_COLOR_YELLOW "yellow " \
-           CONSOLE_COLOR_GREEN "green " CONSOLE_COLOR_BLUE "blue " CONSOLE_COLOR_PURPLE "purple " \
-           CONSOLE_COLOR_WHITE "white\n"
+    printk(" " CONSOLE_COLOR_RED "red " CONSOLE_COLOR_ORANGE "orange " CONSOLE_COLOR_YELLOW "yellow " \
+               CONSOLE_COLOR_GREEN "green " CONSOLE_COLOR_BLUE "blue " CONSOLE_COLOR_PURPLE "purple " \
+               CONSOLE_COLOR_WHITE "white\n"
     );
     //启动jvm！
     //init_classloader();
