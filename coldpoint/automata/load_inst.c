@@ -1,15 +1,16 @@
 #include <coldpoint/automata/load_inst.h>
+//FIXME:重写！
 inline cpstatus load_internal(thread* t,int no)
 {
-    U64* const_val_entry = &t->stack[t->rbp+4];
-    t->stack[t->rsp] = const_val_entry[no];
+    U64* const_val_entry = &t->stack[t->rbp+4].data;
+    t->stack[t->rsp].data = const_val_entry[no];
     t->rsp++;
     return COLD_POINT_SUCCESS;
 }
 inline cpstatus store_internal(thread* t,int no)
 {
-    U64* const_val_entry = &t->stack[t->rbp+4];
-    const_val_entry[no] = t->stack[t->rsp];
+    U64* const_val_entry = &t->stack[t->rbp+4].data;
+    const_val_entry[no] = t->stack[t->rsp].data;
     t->rsp--;
     return COLD_POINT_SUCCESS;
 }

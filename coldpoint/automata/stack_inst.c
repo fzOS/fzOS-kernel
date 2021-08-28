@@ -1,4 +1,6 @@
 #include <coldpoint/automata/stack_inst.h>
+
+//FIXME:重写！
 cpstatus opcode_pop(thread* t)
 {
     print_opcode("pop\n");

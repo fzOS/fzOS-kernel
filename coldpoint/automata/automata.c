@@ -2,7 +2,7 @@
 #include <coldpoint/automata/const_inst.h>
 #include <coldpoint/automata/load_inst.h>
 #include <coldpoint/automata/stack_inst.h>
-#pragma message("Remember!Currently Reference is 32 bits ONLY DUE TO S**T JVM SPEC!")
+
 cpstatus (*automata_opcode[256])(thread* c)= {
     opcode_nop,opcode_aconst_null,opcode_iconst_m1,opcode_iconst_0,//0x00~0x03
     opcode_iconst_1,opcode_iconst_2,opcode_iconst_3,opcode_iconst_4,//0x04~0x07
