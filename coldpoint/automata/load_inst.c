@@ -1,5 +1,5 @@
 #include <coldpoint/automata/load_inst.h>
-//FIXME:重写！
+//FIXME:重写！咕咕
 inline cpstatus load_internal(thread* t,int no)
 {
     U64* const_val_entry = &t->stack[t->rbp+4].data;
