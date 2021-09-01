@@ -91,6 +91,7 @@ void fbcon_flush(char_dev* dev) {
             //切换颜色！
             for(int i=0;i<6;i++) {
                 c= queue_out_single(&fbcon_node.con.con.output_buffer.queue);
+                acquire_semaphore(&fbcon_node.con.con.output_sem);
                 d = char2u8(c);
                 if(d==255) {
                     goto normal_print_char;

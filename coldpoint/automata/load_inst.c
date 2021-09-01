@@ -2,15 +2,17 @@
 //FIXME:重写！咕咕 #3
 inline cpstatus load_internal(thread* t,int no)
 {
-    U64* const_val_entry = &t->stack[t->rbp+4].data;
-    t->stack[t->rsp].data = const_val_entry[no];
+    stack_var* const_val_entry = &t->stack[t->rbp+4];
+    t->stack[t->rsp].data = const_val_entry[no].data;
+    t->stack[t->rsp].type = const_val_entry[no].type;
     t->rsp++;
     return COLD_POINT_SUCCESS;
 }
 inline cpstatus store_internal(thread* t,int no)
 {
-    U64* const_val_entry = &t->stack[t->rbp+4].data;
-    const_val_entry[no] = t->stack[t->rsp].data;
+    stack_var* const_val_entry = &t->stack[t->rbp+4];
+    const_val_entry[no].data = t->stack[t->rsp].data;
+    const_val_entry[no].type = t->stack[t->rsp].type;
     t->rsp--;
     return COLD_POINT_SUCCESS;
 }

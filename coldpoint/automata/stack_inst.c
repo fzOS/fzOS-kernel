@@ -1,6 +1,5 @@
 #include <coldpoint/automata/stack_inst.h>
-
-//FIXME:重写！
+#define is_type_2(x) ((x.type==STACK_TYPE_LONG)||(x.type==STACK_TYPE_DOUBLE))
 cpstatus opcode_pop(thread* t)
 {
     print_opcode("pop\n");
@@ -10,7 +9,7 @@ cpstatus opcode_pop(thread* t)
 cpstatus opcode_pop2(thread* t)
 {
     print_opcode("pop2\n");
-    if(t->stack[t->rsp]&0xFFFFFFFF00000000) {
+    if(is_type_2(t->stack[t->rsp])) {
         goto pop2_sub_common;
     }
     t->rsp--;
@@ -37,7 +36,7 @@ cpstatus opcode_dup_x1(thread* t)
 cpstatus opcode_dup_x2(thread* t)
 {
     print_opcode("dup_x2\n");
-    if(t->stack[t->rsp-1]&0xFFFFFFFF00000000) {
+    if(is_type_2(t->stack[t->rsp-1])) {
         t->stack[t->rsp+1]=t->stack[t->rsp];
         t->stack[t->rsp]=t->stack[t->rsp-1];
         t->stack[t->rsp-1]=t->stack[t->rsp+1];
@@ -55,7 +54,7 @@ cpstatus opcode_dup_x2(thread* t)
 cpstatus opcode_dup2(thread* t)
 {
     print_opcode("dup2\n");
-    if(t->stack[t->rsp]&0xFFFFFFFF00000000) {
+    if(is_type_2(t->stack[t->rsp])) {
         t->stack[t->rsp+1]=t->stack[t->rsp];
         t->rsp++;
     }
@@ -69,7 +68,7 @@ cpstatus opcode_dup2(thread* t)
 cpstatus opcode_dup2_x1(thread* t)
 {
     print_opcode("dup2_x1\n");
-    if(t->stack[t->rsp-1]&0xFFFFFFFF00000000) {
+    if(is_type_2(t->stack[t->rsp-1])) {
         t->stack[t->rsp+1]=t->stack[t->rsp];
         t->stack[t->rsp]=t->stack[t->rsp-1];
         t->stack[t->rsp-1]=t->stack[t->rsp+1];
@@ -87,8 +86,8 @@ cpstatus opcode_dup2_x1(thread* t)
 }
 cpstatus opcode_dup2_x2(thread* t)
 {
-    if(t->stack[t->rsp-1]&0xFFFFFFFF00000000) {
-        if(t->stack[t->rsp]&0xFFFFFFFF00000000) {
+    if(is_type_2(t->stack[t->rsp-1])) {
+        if(is_type_2(t->stack[t->rsp])) {
             t->stack[t->rsp+1]=t->stack[t->rsp];
             t->stack[t->rsp]=t->stack[t->rsp-1];
             t->stack[t->rsp-1]=t->stack[t->rsp+1];
@@ -99,7 +98,7 @@ cpstatus opcode_dup2_x2(thread* t)
         }
     }
     else {
-        if(t->stack[t->rsp]&0xFFFFFFFF00000000) {
+        if(is_type_2(t->stack[t->rsp])) {
             t->stack[t->rsp+1]=t->stack[t->rsp];
             t->stack[t->rsp]=t->stack[t->rsp-1];
             t->stack[t->rsp-1]=t->stack[t->rsp-2];
@@ -107,7 +106,7 @@ cpstatus opcode_dup2_x2(thread* t)
             t->rsp++;
         }
         else {
-            if(t->stack[t->rsp-2]&0xFFFFFFFF00000000) {
+            if(is_type_2(t->stack[t->rsp-2])) {
                 t->stack[t->rsp+2] = t->stack[t->rsp];
                 t->stack[t->rsp+1] = t->stack[t->rsp-1];
                 t->stack[t->rsp] = t->stack[t->rsp-2];
@@ -129,7 +128,7 @@ cpstatus opcode_dup2_x2(thread* t)
 }
 cpstatus opcode_swap(thread* t)
 {
-    U64 val = t->stack[t->rsp-1];
+    stack_var val = t->stack[t->rsp-1];
     t->stack[t->rsp-1]=t->stack[t->rsp];
     t->stack[t->rsp] = val;
     return COLD_POINT_SUCCESS;

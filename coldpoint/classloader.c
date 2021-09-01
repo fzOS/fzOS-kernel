@@ -290,9 +290,9 @@ int init_classloader(void)
     }
     class* c = loadclass(buf);
     memfree(buf);
-    print_class_info(c);
-    print_class_constants(c);
-    print_field_and_method_info(c);
-    thread_test(c);
+     print_class_info(c);
+     print_class_constants(c);
+     print_field_and_method_info(c);
+     thread_test(c);
     return FzOS_SUCCESS;
 }

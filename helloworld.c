@@ -70,13 +70,8 @@ void kernel_main_real() {
     ((U8*)buf)[length] = '\0';
     printk("%s\n",buf);
     free_page(buf,(banner_file.size/PAGE_SIZE+1));
-
-    printk(" " CONSOLE_COLOR_RED "red " CONSOLE_COLOR_ORANGE "orange " CONSOLE_COLOR_YELLOW "yellow " \
-               CONSOLE_COLOR_GREEN "green " CONSOLE_COLOR_BLUE "blue " CONSOLE_COLOR_PURPLE "purple " \
-               CONSOLE_COLOR_WHITE "white\n"
-    );
     //启动jvm！
-    //init_classloader();
+    init_classloader();
 }
 void kernel_main(KernelInfo info) {
     //手动换栈。
