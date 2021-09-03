@@ -8,7 +8,9 @@ cpstatus opcode_add(thread* t)
         case STACK_TYPE_INT: {
             t->stack[t->rsp].data = v2.data+v1.data;
         }
-
+        case STACK_TYPE_LONG: {
+            t->stack[t->rsp].data = v2.data+v1.data;
+        }
     }
 }
 cpstatus opcode_sub(thread* t)
