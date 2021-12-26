@@ -25,7 +25,7 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
 + [&ensp;]Step10: 实现JVM的基础指令;
 + [&ensp;]Step11: 实现JVM的堆机制;
 + [&ensp;]Step12: 实现System类，与Kernel ABI交互;
-+ [&ensp;]后面看着办先
++ [&ensp;]Step13: 与JVM并行线，GUI开发
 
 # File Structure
 
@@ -35,6 +35,7 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
 + <uefivars.h> 定义了与UEFI相关的代码需要包含的头文件;
 + <limit.h> 定义了当前系统的一些限制;
 
+---
 ## common
 
 ### cpuid.c;
@@ -73,6 +74,7 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
 ### semaphore.c & spinlock.c;
 + 两种进程同步的结构体(信号量/自旋锁);
 
+---
 ## drivers
 
 ### devicetree.c;
@@ -104,6 +106,7 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
 ### sata_ahci.c;
 + AHCI模式的Serial ATA设备驱动;
 
+---
 ## filesystem
 
 ### filesystem.c
@@ -112,6 +115,7 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
 ### fhhfs.c
 + fhhfs文件系统驱动；
 
+---
 ## interrupt
 
 ### interrupt.c;
@@ -120,6 +124,7 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
 ### irq.c;
 + 外部中断芯片的初始化;
 
+---
 ## memory
 
 ### gdt.c;
