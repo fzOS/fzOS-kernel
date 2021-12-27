@@ -1,4 +1,7 @@
 #include <coldpoint/automata/math_inst.h>
+
+#pragma GCC diagnostic ignored "-Wreturn-type"
+#pragma GCC diagnostic ignored "-Wswitch"
 cpstatus opcode_add(thread* t)
 {
     stack_var v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];

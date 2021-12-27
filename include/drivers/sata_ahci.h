@@ -327,7 +327,7 @@ typedef struct
     AHCIDevice device;
     AHCIController* controller;
 }AHCIDeviceTreeNode;
-
+void sata_ahci_register(U8 bus,U8 slot,U8 func);
 //打印一个扇区的内容
 #define print_sector(x) \
     for(int i=0;i<512;i++) { \

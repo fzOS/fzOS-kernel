@@ -130,7 +130,6 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
     if(lai_pci_route_pin(&resource,0,bus,slot,func,interrupt_info.split[1])!=LAI_ERROR_NONE) {
         printk(" LAI:Cannot find interrupt for ATA controller!\n");
     }
-    irq_register(resource.base, 0xDD,0,0,ata_interrupt_handler);
     controller_node->controller.base.irq = resource.base;
     //为AHCI设备分配buffer空间。
     //Command List+FIS+Command Table
