@@ -2,6 +2,8 @@
 #define HDA_H
 #include <drivers/blockdev.h>
 #include <drivers/pci.h>
+#define MAX_CODEC_COUNT 15
+
 typedef volatile struct
 {
     U16 gcap;
@@ -62,14 +64,17 @@ typedef volatile struct
     U32 sdbdpl;
     U32 sdbdpu;
 } __attribute__((packed)) StreamDescRegisters;
+struct HDACodec;
 typedef struct
 {
     block_dev dev;
     PCIDevice base;
+    struct HDACodec* codecs[MAX_CODEC_COUNT];
     HDABaseRegisters* registers;
 } HDAController;
-typedef struct
+typedef struct HDACodec
 {
+    int codec_id;
     HDAController* controller;
 } HDACodec;
 typedef struct
