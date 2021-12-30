@@ -76,20 +76,25 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     //From bigger to smaller.
     if(corb_size_accepted&0b0100) {
         //256 entries
-        controller.registers->corbsize = ((controller.registers->corbsize)&0xf0) | 0x10;
+        printk("cal:%x\n",((controller.registers->corbsize)&0xf0) | 0b10);
+        controller.registers->corbsize = ((controller.registers->corbsize)&0xf0) | 0b10;
+        printk("256:%x\n",controller.registers->corbsize);
     }
     else if(corb_size_accepted&0b0010) {
         //16 entries
-        controller.registers->corbsize = ((controller.registers->corbsize)&0xf0) | 0x01;
+        controller.registers->corbsize = ((controller.registers->corbsize)&0xf0) | 0b01;
+        printk("16:%x\n",controller.registers->corbsize);
     }
     else if(corb_size_accepted&0b0001) {
         //2 entries
-        controller.registers->corbsize = ((controller.registers->corbsize)&0xf0) | 0x00;
+        controller.registers->corbsize = ((controller.registers->corbsize)&0xf0) | 0b00;
+        printk("2:%x\n",controller.registers->corbsize);
     }
     else {
         hda_printk(" Invalid CORB size.\n");
         return;
     }
+    printk("%x\n",controller.registers->corbsize);
     controller.registers->corbubase = ((U64)page_corb_rirb)>>32;
     controller.registers->corblbase = ((U64)page_corb_rirb)&0xFFFFFFFF;
     controller.registers->corbrp    = 0x8000;
@@ -100,15 +105,15 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     //From bigger to smaller.
     if(rirb_size_accepted&0b0100) {
         //256 entries
-        controller.registers->rirbsize = ((controller.registers->rirbsize)&0xf0) | 0x10;
+        controller.registers->rirbsize = ((controller.registers->rirbsize)&0xf0) | 0b10;
     }
     else if(rirb_size_accepted&0b0010) {
         //16 entries
-        controller.registers->rirbsize = ((controller.registers->rirbsize)&0xf0) | 0x01;
+        controller.registers->rirbsize = ((controller.registers->rirbsize)&0xf0) | 0b01;
     }
     else if(rirb_size_accepted&0b0001) {
         //2 entries
-        controller.registers->rirbsize = ((controller.registers->rirbsize)&0xf0) | 0x00;
+        controller.registers->rirbsize = ((controller.registers->rirbsize)&0xf0) | 0b00;
     }
     else {
         hda_printk(" Invalid RIRB size.\n");
@@ -119,6 +124,7 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     controller.registers->rirbwp    = 0x8000;
     controller.registers->rirbctl   = 0x03;
 
+    printk("%x/%x\n",controller.registers->corbsize,controller.registers->rirbsize);
     hda_controller_count++;
 }
 
