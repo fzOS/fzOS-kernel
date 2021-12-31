@@ -11,6 +11,18 @@ static char* hda_codec_tree_template = "HDACodec%d";
 void hda_interrupt_handler(int no) {
     hda_printk("Fired from %b\n",no);
 }
+U32 hda_execute_verb(HDAController* controller,U32 verb)
+{
+    //First,check if there is room in CORB.
+    int next_corb_pos = (controller->registers->corbwp +1)%controller->corb_count;
+    int prev_rirb_pos = (controller->registers->rirbwp);
+    while(next_corb_pos == controller->registers->corbrp) __asm__ volatile("pause");
+    //Then,put the verb into corb;
+    controller->corb[next_corb_pos] = verb;
+    controller->registers->corbwp = next_corb_pos;
+    while(prev_rirb_pos == controller->registers->rirbwp) __asm__ volatile("pause");
+    return (U32)(controller->rirb[controller->registers->rirbwp]);
+}
 void hda_register(U8 bus,U8 slot,U8 func) {
     HDAController controller;
     controller.base.bus = bus;
@@ -20,9 +32,9 @@ void hda_register(U8 bus,U8 slot,U8 func) {
 
     //Reset controller.
     controller.registers->gctl = (controller.registers->gctl)&0xFFFFFFFE;
-    while(controller.registers->gctl&0x00000001) __asm__ volatile("nop");;
+    while(controller.registers->gctl&0x00000001) __asm__ volatile("pause");
     controller.registers->gctl = (controller.registers->gctl)|0x00000001;
-    while(!(controller.registers->gctl&0x00000001)) __asm__ volatile("nop");;
+    while(!(controller.registers->gctl&0x00000001)) __asm__ volatile("pause");
     hda_printk("Got Intel HDA v%d.%d device at bus %d,slot %d,func %d.\n",controller.registers->vmaj,controller.registers->vmin,bus,slot,func);
     //尝试获取中断信息。
     union {
@@ -46,25 +58,6 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     strcopy(controller_node->header.name,buf,DT_NAME_LENGTH_MAX);
     controller_node->header.type = DT_BLOCK_DEVICE;
     device_tree_add_from_parent((device_tree_node*)controller_node,(device_tree_node*)base_node);
-    int mask=0x01;
-    int hda_codec_count=0;
-    for(int i=0;i<MAX_CODEC_COUNT;i++) {
-        if((controller.registers->statests)&mask) {
-            HDACodecTreeNode* codec_node = allocate_page(1);
-            memset(codec_node,0,sizeof(HDACodecTreeNode));
-            sprintk(buf,hda_codec_tree_template,hda_codec_count++);
-            codec_node->codec.controller = &(controller_node->controller);
-            controller_node->controller.codecs[i] = &(codec_node->codec);
-            codec_node->codec.codec_id = i;
-            strcopy(codec_node->header.name,buf,DT_NAME_LENGTH_MAX);
-            codec_node->header.type = DT_BLOCK_DEVICE;
-            device_tree_add_from_parent((device_tree_node*)codec_node,(device_tree_node*)controller_node);
-        }
-        mask <<=1;
-    }
-    if(!hda_codec_count) { //No codec found, rubbish.
-        return;
-    }
     //Allocate page for CORB and RIRB.
     void* page_corb_rirb = allocate_page(1);
     page_corb_rirb=(void*)((U64)page_corb_rirb & (~KERNEL_ADDR_OFFSET));
@@ -76,25 +69,23 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     //From bigger to smaller.
     if(corb_size_accepted&0b0100) {
         //256 entries
-        printk("cal:%x\n",((controller.registers->corbsize)&0xf0) | 0b10);
+        controller.corb_count = 256;
         controller.registers->corbsize = ((controller.registers->corbsize)&0xf0) | 0b10;
-        printk("256:%x\n",controller.registers->corbsize);
     }
     else if(corb_size_accepted&0b0010) {
         //16 entries
+        controller.corb_count = 16;
         controller.registers->corbsize = ((controller.registers->corbsize)&0xf0) | 0b01;
-        printk("16:%x\n",controller.registers->corbsize);
     }
     else if(corb_size_accepted&0b0001) {
         //2 entries
+        controller.corb_count = 2;
         controller.registers->corbsize = ((controller.registers->corbsize)&0xf0) | 0b00;
-        printk("2:%x\n",controller.registers->corbsize);
     }
     else {
         hda_printk(" Invalid CORB size.\n");
         return;
     }
-    printk("%x\n",controller.registers->corbsize);
     controller.registers->corbubase = ((U64)page_corb_rirb)>>32;
     controller.registers->corblbase = ((U64)page_corb_rirb)&0xFFFFFFFF;
     controller.registers->corbrp    = 0x8000;
@@ -105,14 +96,17 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     //From bigger to smaller.
     if(rirb_size_accepted&0b0100) {
         //256 entries
+        controller.rirb_count = 256;
         controller.registers->rirbsize = ((controller.registers->rirbsize)&0xf0) | 0b10;
     }
     else if(rirb_size_accepted&0b0010) {
         //16 entries
+        controller.rirb_count = 16;
         controller.registers->rirbsize = ((controller.registers->rirbsize)&0xf0) | 0b01;
     }
     else if(rirb_size_accepted&0b0001) {
         //2 entries
+        controller.rirb_count = 2;
         controller.registers->rirbsize = ((controller.registers->rirbsize)&0xf0) | 0b00;
     }
     else {
@@ -123,8 +117,40 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     controller.registers->rirblbase = (((U64)page_corb_rirb)&0xFFFFFFFF)+0x800;
     controller.registers->rirbwp    = 0x8000;
     controller.registers->rirbctl   = 0x03;
+    controller.corb = page_corb_rirb;
+    controller.rirb = (U64*)((U64)page_corb_rirb+0x800);
+    int mask=0x01;
+    int hda_codec_count=0;
+    HDAVerb verb;
+    for(int i=0;i<MAX_CODEC_COUNT;i++) {
+        if((controller.registers->statests)&mask) {
+            HDACodecTreeNode* codec_node = allocate_page(1);
+            memset(codec_node,0,sizeof(HDACodecTreeNode));
+            sprintk(buf,hda_codec_tree_template,hda_codec_count++);
+            codec_node->codec.controller = &(controller_node->controller);
+            controller_node->controller.codecs[i] = &(codec_node->codec);
+            codec_node->codec.codec_id = i;
+            strcopy(codec_node->header.name,buf,DT_NAME_LENGTH_MAX);
+            codec_node->header.type = DT_BLOCK_DEVICE;
+            device_tree_add_from_parent((device_tree_node*)codec_node,(device_tree_node*)controller_node);
 
-    printk("%x/%x\n",controller.registers->corbsize,controller.registers->rirbsize);
+            //Get Dev/Ven/Sub.
+            verb.split.codec_addr = i;
+            verb.split.command    = CODEC_GET_PARAMETER;
+            verb.split.data       = PARAM_VEN_DEV_ID;
+            verb.split.node_id    = 0;
+            int ret = hda_execute_verb(&controller,verb.packed);
+            hda_printk("Codec #%d:PID:%w,VID:%w.\n",i,(ret&0xFFFF0000)>>16,ret&0xFFFF);
+            //Get Node Count.
+            verb.split.data       = PARAM_NODE_COUNT;
+            ret = hda_execute_verb(&controller,verb.packed);
+            hda_printk("Node count:%d.\n",ret&0xFF);
+        }
+        mask <<=1;
+    }
+    if(!hda_codec_count) { //No codec found, rubbish.
+        return;
+    }
     hda_controller_count++;
 }
 

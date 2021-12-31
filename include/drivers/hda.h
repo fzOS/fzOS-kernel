@@ -71,12 +71,57 @@ typedef struct
     PCIDevice base;
     struct HDACodec* codecs[MAX_CODEC_COUNT];
     HDABaseRegisters* registers;
+    U32* corb;
+    U64* rirb;
+    U32 corb_count,rirb_count;
 } HDAController;
 typedef struct HDACodec
 {
     int codec_id;
     HDAController* controller;
 } HDACodec;
+typedef enum {
+    CODEC_GET_PARAMETER=0xf00,
+    CODEC_GET_SELECTED_INPUT=0xf01,
+    CODEC_SET_SELECTED_INPUT=0x701,
+    CODEC_GET_STREAM_CHANNEL=0xf06,
+    CODEC_SET_STREAM_CHANNEL=0x706,
+    CODEC_GET_PIN_WIDGET_CONTROL=0xf07,
+    CODEC_SET_PIN_WIDGET_CONTROL=0x707,
+    CODEC_GET_VOLUME_CONTROL=0xf0f,
+    CODEC_SET_VOLUME_CONTROL=0x70f,
+    CODEC_GET_CONF_DEFAULT=0xf1c,
+    CODEC_GET_CONV_CHAN_CNT=0xf2d,
+    CODEC_SET_CONV_CHAN_CNT=0x72d,
+    CODEC_FUNCTION_RESET=0x7ff
+} HDACommand;
+typedef enum {
+    PARAM_VEN_DEV_ID=0x00,
+    PARAM_REV_ID=0x02,
+    PARAM_NODE_COUNT=0x04,
+    PARAM_FUNC_GROUP_TYPE=0x05,
+    PARAM_AUDIO_GROUP_CAP=0x08,
+    PARAM_AUDIO_WIDGET_CAP=0x09,
+    PARAM_SUPPORTED_PCM_RATES=0x0a,
+    PARAM_SUPPORTED_FORMATS=0x0b,
+    PARAM_PIN_CAP=0x0c,
+    PARAM_INPUT_AMP_CAP=0x0d,
+    PARAM_OUTPUT_AMP_CAP=0x12,
+    PARAM_CON_LOST_LENGTH=0x0e,
+    PARAM_SUPPORTED_PWR_STATES=0x0f,
+    PARAM_PROCESSING_CAP=0x10,
+    PARAM_GPIO_COUNT=0x11,
+    PARAM_VOLUME_CAP=0x13
+} HDAParam;
+typedef union {
+    struct {
+        int data:8;
+        HDACommand command:12;
+        int node_id:8;
+        int codec_addr:4;
+    } __attribute__((packed))  split;
+    U32 packed;
+} HDAVerb;
 typedef struct
 {
     device_tree_node header;
