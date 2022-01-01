@@ -141,10 +141,34 @@ void hda_register(U8 bus,U8 slot,U8 func) {
             verb.split.node_id    = 0;
             int ret = hda_execute_verb(&controller,verb.packed);
             hda_printk("Codec #%d:PID:%w,VID:%w.\n",i,(ret&0xFFFF0000)>>16,ret&0xFFFF);
-            //Get Node Count.
+            //Get Func Group.
             verb.split.data       = PARAM_NODE_COUNT;
             ret = hda_execute_verb(&controller,verb.packed);
-            hda_printk("Node count:%d.\n",ret&0xFF);
+            int starting_node_number = (ret&0xFF0000)>>16;
+            int node_count = (ret&0xFF);
+            printk("Starting at %d\n",starting_node_number);
+            for(int j=0;j<node_count;j++) {
+                controller.afg_nodes[j+starting_node_number]=0;
+                verb.split.data       = PARAM_FUNC_GROUP_TYPE;
+                verb.split.node_id    = j+starting_node_number;
+                ret = hda_execute_verb(&controller,verb.packed);
+                printk("Node #%d:%b\n",j+starting_node_number,ret&0xFF);
+                if((ret&0xFF)==0x01) {
+                    verb.split.data       = PARAM_NODE_COUNT;
+                    verb.split.node_id    = j+starting_node_number;
+                    ret = hda_execute_verb(&controller,verb.packed);
+                    int widget_start = (ret&0xFF0000)>>16;
+                    int widget_count = (ret&0xFF);
+                    AudioWidgetCap audio_widget_cap;
+                    for(int k=0;k<widget_count;k++) {
+                        verb.split.data       = PARAM_AUDIO_WIDGET_CAP;
+                        verb.split.node_id    = k+widget_start;
+                        audio_widget_cap.raw = hda_execute_verb(&controller,verb.packed);
+                        printk("Widget #%d:%x->%b\n",k,audio_widget_cap.raw,audio_widget_cap.split.type);
+                    }
+
+                }
+            }
         }
         mask <<=1;
     }

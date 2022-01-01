@@ -3,7 +3,7 @@
 #include <drivers/blockdev.h>
 #include <drivers/pci.h>
 #define MAX_CODEC_COUNT 15
-
+#define MAX_AFG_COUNT 4
 typedef volatile struct
 {
     U16 gcap;
@@ -70,6 +70,7 @@ typedef struct
     block_dev dev;
     PCIDevice base;
     struct HDACodec* codecs[MAX_CODEC_COUNT];
+    U8 afg_nodes[MAX_AFG_COUNT];//Static storage of AFG tree.
     HDABaseRegisters* registers;
     U32* corb;
     U64* rirb;
@@ -80,6 +81,28 @@ typedef struct HDACodec
     int codec_id;
     HDAController* controller;
 } HDACodec;
+typedef union {
+    U32 raw;
+    struct {
+        int chan_count_lsb:1;
+        int in_amp_present:1;
+        int out_amp_present:1;
+        int amp_param_override:1;
+        int format_override:1;
+        int stripe:1;
+        int proc_widget:1;
+        int unsol_capable:1;
+        int conn_lost:1;
+        int digital:1;
+        int power_cntrl:1;
+        int l_r_swap:1;
+        int cp_caps:1;
+        int chan_count_ext:3;
+        int delay:4;
+        int type:4;
+        int reserved:8;
+    } __attribute__((packed)) split;
+} AudioWidgetCap;
 typedef enum {
     CODEC_GET_PARAMETER=0xf00,
     CODEC_GET_SELECTED_INPUT=0xf01,
