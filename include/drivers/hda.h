@@ -50,6 +50,28 @@ typedef volatile struct
     U32 dpibubase;
     U8  reserved9[8];
 } __attribute__((packed)) HDABaseRegisters;
+typedef union {
+    U32 raw;
+    struct {
+        int chan_count_lsb:1;
+        int in_amp_present:1;
+        int out_amp_present:1;
+        int amp_param_override:1;
+        int format_override:1;
+        int stripe:1;
+        int proc_widget:1;
+        int unsol_capable:1;
+        int conn_lost:1;
+        int digital:1;
+        int power_cntrl:1;
+        int l_r_swap:1;
+        int cp_caps:1;
+        int chan_count_ext:3;
+        int delay:4;
+        int type:4;
+        int reserved:8;
+    } __attribute__((packed)) split;
+} AudioWidgetCap;
 typedef volatile struct
 {
     U8  sdctl[3];
@@ -80,29 +102,11 @@ typedef struct HDACodec
 {
     int codec_id;
     HDAController* controller;
+    int audio_widget_count;
+    //Output,Input,Mixer,Selector,Pin Complex,Power Widget
+    AudioWidgetCap widgets[0];
 } HDACodec;
-typedef union {
-    U32 raw;
-    struct {
-        int chan_count_lsb:1;
-        int in_amp_present:1;
-        int out_amp_present:1;
-        int amp_param_override:1;
-        int format_override:1;
-        int stripe:1;
-        int proc_widget:1;
-        int unsol_capable:1;
-        int conn_lost:1;
-        int digital:1;
-        int power_cntrl:1;
-        int l_r_swap:1;
-        int cp_caps:1;
-        int chan_count_ext:3;
-        int delay:4;
-        int type:4;
-        int reserved:8;
-    } __attribute__((packed)) split;
-} AudioWidgetCap;
+
 typedef enum {
     CODEC_GET_PARAMETER=0xf00,
     CODEC_GET_SELECTED_INPUT=0xf01,
