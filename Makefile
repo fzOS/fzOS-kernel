@@ -4,6 +4,8 @@ GNUEFI_PATH=/usr/include/efi
 ifeq '$(USER)' 'fhh'
 export PATH:=/home/fhh/.ccache/:${PATH}
 CC= ccache 
+else
+CC= ""
 endif
 ifeq '$(DEBUG)' '1'
 VERSION := $(shell echo git-`git rev-parse --short HEAD`)
@@ -13,7 +15,7 @@ endif
 THIS_YEAR := $(shell date +"%Y")
 BASE_DIR=${PWD}
 CC:=${CC} gcc
-CFLAGS=-pie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-red-zone -ffreestanding
+CFLAGS=-pie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -I "/usr/include/efi/x86_64" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-red-zone -ffreestanding
 SUBDIRS=drivers memory acpi common syscall interrupt filesystem coldpoint
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
