@@ -102,9 +102,15 @@ typedef struct HDACodec
 {
     int codec_id;
     HDAController* controller;
-    int audio_widget_count;
+    U8 audio_widget_count;
     //Output,Input,Mixer,Selector,Pin Complex,Power Widget
-    AudioWidgetCap widgets[0];
+    U8 output_index;
+    U8 input_index;
+    U8 mixer_index;
+    U8 selector_index;
+    U8 pin_complex_index;
+    U8 power_widget_index;
+    U8 audio_widgets[0];
 } HDACodec;
 
 typedef enum {

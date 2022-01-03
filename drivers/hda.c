@@ -160,13 +160,80 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                     int widget_start = (ret&0xFF0000)>>16;
                     int widget_count = (ret&0xFF);
                     AudioWidgetCap audio_widget_cap;
+                    //Output,Input,Mixer,Selector,Pin Complex,Power Widget
+                    U8 output_count=0,input_count=0,mixer_count=0,selector_count=0,pin_complex_count=0,power_widget_count=0;
                     for(int k=0;k<widget_count;k++) {
                         verb.split.data       = PARAM_AUDIO_WIDGET_CAP;
                         verb.split.node_id    = k+widget_start;
                         audio_widget_cap.raw = hda_execute_verb(&controller,verb.packed);
-                        printk("Widget #%d:%x->%b\n",k,audio_widget_cap.raw,audio_widget_cap.split.type);
+                        switch(audio_widget_cap.split.type) {
+                            case 0x00: {output_count++;break;}
+                            case 0x01: {input_count++;break;}
+                            case 0x02: {mixer_count++;break;}
+                            case 0x03: {selector_count++;break;}
+                            case 0x04: {pin_complex_count++;break;}
+                            case 0x05: {power_widget_count++;break;}
+                            default:break;
+                        }
                     }
-
+                    hda_printk("Codec %d:%d outputs,%d inputs,%d mixers,%d selectors,%d pin complices,%d power widgets\n",i,
+                        output_count,
+                        input_count,
+                        mixer_count,
+                        selector_count,
+                        pin_complex_count,
+                        power_widget_count
+                    );
+                    codec_node->codec.output_index      = widget_start;
+                    codec_node->codec.input_index       = codec_node->codec.output_index+output_count;
+                    codec_node->codec.mixer_index       = codec_node->codec.input_index+input_count;
+                    codec_node->codec.selector_index    = codec_node->codec.mixer_index+mixer_count;
+                    codec_node->codec.pin_complex_index = codec_node->codec.selector_index+selector_count;
+                    codec_node->codec.power_widget_index= codec_node->codec.pin_complex_index+pin_complex_count;
+                    //2nd iteration:put into array.
+                    output_count = input_count = mixer_count = selector_count = pin_complex_count = power_widget_count = 0;
+                    for(int k=0;k<widget_count;k++) {
+                        verb.split.data       = PARAM_AUDIO_WIDGET_CAP;
+                        verb.split.node_id    = k+widget_start;
+                        audio_widget_cap.raw = hda_execute_verb(&controller,verb.packed);
+                        switch(audio_widget_cap.split.type) {
+                            case 0x00: {
+                                codec_node->codec.audio_widgets[codec_node->codec.output_index+output_count] = k+widget_start;
+                                output_count++;
+                                break;
+                            }
+                            case 0x01: {
+                                codec_node->codec.audio_widgets[codec_node->codec.input_index+input_count] = k+widget_start;
+                                input_count++;
+                                break;
+                            }
+                            case 0x02:  {
+                                codec_node->codec.audio_widgets[codec_node->codec.mixer_index+mixer_count] = k+widget_start;
+                                mixer_count++;
+                                break;
+                            }
+                            case 0x03: {
+                                codec_node->codec.audio_widgets[codec_node->codec.selector_index+selector_count] = k+widget_start;
+                                selector_count++;
+                                break;
+                            }
+                            case 0x04: {
+                                codec_node->codec.audio_widgets[codec_node->codec.pin_complex_index+pin_complex_count] = k+widget_start;
+                                pin_complex_count++;
+                                break;
+                            }
+                            case 0x05: {
+                                codec_node->codec.audio_widgets[codec_node->codec.power_widget_index+power_widget_count] = k+widget_start;
+                                power_widget_count++;
+                                break;
+                            }
+                            default:break;
+                        }
+                    }
+                    //测试。
+                    for(int k=0;k<widget_count;k++) {
+                        printk("%x ",codec_node->codec.audio_widgets[k]);
+                    }
                 }
             }
         }
