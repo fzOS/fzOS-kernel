@@ -64,7 +64,7 @@ U64 random_get_u64(void)
             "_done%=:\n"
             "movq %%rax,%0\n"
             :"=g"(ret)
-            :
+            : /* no input*/
             :"%rax","%rbx","%rcx","memory"
             :software
         );

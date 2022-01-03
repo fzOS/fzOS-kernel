@@ -8,6 +8,13 @@ Kernel source code for fzOS.
 
 LAI(https://github.com/managarm/lai/) for ACPI Parsing
 
+## Note for compiler
++ lower than gcc-10 is not suitable due to the asm goto support 
+    + link (https://gcc.gnu.org/onlinedocs/gcc-10.2.0/gcc/Extended-Asm.html#Goto-Labels)
+    + An asm goto statement cannot have outputs. 
+    + further link (https://github.com/gcc-mirror/gcc/blob/releases/gcc-10/gcc/c/c-parser.c)
+    + For asm goto, we don't allow output operands, but reserve the slot for a future extension that does allow them.
+
 ## 开发路线
 ### 这块现在理清了
 #### 领袖说过：自己动手，丰衣足食。
