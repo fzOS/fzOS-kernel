@@ -45,6 +45,20 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
     + 需要另一个linux虚拟机设置磁盘系统
     + 然后去虚拟机
 
+## 命名规范
+#### 请尤其注意下列保留区段.jpg
++ 变量
+    + 常规变量使用 小写下划线命名 ( 例如: bss_info )
+    + 全局变量使用 g_小写下划线命名（ 例如: g_gui_service_window_list ）
+    + 注意某些全局变量采用的还是 小写下划线命名
++ 宏定义
+    + 全大写下划线命名 （ 例如: GUI_DEFAULT_WINDOW_SIZE ）
+    + 下划线开头结尾的全大写（ 例如: _GUI_DEFAULT_WINDOW_SIZE_ ）
++ 结构体
+    + 驼峰命名 （ 例如: TestVariableType ）
++ 函数
+    + 小写下划线
+
 ## 开发路线
 ### 这块现在理清了
 #### 领袖说过：自己动手，丰衣足食。
