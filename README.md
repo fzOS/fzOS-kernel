@@ -2,11 +2,11 @@
 
 # fzOS-kernel
 
-Kernel source code for fzOS.
-fzOS内核源码，
-这是一个充满了神奇实现的 AMD64/X86-64 内核
-目前fzOS只支持也只打算支持UEFI启动
-也不打算支持32位（毕竟谁2202年了谁还用32位）
+#### Kernel source code for fzOS.
+#### fzOS内核源码，
+#### 这是一个充满了神奇实现的 AMD64/X86-64 内核
+#### 目前fzOS只支持也只打算支持UEFI启动
+#### 也不打算支持32位（毕竟谁2202年了谁还用32位）
 
 ## External Libraries
 

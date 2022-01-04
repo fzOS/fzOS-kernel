@@ -57,3 +57,9 @@ mount:
 	echo "Mounting at $${a}p1" && \
 	losetup -f -P '/home/fhh/VirtualBox VMs/UEFITest/raw.img' && \
 	mount -t auto $${a}p1 /media
+installvm:
+	@echo "Mounting to /data" && \
+	mount /dev/sdb1 /data && \
+	echo "Moving kernel into EFI" && \
+	mv build/kernel /data && \
+	echo "VM kernel setup Success"
