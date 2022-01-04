@@ -14,8 +14,8 @@ VERSION := 0.2.0
 endif
 THIS_YEAR := $(shell date +"%Y")
 BASE_DIR=${PWD}
-CC:=${CC} gcc
-CFLAGS=-fpie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -I "/usr/include/efi/x86_64" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-red-zone -ffreestanding
+CC:=${CC}gcc
+CFLAGS=-fpie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -isystem "/usr/include/efi/x86_64" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-red-zone -ffreestanding
 SUBDIRS=drivers memory acpi common syscall interrupt filesystem coldpoint
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
