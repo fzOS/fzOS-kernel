@@ -103,6 +103,7 @@ typedef struct HDACodec
     int codec_id;
     HDAController* controller;
     U8 audio_widget_count;
+    U8 afg_id;
     //Output,Input,Mixer,Selector,Pin Complex,Power Widget
     U8 output_index;
     U8 input_index;

@@ -146,13 +146,12 @@ void hda_register(U8 bus,U8 slot,U8 func) {
             ret = hda_execute_verb(&controller,verb.packed);
             int starting_node_number = (ret&0xFF0000)>>16;
             int node_count = (ret&0xFF);
-            printk("Starting at %d\n",starting_node_number);
+            codec_node->codec.afg_id = starting_node_number;
             for(int j=0;j<node_count;j++) {
                 controller.afg_nodes[j+starting_node_number]=0;
                 verb.split.data       = PARAM_FUNC_GROUP_TYPE;
                 verb.split.node_id    = j+starting_node_number;
                 ret = hda_execute_verb(&controller,verb.packed);
-                printk("Node #%d:%b\n",j+starting_node_number,ret&0xFF);
                 if((ret&0xFF)==0x01) {
                     verb.split.data       = PARAM_NODE_COUNT;
                     verb.split.node_id    = j+starting_node_number;
@@ -176,7 +175,7 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                             default:break;
                         }
                     }
-                    hda_printk("Codec %d:%d outputs,%d inputs,%d mixers,%d selectors,%d pin complices,%d power widgets\n",i,
+                    hda_printk("Codec #%d:%d outputs,%d inputs,%d mixers,%d selectors,%d pin complices,%d power widgets\n",i,
                         output_count,
                         input_count,
                         mixer_count,
@@ -184,7 +183,7 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                         pin_complex_count,
                         power_widget_count
                     );
-                    codec_node->codec.output_index      = widget_start;
+                    codec_node->codec.output_index      = 0;
                     codec_node->codec.input_index       = codec_node->codec.output_index+output_count;
                     codec_node->codec.mixer_index       = codec_node->codec.input_index+input_count;
                     codec_node->codec.selector_index    = codec_node->codec.mixer_index+mixer_count;
@@ -227,12 +226,16 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                                 power_widget_count++;
                                 break;
                             }
-                            default:break;
+                            default: {break;}
                         }
                     }
-                    //测试。
-                    for(int k=0;k<widget_count;k++) {
-                        printk("%x ",codec_node->codec.audio_widgets[k]);
+                    //We only cares about outputs.
+                    for(int k=0;k<pin_complex_count;k++) {
+                        verb.split.command = CODEC_GET_CONF_DEFAULT;
+                        verb.split.data    = 0;
+                        verb.split.node_id = k+codec_node->codec.pin_complex_index;
+                        ret = hda_execute_verb(&controller,verb.packed);
+                        printk("Audio Pin Complex %b:%x\n",codec_node->codec.audio_widgets[k+codec_node->codec.pin_complex_index],ret);
                     }
                 }
             }
