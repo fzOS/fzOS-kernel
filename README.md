@@ -3,17 +3,47 @@
 # fzOS-kernel
 
 Kernel source code for fzOS.
+fzOS内核源码，
+这是一个充满了神奇实现的 AMD64/X86-64 内核
+目前fzOS只支持也只打算支持UEFI启动
+也不打算支持32位（毕竟谁2202年了谁还用32位）
 
 ## External Libraries
 
 LAI(https://github.com/managarm/lai/) for ACPI Parsing
 
-## Note for compiler
-+ lower than gcc-10 is not suitable due to the asm goto support 
+## Note for compiler 关于编译器版本可能对当前版本kernel导致的编译失败
++ lower/equal than gcc-10 is not suitable due to the asm goto support 
++ 请使用高于 gcc-10 的 GNU-GCC编译器进行编译 （由于random部分使用了asm汇编的goto，其中的部分方法在gcc<=10不被支持）
     + link (https://gcc.gnu.org/onlinedocs/gcc-10.2.0/gcc/Extended-Asm.html#Goto-Labels)
-    + An asm goto statement cannot have outputs. 
+    + 链接 (https://gcc.gnu.org/onlinedocs/gcc-10.2.0/gcc/Extended-Asm.html#Goto-Labels)
+    + Before GCC-11, an asm goto statement cannot have outputs. 
+    + 在 gcc-11 之前，asm goto 声明不支持 output 参数。
     + further link (https://github.com/gcc-mirror/gcc/blob/releases/gcc-10/gcc/c/c-parser.c)
-    + For asm goto, we don't allow output operands, but reserve the slot for a future extension that does allow them.
+    + 链接 (https://github.com/gcc-mirror/gcc/blob/releases/gcc-10/gcc/c/c-parser.c)
+    + In GCC-10, For asm goto, we don't allow output operands, but reserve the slot for a future extension that does allow them.
+    + 在 gcc-10 中，对于 asm goto 指令，暂时不支持输出操作，但是这个指令位置被保留，作为对未来可能更新的预留
+
+## Install/Compile Guidence 安装/编译说明
+#### 编译环境
++ 操作系统
+    + 请使用 linux 作为编译环境 (其中 debian 和 arch linux 分别是我们的开发环境)
+    + macOS下有许多奇怪的问题，反正我是没成功编译，而且结果需要是elf而不是mach-O
+    + 没人用 windows, 所以就不讨论这个系统了
+    + docker 使用 build 的 gcc11 会有一些奇怪的问题
++ 软件和编译器
+    + 需要：GCC, build-essential, gnu-efi
+    + GCC需要高于版本11, 目前开发使用的是 GCC-11.2.0
+    + clang 由于asm语法上的问题，可能需要一些小小的改动
+    + 内联 ASM 用的是 AT&T 语法
++ 编译
+    + 在文件夹里 make 就行了
+    + 结果是 build/kernel 这个可执行文件
++ 运行/测试
+    + 去隔壁 fzBurg 找一下 efi 引导文件
+    + 直接用vso文件，
+    + 需要另一个linux虚拟机设置磁盘系统
+    + 然后去虚拟机
 
 ## 开发路线
 ### 这块现在理清了
