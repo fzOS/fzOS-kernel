@@ -8,6 +8,24 @@
 static U8 hda_controller_count=0;
 static char* hda_controller_tree_template = "HDAController%d";
 static char* hda_codec_tree_template = "HDACodec%d";
+static char* hda_connector_type[] = {
+    "line-out",
+    "speaker",
+    "HP-out",
+    "CD",
+    "SPDIF-out",
+    "digital-out",
+    "modem-line",
+    "modem-handset",
+    "line-in",
+    "aux",
+    "mic-in",
+    "telephony",
+    "SPDIF-in",
+    "digital-in",
+    "reserved",
+    "unknown"
+};
 void hda_interrupt_handler(int no) {
     hda_printk("Fired from %b\n",no);
 }
@@ -230,13 +248,38 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                         }
                     }
                     //We only cares about outputs.
+                    HDAConfigurationDefault conf_default;
                     for(int k=0;k<pin_complex_count;k++) {
                         verb.split.command = CODEC_GET_CONF_DEFAULT;
                         verb.split.data    = 0;
                         verb.split.node_id = k+codec_node->codec.pin_complex_index;
-                        ret = hda_execute_verb(&controller,verb.packed);
-                        printk("Audio Pin Complex %b:%x\n",codec_node->codec.audio_widgets[k+codec_node->codec.pin_complex_index],ret);
+                        conf_default.packed = hda_execute_verb(&controller,verb.packed);
+                        if(conf_default.packed!=0) {
+                            //Create Tree Node.
+                            HDAConnectorTreeNode* conn_node = allocate_page(1);
+                            memset(conn_node,0x00,PAGE_SIZE);
+                            strcopy(conn_node->header.name,hda_connector_type[conf_default.split.def_device],16);
+                            conn_node->header.type=DT_BLOCK_DEVICE;
+                            conn_node->connector.pin_default.packed = conf_default.packed;
+                            conn_node->connector.io_direction = ((conf_default.split.def_device&0x02)==0x02);
+                            device_tree_add_from_parent((device_tree_node*)conn_node,(device_tree_node*)codec_node);
+                            //by default, we choose Speaker/line-out as desired output,mic/line-in as desired input.
+                            if(codec_node->codec.default_output==nullptr) {
+                                if(conf_default.split.def_device==0x00||conf_default.split.def_device==0x01) {
+                                    codec_node->codec.default_output=&(conn_node->connector);
+                                }
+                            }
+                            if(codec_node->codec.default_input==nullptr) {
+                                if(conf_default.split.def_device==0x08||conf_default.split.def_device==0x0a) {
+                                    codec_node->codec.default_input=&(conn_node->connector);
+                                }
+                            }
+                        }
                     }
+                    hda_printk("Codec #%d:Selected %s as default output,%s as default input.\n",i,
+                        hda_connector_type[codec_node->codec.default_output->pin_default.split.def_device],
+                        hda_connector_type[codec_node->codec.default_input->pin_default.split.def_device]
+                    );
                 }
             }
         }

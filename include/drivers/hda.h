@@ -98,10 +98,30 @@ typedef struct
     U64* rirb;
     U32 corb_count,rirb_count;
 } HDAController;
+typedef union {
+    struct {
+        U8  sequence:4;
+        U8  def_association:4;
+        U8  misc:4;
+        U8  color:4;
+        U8  conn_type:4;
+        U8  def_device:4;
+        U8  location:6;
+        U8  connectivity:2;
+    } split;
+    U32 packed;
+} HDAConfigurationDefault;
+typedef struct {
+    HDAConfigurationDefault pin_default;
+    U8 widget_id;
+    U8 io_direction; //0:Output;1:Input
+} HDAConnector;
 typedef struct HDACodec
 {
     int codec_id;
     HDAController* controller;
+    HDAConnector* default_output;
+    HDAConnector* default_input;
     U8 audio_widget_count;
     U8 afg_id;
     //Output,Input,Mixer,Selector,Pin Complex,Power Widget
@@ -156,6 +176,8 @@ typedef union {
     } __attribute__((packed))  split;
     U32 packed;
 } HDAVerb;
+
+
 typedef struct
 {
     device_tree_node header;
@@ -166,6 +188,10 @@ typedef struct
     device_tree_node header;
     HDACodec codec;
 }HDACodecTreeNode;
+typedef struct {
+    device_tree_node header;
+    HDAConnector connector;
+}HDAConnectorTreeNode;
 void hda_register(U8 bus,U8 slot,U8 func);
 
 #endif
