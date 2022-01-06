@@ -9,22 +9,22 @@ static U8 hda_controller_count=0;
 static char* hda_controller_tree_template = "HDAController%d";
 static char* hda_codec_tree_template = "HDACodec%d";
 static char* hda_connector_type[] = {
-    "line-out",
-    "speaker",
-    "HP-out",
+    "LineOut",
+    "Speaker",
+    "HPOut",
     "CD",
-    "SPDIF-out",
-    "digital-out",
-    "modem-line",
-    "modem-handset",
-    "line-in",
-    "aux",
-    "mic-in",
-    "telephony",
-    "SPDIF-in",
-    "digital-in",
-    "reserved",
-    "unknown"
+    "SPDIFOut",
+    "DigitalOut",
+    "ModemLine",
+    "ModemHandset",
+    "LineIn",
+    "Aux",
+    "MicIn",
+    "Telephony",
+    "SPDIFIn",
+    "DigitalIn",
+    "Reserved",
+    "Unknown"
 };
 void hda_interrupt_handler(int no) {
     hda_printk("Fired from %b\n",no);
@@ -252,13 +252,14 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                     for(int k=0;k<pin_complex_count;k++) {
                         verb.split.command = CODEC_GET_CONF_DEFAULT;
                         verb.split.data    = 0;
-                        verb.split.node_id = k+codec_node->codec.pin_complex_index;
+                        verb.split.node_id = codec_node->codec.audio_widgets[k+codec_node->codec.pin_complex_index];
                         conf_default.packed = hda_execute_verb(&controller,verb.packed);
                         if(conf_default.packed!=0) {
                             //Create Tree Node.
                             HDAConnectorTreeNode* conn_node = allocate_page(1);
                             memset(conn_node,0x00,PAGE_SIZE);
                             strcopy(conn_node->header.name,hda_connector_type[conf_default.split.def_device],16);
+                            conn_node->connector.widget_id = verb.split.node_id;
                             conn_node->header.type=DT_BLOCK_DEVICE;
                             conn_node->connector.pin_default.packed = conf_default.packed;
                             conn_node->connector.io_direction = ((conf_default.split.def_device&0x02)==0x02);
@@ -280,7 +281,16 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                         hda_connector_type[codec_node->codec.default_output->pin_default.split.def_device],
                         hda_connector_type[codec_node->codec.default_input->pin_default.split.def_device]
                     );
-                }
+                    //Get ADC/DAC for default output/input.
+                    verb.split.command = WIDGET_GET_CONNECTION_ENTRY;
+                    verb.split.node_id = codec_node->codec.default_output->widget_id;
+                    verb.split.data    = 0;
+                    ret = hda_execute_verb(&controller,verb.packed);
+                    printk("Out:%x\n",ret);
+                    verb.split.node_id = codec_node->codec.default_input->widget_id;
+                    ret = hda_execute_verb(&controller,verb.packed);
+                    printk("In:%x\n",ret);
+                 }
             }
         }
         mask <<=1;
