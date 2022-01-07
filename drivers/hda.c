@@ -247,6 +247,7 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                             default: {break;}
                         }
                     }
+
                     //We only cares about outputs.
                     HDAConfigurationDefault conf_default;
                     for(int k=0;k<pin_complex_count;k++) {
