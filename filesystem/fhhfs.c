@@ -8,7 +8,7 @@
 #include <drivers/sata_ahci.h>
 #include <common/random.h>
 
-
+#pragma message "Someday I shall clean this mess...."
 U64 fhhfs_get_node_from_dir(char* filename,void* buffer,U64 length) {
 
     void* p = buffer;
@@ -49,17 +49,19 @@ inline int fhhfs_stat(fhhfs_filesystem* fs,file* file)
     free_page(buf,1);
     return FzOS_SUCCESS;
 }
+
 //这里的buffer共享时可以节省内存分配开销。
 U64 fhhfs_get_next_node_id(fhhfs_filesystem* fs,U64 prev_id,void* buffer) {
-    U64 dest_node_page = prev_id/fs->node_size;
+    U64 dest_node_page = prev_id/(fs->node_size/sizeof(U64));
     fhhfs_readnode(fs,dest_node_page+fs->node_table_entry,buffer,1);
     return ((U64*)buffer)[prev_id%(fs->node_size/sizeof(U64))];
 }
+
 //定义写入下个id的函数。
 int fhhfs_write_node_id(fhhfs_filesystem* fs,U64 node,U64 value,void* buf)
 {
     //首先，查找node分配表.
-    U64 dest_node_page = node / fs->node_size;
+    U64 dest_node_page = node/(fs->node_size/sizeof(U64));
     fhhfs_readnode(fs,(fs->node_table_entry+dest_node_page),buf,1);
     //写入数据。
     U64* node_id_page = buf;
