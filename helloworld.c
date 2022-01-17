@@ -18,6 +18,7 @@
 #include <common/file.h>
 #include <common/random.h>
 #include <coldpoint/classloader.h>
+#include <common/wav.h>
 #ifndef VERSION
 #define VERSION "0.1"
 #endif
@@ -73,6 +74,23 @@ void kernel_main_real() {
     ((U8*)buf)[length] = '\0';
     printk("%s\n",buf);
     free_page(buf,(banner_file.size/PAGE_SIZE+1));
+    //播放音乐。
+    file music_file;
+    generic_open("/test.wav",&music_file);
+    buf = allocate_page(music_file.size/PAGE_SIZE+1);
+    length =music_file.filesystem->read(&music_file,buf,(music_file.size/PAGE_SIZE+1)*PAGE_SIZE);
+    WavAudioInfo info;
+    if(stat_wav(&info,buf,length)==FzOS_SUCCESS) {
+        printk(" Test WAV loaded.%d channels,%d bits per sample, %d Hz sample rate,%d bytes.\n",
+               info.channels,
+               info.sample_depth,
+               info.sample_rate,
+               info.data_length);
+    }
+    else {
+        printk(" Test WAV not recognized!\n");
+    }
+    free_page(buf,(music_file.size/PAGE_SIZE+1));
     //启动jvm！
     //init_classloader();
 }
