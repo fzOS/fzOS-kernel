@@ -40,7 +40,34 @@ int stat_wav(WavAudioInfo* info_buffer,void* file_buffer,U64 filesize)
     info_buffer->offset_to_data = (void*)data->data-file_buffer;
     return FzOS_SUCCESS;
 }
-int play_wav(WavAudioInfo* info_buffer,void* file_buffer,HDAConnector connector)
+int play_wav(WavAudioInfo* info_buffer,void* file_buffer,HDAConnector* connector)
 {
+    //Creates the PCM buffer.
+    void* pcm_buffer = allocate_page((info_buffer->data_length-1)/PAGE_SIZE+1);
+    memcpy(pcm_buffer,file_buffer+info_buffer->offset_to_data,info_buffer->data_length);
+    //Creates the BDL Buffer.
+    //FIXME:SHOULD NOT ALWAYS USE 0!
+    HDABufferDescriptor* desc = &(connector->codec->controller->buffer_desciptor_list[0]);
+    desc->length = info_buffer->data_length;
+    desc->address = (U64)pcm_buffer&(~KERNEL_ADDR_OFFSET);
+    desc->interrupt_on_completion = 0;
+    //Get Stream Descriptor.
+    StreamDescRegisters* reg = get_output_stream_desc(connector->codec->controller);
+    //Fill in basic info.
+    reg->sdcbl = info_buffer->data_length;
+    reg->sdlvi = 1;
+    PCMFormatStructure s;
+    s.raw = 0;
+    s.split.sample_base_rate = (info_buffer->sample_rate==44100?1:0);
+    switch(info_buffer->sample_depth) {
+        case 8: {s.split.bits_per_sample = 0;break;}
+        case 16: {s.split.bits_per_sample = 1;break;}
+        case 32: {s.split.bits_per_sample = 0b100;break;}
+        default:
+            return FzOS_INVALID_INPUT;
+    }
+    reg->sdfmt = s.raw;
+    reg->sdbdpl = (U64)(connector->codec->controller->buffer_desciptor_list) & 0xFFFFFFFF;
+    reg->sdbdpu = ((U64)(connector->codec->controller->buffer_desciptor_list) & ~KERNEL_ADDR_OFFSET)>>32;
     return FzOS_SUCCESS;
 }

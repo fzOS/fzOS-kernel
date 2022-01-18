@@ -31,5 +31,5 @@ typedef struct {
     U8  data[0];
 }__attribute__((packed)) WavDataChunk;
 int stat_wav(WavAudioInfo* info_buffer,void* file_buffer,U64 filesize);
-int play_wav(WavAudioInfo* info_buffer,void* file_buffer,HDAConnector connector);
+int play_wav(WavAudioInfo* info_buffer,void* file_buffer,HDAConnector* connector);
 #endif

@@ -109,7 +109,6 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     controller.registers->corbrp    = 0x8000;
     controller.registers->corbwp    = 0;
     controller.registers->corbctl   = 0x02;
-
     char rirb_size_accepted = ((controller.registers->rirbsize)&0xf0)>>4;
     //From bigger to smaller.
     if(rirb_size_accepted&0b0100) {
@@ -137,6 +136,8 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     controller.registers->rirbctl   = 0x03;
     controller.corb = page_corb_rirb;
     controller.rirb = (U64*)((U64)page_corb_rirb+0x800);
+    controller.buffer_desciptor_list = allocate_page(1);
+    memset(controller.buffer_desciptor_list,0x00,PAGE_SIZE);
     int mask=0x01;
     int hda_codec_count=0;
     HDAVerb verb;
@@ -269,11 +270,12 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                             }
                             else {
                                 sprintk(hda_connector_name_with_number,"%s%d",hda_connector_type[conf_default.split.def_device],hda_connector_type_count[conf_default.split.def_device]+1);
-                                printk("Got:%s\n",hda_connector_name_with_number);
                                 strcopy(conn_node->header.name,hda_connector_name_with_number,DT_NAME_LENGTH_MAX);
                             }
                             hda_connector_type_count[conf_default.split.def_device]++;
+                            conn_node->connector.codec = &(codec_node->codec);
                             conn_node->connector.widget_id = verb.split.node_id;
+                            conn_node->connector.connector_name = conn_node->header.name;
                             conn_node->header.type=DT_BLOCK_DEVICE;
                             conn_node->connector.pin_default.packed = conf_default.packed;
                             conn_node->connector.io_direction = ((conf_default.split.def_device&0x02)==0x02);
@@ -292,8 +294,8 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                         }
                     }
                     hda_printk("Codec #%d:Selected %s as default output,%s as default input.\n",i,
-                        hda_connector_type[codec_node->codec.default_output->pin_default.split.def_device],
-                        hda_connector_type[codec_node->codec.default_input->pin_default.split.def_device]
+                        codec_node->codec.default_output->connector_name,
+                        codec_node->codec.default_input->connector_name
                     );
                     //Get ADC/DAC for default output/input.
                     verb.split.command = WIDGET_GET_CONNECTION_ENTRY;
@@ -314,5 +316,16 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     }
     hda_controller_count++;
 }
-
+StreamDescRegisters* get_input_stream_desc(HDAController* controller)
+{
+    //FIXME:return something other than 0
+    int chosen=0;
+    return ((void*)controller->registers)+0x80+chosen*sizeof(StreamDescRegisters);
+}
+StreamDescRegisters* get_output_stream_desc(HDAController* controller)
+{
+    //FIXME:return something other than 0
+    int chosen=0;
+    return ((void*)controller->registers)+0x80+(chosen+((controller->registers->gcap&0xf00)>>3))*sizeof(StreamDescRegisters);
+}
 //END

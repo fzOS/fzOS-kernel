@@ -79,7 +79,7 @@ typedef volatile struct
     U32 sdlpib;
     U32 sdcbl;
     U16 sdlvi;
-    U16 reserved1[2];
+    U8 reserved1[2];
     U16 sdfifod;
     U16 sdfmt;
     U8  reserved2[4];
@@ -87,6 +87,23 @@ typedef volatile struct
     U32 sdbdpu;
 } __attribute__((packed)) StreamDescRegisters;
 struct HDACodec;
+typedef struct {
+    U64 address;
+    U32 length;
+    U32 interrupt_on_completion;
+} __attribute__((packed)) HDABufferDescriptor;
+typedef union {
+    struct {
+        int num_of_channels:4;
+        unsigned  bits_per_sample:3;
+        int reserved:1;
+        int sample_base_rate_divisor:3;
+        int sample_base_rate_multiple:3;
+        int sample_base_rate:1;
+        int stream_type:1;
+    } __attribute__((packed)) split;
+    U16 raw;
+} PCMFormatStructure;
 typedef struct
 {
     block_dev dev;
@@ -97,6 +114,7 @@ typedef struct
     U32* corb;
     U64* rirb;
     U32 corb_count,rirb_count;
+    HDABufferDescriptor* buffer_desciptor_list;
 } HDAController;
 typedef union {
     struct {
@@ -111,17 +129,13 @@ typedef union {
     } split;
     U32 packed;
 } HDAConfigurationDefault;
-typedef struct {
-    HDAConfigurationDefault pin_default;
-    U8 widget_id;
-    U8 io_direction; //0:Output;1:Input
-} HDAConnector;
+struct HDAConnector;
 typedef struct HDACodec
 {
     int codec_id;
     HDAController* controller;
-    HDAConnector* default_output;
-    HDAConnector* default_input;
+    struct HDAConnector* default_output;
+    struct HDAConnector* default_input;
     U8 audio_widget_count;
     U8 afg_id;
     //Output,Input,Mixer,Selector,Pin Complex,Power Widget
@@ -133,7 +147,13 @@ typedef struct HDACodec
     U8 power_widget_index;
     U8 audio_widgets[0];
 } HDACodec;
-
+typedef struct HDAConnector {
+    HDAConfigurationDefault pin_default;
+    HDACodec* codec;
+    char* connector_name;
+    U8 widget_id;
+    U8 io_direction; //0:Output;1:Input
+} HDAConnector;
 typedef enum {
     CODEC_GET_PARAMETER=0xf00,
     CODEC_GET_SELECTED_INPUT=0xf01,
@@ -194,5 +214,6 @@ typedef struct {
     HDAConnector connector;
 }HDAConnectorTreeNode;
 void hda_register(U8 bus,U8 slot,U8 func);
-
+StreamDescRegisters* get_input_stream_desc(HDAController* controller);
+StreamDescRegisters* get_output_stream_desc(HDAController* controller);
 #endif
