@@ -42,5 +42,5 @@ int stat_wav(WavAudioInfo* info_buffer,void* file_buffer,U64 filesize)
 }
 int play_wav(WavAudioInfo* info_buffer,void* file_buffer,HDAConnector connector)
 {
-
+    return FzOS_SUCCESS;
 }

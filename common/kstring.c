@@ -23,7 +23,8 @@ int strcomp(const char* first,const char* second) {
         result=first[pointer]?-1:(second[pointer]?1:0);
     return result;
 }
-static void sputnum(char* buf,U64 num) {
+static int sputnum(char* buf,U64 num) {
+    char* bufp = buf;
     U8 tempint;
     tempint = num % 10 + 48;
     if ((num / 10) != 0){
@@ -31,11 +32,13 @@ static void sputnum(char* buf,U64 num) {
     }
     *buf = ((char) tempint);
     buf++;
+    return buf-bufp;
 }
 
 
-static void sputU64hex(char* buf,U64 data)
+static int sputU64hex(char* buf,U64 data)
 {
+    char* bufp = buf;
     U8 tempint;
     U8 temp1,temp2;
     *buf = '0';
@@ -66,9 +69,11 @@ static void sputU64hex(char* buf,U64 data)
             buf++;
         }
     }
+    return buf-bufp;
 }
-static void sputU16hex(char* buf,U16 data)
+static int sputU16hex(char* buf,U16 data)
 {
+    char* bufp = buf;
     U8 tempint;
     U8 temp1,temp2;
     *buf = '0';
@@ -99,9 +104,12 @@ static void sputU16hex(char* buf,U16 data)
             buf++;
         }
     }
+    return buf-bufp;
 }
-static void sputU8hex(char* buf,U8 data)
+static int sputU8hex(char* buf,U8 data)
 {
+
+    char* bufp = buf;
     U8 temp1,temp2;
     *buf = '0';
     buf++;
@@ -127,17 +135,20 @@ static void sputU8hex(char* buf,U8 data)
         *buf = temp1;
         buf++;
     }
+    return buf-bufp;
 }
 
 
 
-static void sputstring(char* buf,char *str)
+static int sputstring(char* buf,char *str)
 {
+    char* bufp = buf;
     while (*str != '\0'){
         *buf=*str;
         buf++;
         str++;
     }
+    return buf-bufp;
 }
 int sprintk(char* buf, const char* format,...)
 {
@@ -154,21 +165,21 @@ int sprintk(char* buf, const char* format,...)
             pointer++;
             switch(*pointer)
             {
-                case 'c':{*bufp = *pointer;break;}
-                case 'd':{sputnum(bufp,va_arg(arg,U64));break;}
-                case 'x':{sputU64hex(bufp,va_arg(arg,U64));break;}
-                case 'b':{sputU8hex(bufp,va_arg(arg,int));break;}
-                case 'w':{sputU16hex(bufp,va_arg(arg,int));break;}
-                case 's':{sputstring(bufp,va_arg(arg,char*));break;}
+                case 'c':{*bufp = *pointer;bufp++;break;}
+                case 'd':{bufp+=sputnum(bufp,va_arg(arg,U64));break;}
+                case 'x':{bufp+=sputU64hex(bufp,va_arg(arg,U64));break;}
+                case 'b':{bufp+=sputU8hex(bufp,va_arg(arg,int));break;}
+                case 'w':{bufp+=sputU16hex(bufp,va_arg(arg,int));break;}
+                case 's':{bufp+=sputstring(bufp,va_arg(arg,char*));break;}
                 default:{count--;break;}
             }
         }
         else
         {
             *bufp = *pointer;
+            bufp++;
         }
         pointer++;
-        bufp++;
     }
     va_end(arg);
     *bufp='\0';

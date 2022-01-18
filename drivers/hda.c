@@ -140,6 +140,8 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     int mask=0x01;
     int hda_codec_count=0;
     HDAVerb verb;
+    U8 hda_connector_type_count[sizeof(hda_connector_type)/sizeof(char*)];
+    char hda_connector_name_with_number[DT_NAME_LENGTH_MAX];
     for(int i=0;i<MAX_CODEC_COUNT;i++) {
         if((controller.registers->statests)&mask) {
             HDACodecTreeNode* codec_node = allocate_page(1);
@@ -249,6 +251,9 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                     }
 
                     //We only cares about outputs.
+                    for(int i=0;i<sizeof(hda_connector_type_count);i++) {
+                        hda_connector_type_count[i]=0;
+                    }
                     HDAConfigurationDefault conf_default;
                     for(int k=0;k<pin_complex_count;k++) {
                         verb.split.command = CODEC_GET_CONF_DEFAULT;
@@ -259,7 +264,15 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                             //Create Tree Node.
                             HDAConnectorTreeNode* conn_node = allocate_page(1);
                             memset(conn_node,0x00,PAGE_SIZE);
-                            strcopy(conn_node->header.name,hda_connector_type[conf_default.split.def_device],16);
+                            if(hda_connector_type_count[conf_default.split.def_device]==0) {
+                                strcopy(conn_node->header.name,hda_connector_type[conf_default.split.def_device],DT_NAME_LENGTH_MAX);
+                            }
+                            else {
+                                sprintk(hda_connector_name_with_number,"%s%d",hda_connector_type[conf_default.split.def_device],hda_connector_type_count[conf_default.split.def_device]+1);
+                                printk("Got:%s\n",hda_connector_name_with_number);
+                                strcopy(conn_node->header.name,hda_connector_name_with_number,DT_NAME_LENGTH_MAX);
+                            }
+                            hda_connector_type_count[conf_default.split.def_device]++;
                             conn_node->connector.widget_id = verb.split.node_id;
                             conn_node->header.type=DT_BLOCK_DEVICE;
                             conn_node->connector.pin_default.packed = conf_default.packed;
