@@ -57,7 +57,6 @@ void kernel_main_real() {
     init_pci();
 
     print_device_tree();
-
     //查找根分区并挂载。
     if(mount_root_partition()!=FzOS_SUCCESS) {
         printk(" Error!No root partition found. FzOS cannot continue.\n");
@@ -65,7 +64,6 @@ void kernel_main_real() {
             halt();
         }
     };
-
     //显示Banner.
     file banner_file;
     generic_open("/banner_color",&banner_file);
@@ -74,6 +72,7 @@ void kernel_main_real() {
     ((U8*)buf)[length] = '\0';
     printk("%s\n",buf);
     free_page(buf,(banner_file.size/PAGE_SIZE+1));
+
     //播放音乐。
     file music_file;
     generic_open("/test.wav",&music_file);
@@ -86,10 +85,17 @@ void kernel_main_real() {
                info.sample_depth,
                info.sample_rate,
                info.data_length);
+        //FIXME:Use open.
+        HDACodecTreeNode* hda_codec_node = (HDACodecTreeNode*)device_tree_resolve_by_path("/Devices/HDAController0/HDACodec0",nullptr,DT_RETURN_IF_NONEXIST);
+        if(hda_codec_node==nullptr) { //no sound card
+            goto skip_playing_audio;
+        }
+        play_wav(&info,buf,hda_codec_node->codec.default_output);
     }
     else {
         printk(" Test WAV not recognized!\n");
     }
+skip_playing_audio:
     free_page(buf,(music_file.size/PAGE_SIZE+1));
     //启动jvm！
     //init_classloader();

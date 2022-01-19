@@ -72,7 +72,6 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     HDAControllerTreeNode* controller_node = allocate_page(1);
     memset(controller_node,0,sizeof(HDAControllerTreeNode));
     sprintk(buf,hda_controller_tree_template,hda_controller_count++);
-    controller_node->controller = controller;
     strcopy(controller_node->header.name,buf,DT_NAME_LENGTH_MAX);
     controller_node->header.type = DT_BLOCK_DEVICE;
     device_tree_add_from_parent((device_tree_node*)controller_node,(device_tree_node*)base_node);
@@ -138,6 +137,7 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     controller.rirb = (U64*)((U64)page_corb_rirb+0x800);
     controller.buffer_desciptor_list = allocate_page(1);
     memset(controller.buffer_desciptor_list,0x00,PAGE_SIZE);
+    controller_node->controller = controller;
     int mask=0x01;
     int hda_codec_count=0;
     HDAVerb verb;
@@ -302,10 +302,10 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                     verb.split.node_id = codec_node->codec.default_output->widget_id;
                     verb.split.data    = 0;
                     ret = hda_execute_verb(&controller,verb.packed);
-                    printk("Out:%x\n",ret);
+                    codec_node->codec.default_output->connected_converter_id = ret;
                     verb.split.node_id = codec_node->codec.default_input->widget_id;
                     ret = hda_execute_verb(&controller,verb.packed);
-                    printk("In:%x\n",ret);
+                    codec_node->codec.default_input->connected_converter_id = ret;
                  }
             }
         }
@@ -316,16 +316,29 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     }
     hda_controller_count++;
 }
-StreamDescRegisters* get_input_stream_desc(HDAController* controller)
+StreamDescRegisters* get_input_stream_desc(HDAController* controller,int* stream_id_buffer)
 {
     //FIXME:return something other than 0
     int chosen=0;
+    *stream_id_buffer = chosen;
     return ((void*)controller->registers)+0x80+chosen*sizeof(StreamDescRegisters);
 }
-StreamDescRegisters* get_output_stream_desc(HDAController* controller)
+StreamDescRegisters* get_output_stream_desc(HDAController* controller,int* stream_id_buffer)
 {
     //FIXME:return something other than 0
     int chosen=0;
-    return ((void*)controller->registers)+0x80+(chosen+((controller->registers->gcap&0xf00)>>3))*sizeof(StreamDescRegisters);
+    *stream_id_buffer = chosen;
+    return ((void*)controller->registers)+0x80+(chosen+((controller->registers->gcap&0xf00)>>8))*sizeof(StreamDescRegisters);
+}
+
+int bind_stream_to_converter(HDACodec* codec,int stream_id,int converter_widget_id)
+{
+    HDAVerb verb;
+    verb.packed = 0;
+    verb.split.command=CODEC_SET_STREAM_CHANNEL;
+    verb.split.codec_addr = codec->codec_id;
+    verb.split.node_id    = converter_widget_id;
+    verb.split.data       = (stream_id&0xF)<<4;
+    return hda_execute_verb(codec->controller,verb.packed);
 }
 //END

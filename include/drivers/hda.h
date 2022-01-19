@@ -151,6 +151,7 @@ typedef struct HDAConnector {
     HDAConfigurationDefault pin_default;
     HDACodec* codec;
     char* connector_name;
+    U8 connected_converter_id;
     U8 widget_id;
     U8 io_direction; //0:Output;1:Input
 } HDAConnector;
@@ -214,6 +215,7 @@ typedef struct {
     HDAConnector connector;
 }HDAConnectorTreeNode;
 void hda_register(U8 bus,U8 slot,U8 func);
-StreamDescRegisters* get_input_stream_desc(HDAController* controller);
-StreamDescRegisters* get_output_stream_desc(HDAController* controller);
+StreamDescRegisters* get_input_stream_desc(HDAController* controller,int* stream_id_buffer);
+StreamDescRegisters* get_output_stream_desc(HDAController* controller,int* stream_id_buffer);
+int bind_stream_to_converter(HDACodec* codec,int stream_id,int converter_widget_id);
 #endif
