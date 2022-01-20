@@ -41,6 +41,24 @@ U32 hda_execute_verb(HDAController* controller,U32 verb)
     while(prev_rirb_pos == controller->registers->rirbwp) __asm__ volatile("pause");
     return (U32)(controller->rirb[controller->registers->rirbwp]);
 }
+int set_widget_power_state(HDACodec* codec,int widget_id,int power_state)
+{
+    HDAVerb verb;
+    verb.packed = 0;
+    verb.split.command=CODEC_SET_POWER_STATE;
+    verb.split.codec_addr = codec->codec_id;
+    verb.split.node_id = widget_id;
+    verb.split.data = power_state;
+    U32 ret = hda_execute_verb(codec->controller,verb.packed);
+    if(ret!=0) {
+        return ret;
+    }
+    verb.split.command=CODEC_GET_POWER_STATE;
+    verb.split.data = 0;
+    ret = hda_execute_verb(codec->controller,verb.packed);
+    return FzOS_SUCCESS;
+}
+//END
 void hda_register(U8 bus,U8 slot,U8 func) {
     HDAController controller;
     controller.base.bus = bus;
@@ -168,8 +186,11 @@ void hda_register(U8 bus,U8 slot,U8 func) {
             int starting_node_number = (ret&0xFF0000)>>16;
             int node_count = (ret&0xFF);
             codec_node->codec.afg_id = starting_node_number;
+            //Power On AFG node.
+            set_widget_power_state(&codec_node->codec,starting_node_number,0);
             for(int j=0;j<node_count;j++) {
                 controller.afg_nodes[j+starting_node_number]=0;
+                verb.split.command    = CODEC_GET_PARAMETER;
                 verb.split.data       = PARAM_FUNC_GROUP_TYPE;
                 verb.split.node_id    = j+starting_node_number;
                 ret = hda_execute_verb(&controller,verb.packed);
@@ -306,6 +327,13 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                     verb.split.node_id = codec_node->codec.default_input->widget_id;
                     ret = hda_execute_verb(&controller,verb.packed);
                     codec_node->codec.default_input->connected_converter_id = ret;
+                    //Enable Default output.
+                    verb.split.command    = CODEC_GET_PIN_WIDGET_CONTROL;
+                    verb.split.data       = 0;
+                    U32 pin_status = hda_execute_verb(&controller,verb.packed);
+                    verb.split.command    = CODEC_SET_PIN_WIDGET_CONTROL;
+                    verb.split.data       = (pin_status&0xFF)|0x40;
+                    hda_execute_verb(&controller,verb.packed);
                  }
             }
         }
@@ -327,18 +355,21 @@ StreamDescRegisters* get_output_stream_desc(HDAController* controller,int* strea
 {
     //FIXME:return something other than 0
     int chosen=0;
-    *stream_id_buffer = chosen;
+    *stream_id_buffer = (chosen+((controller->registers->gcap&0xf00)>>8));
     return ((void*)controller->registers)+0x80+(chosen+((controller->registers->gcap&0xf00)>>8))*sizeof(StreamDescRegisters);
 }
 
 int bind_stream_to_converter(HDACodec* codec,int stream_id,int converter_widget_id)
 {
+    printk("Binding %b to %b\n",stream_id,converter_widget_id);
     HDAVerb verb;
     verb.packed = 0;
-    verb.split.command=CODEC_SET_STREAM_CHANNEL;
+    verb.split.command    = CODEC_SET_STREAM_CHANNEL;
     verb.split.codec_addr = codec->codec_id;
     verb.split.node_id    = converter_widget_id;
     verb.split.data       = (stream_id&0xF)<<4;
-    return hda_execute_verb(codec->controller,verb.packed);
+    U32 ret = hda_execute_verb(codec->controller,verb.packed);
+
+    return ret;
 }
-//END
+

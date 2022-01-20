@@ -74,7 +74,7 @@ typedef union {
 } AudioWidgetCap;
 typedef volatile struct
 {
-    U8  sdctl[3];
+    U32 sdctl:24;
     U8  sdsts;
     U32 sdlpib;
     U32 sdcbl;
@@ -169,6 +169,8 @@ typedef enum {
     CODEC_GET_CONV_CHAN_CNT=0xf2d,
     CODEC_SET_CONV_CHAN_CNT=0x72d,
     CODEC_FUNCTION_RESET=0x7ff,
+    CODEC_GET_POWER_STATE=0xf05,
+    CODEC_SET_POWER_STATE=0x705,
     WIDGET_GET_CONNECTION_ENTRY=0xf02
 } HDACommand;
 typedef enum {
@@ -218,4 +220,5 @@ void hda_register(U8 bus,U8 slot,U8 func);
 StreamDescRegisters* get_input_stream_desc(HDAController* controller,int* stream_id_buffer);
 StreamDescRegisters* get_output_stream_desc(HDAController* controller,int* stream_id_buffer);
 int bind_stream_to_converter(HDACodec* codec,int stream_id,int converter_widget_id);
+int set_widget_power_state(HDACodec* codec,int widget_id,int power_state);
 #endif
