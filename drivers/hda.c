@@ -4,6 +4,7 @@
 #include <lai/helpers/pci.h>
 #include <memory/memory.h>
 #include <common/kstring.h>
+
 #define hda_printk(x...) printk(" HDA:" x)
 static U8 hda_controller_count=0;
 static char* hda_controller_tree_template = "HDAController%d";
@@ -27,8 +28,21 @@ static char* hda_connector_type[] = {
     "Unknown"
 };
 void hda_interrupt_handler(int no) {
-    hda_printk("Fired from %b\n",no);
+    //hda_printk("Fired from %b\n",no);
+    HDAController* controller = get_hardware_by_irq(no);
+    U16 model=0x01;
+    for(int i=0;i<MAX_STREAM_COUNT;i++) {
+        if(controller->registers->intsts&model) {
+            release_semaphore(&controller->stream_buffer_desc[i].stream_semaphore);
+            StreamDescRegisters* registers = ((void*)controller->registers)+0x80+i*sizeof(StreamDescRegisters);
+            registers->sdsts = 0x04;
+            printk("Interrupt cleared.\n");
+        }
+        model<<=1;
+    }
 }
+//We only cares about ONE sound card.
+
 U32 hda_execute_verb(HDAController* controller,U32 verb)
 {
     //First,check if there is room in CORB.
@@ -83,7 +97,7 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     if(lai_pci_route_pin(&resource,0,bus,slot,func,interrupt_info.split[1])!=LAI_ERROR_NONE) {
         printk(" LAI:Cannot find interrupt for HDA controller!\n");
     }
-    irq_register(resource.base, 0xDA,0,0,hda_interrupt_handler);
+    controller.registers->intctl |= 0x80000000;
     controller.base.irq = resource.base;
     char buf[DT_NAME_LENGTH_MAX];
     device_tree_node* base_node = device_tree_resolve_by_path(BASE_DEVICE_TREE_TEMPLATE,nullptr,DT_CREATE_IF_NONEXIST);
@@ -93,6 +107,7 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     strcopy(controller_node->header.name,buf,DT_NAME_LENGTH_MAX);
     controller_node->header.type = DT_BLOCK_DEVICE;
     device_tree_add_from_parent((device_tree_node*)controller_node,(device_tree_node*)base_node);
+    irq_register(resource.base, 0xDA,0,0,hda_interrupt_handler,&controller_node->controller);
     //Allocate page for CORB and RIRB.
     void* page_corb_rirb = allocate_page(1);
     page_corb_rirb=(void*)((U64)page_corb_rirb & (~KERNEL_ADDR_OFFSET));
@@ -349,19 +364,18 @@ StreamDescRegisters* get_input_stream_desc(HDAController* controller,int* stream
     //FIXME:return something other than 0
     int chosen=0;
     *stream_id_buffer = chosen;
-    return ((void*)controller->registers)+0x80+chosen*sizeof(StreamDescRegisters);
+    return &controller->registers->stream_desc_registers[chosen];
 }
 StreamDescRegisters* get_output_stream_desc(HDAController* controller,int* stream_id_buffer)
 {
     //FIXME:return something other than 0
     int chosen=0;
     *stream_id_buffer = (chosen+((controller->registers->gcap&0xf00)>>8));
-    return ((void*)controller->registers)+0x80+(chosen+((controller->registers->gcap&0xf00)>>8))*sizeof(StreamDescRegisters);
+    return &controller->registers->stream_desc_registers[chosen+((controller->registers->gcap&0xf00)>>8)];
 }
 
 int bind_stream_to_converter(HDACodec* codec,int stream_id,int converter_widget_id)
 {
-    printk("Binding %b to %b\n",stream_id,converter_widget_id);
     HDAVerb verb;
     verb.packed = 0;
     verb.split.command    = CODEC_SET_STREAM_CHANNEL;
@@ -369,7 +383,8 @@ int bind_stream_to_converter(HDACodec* codec,int stream_id,int converter_widget_
     verb.split.node_id    = converter_widget_id;
     verb.split.data       = (stream_id&0xF)<<4;
     U32 ret = hda_execute_verb(codec->controller,verb.packed);
-
+    //Enable Interrupt.
+    codec->controller->registers->intctl|=(1<<stream_id);
     return ret;
 }
 

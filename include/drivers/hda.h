@@ -2,8 +2,24 @@
 #define HDA_H
 #include <drivers/blockdev.h>
 #include <drivers/pci.h>
+#include <common/semaphore.h>
+#define MAX_STREAM_COUNT 15
 #define MAX_CODEC_COUNT 15
 #define MAX_AFG_COUNT 4
+typedef volatile struct
+{
+    U32 sdctl:24;
+    U8  sdsts;
+    U32 sdlpib;
+    U32 sdcbl;
+    U16 sdlvi;
+    U8 reserved1[2];
+    U16 sdfifod;
+    U16 sdfmt;
+    U8  reserved2[4];
+    U32 sdbdpl;
+    U32 sdbdpu;
+} __attribute__((packed)) StreamDescRegisters;
 typedef volatile struct
 {
     U16 gcap;
@@ -49,6 +65,7 @@ typedef volatile struct
     U32 dpiblbase;
     U32 dpibubase;
     U8  reserved9[8];
+    StreamDescRegisters stream_desc_registers[0];
 } __attribute__((packed)) HDABaseRegisters;
 typedef union {
     U32 raw;
@@ -72,20 +89,7 @@ typedef union {
         int reserved:8;
     } __attribute__((packed)) split;
 } AudioWidgetCap;
-typedef volatile struct
-{
-    U32 sdctl:24;
-    U8  sdsts;
-    U32 sdlpib;
-    U32 sdcbl;
-    U16 sdlvi;
-    U8 reserved1[2];
-    U16 sdfifod;
-    U16 sdfmt;
-    U8  reserved2[4];
-    U32 sdbdpl;
-    U32 sdbdpu;
-} __attribute__((packed)) StreamDescRegisters;
+
 struct HDACodec;
 typedef struct {
     U64 address;
@@ -104,6 +108,17 @@ typedef union {
     } __attribute__((packed)) split;
     U16 raw;
 } PCMFormatStructure;
+typedef enum {
+    AUDIO_STOP_AFTER_DONE=0,
+    AUDIO_REPLAY_AFTER_DONE=1
+} AudioPlayPolicy;
+typedef struct {
+    semaphore stream_semaphore;
+    AudioPlayPolicy policy;
+    void* buffer;
+    U64 total_buffer_page_count;
+    U64 current_buffer_page;
+}StreamBufferDesc;
 typedef struct
 {
     block_dev dev;
@@ -115,6 +130,7 @@ typedef struct
     U64* rirb;
     U32 corb_count,rirb_count;
     HDABufferDescriptor* buffer_desciptor_list;
+    StreamBufferDesc stream_buffer_desc[MAX_STREAM_COUNT];
 } HDAController;
 typedef union {
     struct {

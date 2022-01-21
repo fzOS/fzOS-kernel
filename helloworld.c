@@ -56,7 +56,7 @@ void kernel_main_real() {
     //然后是PCI设备。
     init_pci();
 
-    print_device_tree();
+    //print_device_tree();
     //查找根分区并挂载。
     if(mount_root_partition()!=FzOS_SUCCESS) {
         printk(" Error!No root partition found. FzOS cannot continue.\n");
@@ -91,6 +91,7 @@ void kernel_main_real() {
             goto skip_playing_audio;
         }
         play_wav(&info,buf,hda_codec_node->codec.default_output);
+        printk(" Play done.\n");
     }
     else {
         printk(" Test WAV not recognized!\n");

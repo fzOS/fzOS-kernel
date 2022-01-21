@@ -90,6 +90,7 @@ int play_wav(WavAudioInfo* info_buffer,void* file_buffer,HDAConnector* connector
         return FzOS_ERROR;
     }
     //Play!
-    reg->sdctl |= 0x02;
+    reg->sdctl |= 0x06;
+    acquire_semaphore(&connector->codec->controller->stream_buffer_desc[stream_no].stream_semaphore);
     return FzOS_SUCCESS;
 }

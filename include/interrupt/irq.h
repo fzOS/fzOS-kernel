@@ -2,7 +2,6 @@
 #define IRQ
 #include <types.h>
 #include <limit.h>
-void init_irq(void);
 typedef union {
     struct {
     U8 vector;
@@ -19,7 +18,9 @@ typedef union {
     U32 raw[2];
     U64 total;
 } io_rediection_entry;
+void init_irq(void);
+void* get_hardware_by_irq(U8 irq_number);
 extern void (*irq_handlers[IRQS_MAX])(int);
-extern void (*irq_register)(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int));
+extern void (*irq_register)(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int),void* additional_buffer);
 extern void (*irq_clear)(void);
 #endif
