@@ -76,7 +76,7 @@ void kernel_main_real() {
 
     //播放音乐。
     file music_file;
-    generic_open("/music.wav",&music_file);
+    generic_open("/test.wav",&music_file);
     buf = allocate_page(music_file.size/PAGE_SIZE+1);
     length =music_file.filesystem->read(&music_file,buf,(music_file.size/PAGE_SIZE+1)*PAGE_SIZE);
     AudioInfo info;
