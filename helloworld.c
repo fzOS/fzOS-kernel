@@ -19,6 +19,7 @@
 #include <common/random.h>
 #include <coldpoint/classloader.h>
 #include <common/wav.h>
+#include <drivers/hda.h>
 #ifndef VERSION
 #define VERSION "0.1"
 #endif
@@ -75,10 +76,10 @@ void kernel_main_real() {
 
     //播放音乐。
     file music_file;
-    generic_open("/test.wav",&music_file);
+    generic_open("/music.wav",&music_file);
     buf = allocate_page(music_file.size/PAGE_SIZE+1);
     length =music_file.filesystem->read(&music_file,buf,(music_file.size/PAGE_SIZE+1)*PAGE_SIZE);
-    WavAudioInfo info;
+    AudioInfo info;
     if(stat_wav(&info,buf,length)==FzOS_SUCCESS) {
         printk(" Test WAV loaded.%d channels,%d bits per sample, %d Hz sample rate,%d bytes.\n",
                info.channels,

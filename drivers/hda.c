@@ -4,7 +4,6 @@
 #include <lai/helpers/pci.h>
 #include <memory/memory.h>
 #include <common/kstring.h>
-
 #define hda_printk(x...) printk(" HDA:" x)
 static U8 hda_controller_count=0;
 static char* hda_controller_tree_template = "HDAController%d";
@@ -33,10 +32,25 @@ void hda_interrupt_handler(int no) {
     U16 model=0x01;
     for(int i=0;i<MAX_STREAM_COUNT;i++) {
         if(controller->registers->intsts&model) {
-            release_semaphore(&controller->stream_buffer_desc[i].stream_semaphore);
             StreamDescRegisters* registers = ((void*)controller->registers)+0x80+i*sizeof(StreamDescRegisters);
+            StreamBufferDesc* buffer_desc  = &controller->stream_buffer_desc[i];
             registers->sdsts = 0x04;
-            printk("Interrupt cleared.\n");
+            if(buffer_desc->current_buffer_page-1>buffer_desc->total_buffer_page_count) {
+                controller->registers->stream_desc_registers[i].sdctl = 0x00;
+                return;
+            }
+            //换缓冲。
+            void* chosen = buffer_desc->stream_buffer_addr + ((buffer_desc->current_buffer_page)&1)*HDA_BUFFER_SIZE;
+            if(buffer_desc->current_buffer_page>=buffer_desc->total_buffer_page_count) {
+                memset(chosen,0,1*HDA_BUFFER_SIZE);
+                release_semaphore(&controller->stream_buffer_desc[i].stream_semaphore);
+            }
+            memcpy(chosen,buffer_desc->buffer+(buffer_desc->current_buffer_page) *HDA_BUFFER_SIZE,1*HDA_BUFFER_SIZE);
+            if(buffer_desc->buffer_length-(buffer_desc->current_buffer_page)*HDA_BUFFER_SIZE<HDA_BUFFER_SIZE) {
+                int off=buffer_desc->buffer_length-(buffer_desc->current_buffer_page)*HDA_BUFFER_SIZE;
+                memset(chosen+off,0,HDA_BUFFER_SIZE-off);
+            }
+            buffer_desc->current_buffer_page+=1;
         }
         model<<=1;
     }
@@ -168,8 +182,6 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     controller.registers->rirbctl   = 0x03;
     controller.corb = page_corb_rirb;
     controller.rirb = (U64*)((U64)page_corb_rirb+0x800);
-    controller.buffer_desciptor_list = allocate_page(1);
-    memset(controller.buffer_desciptor_list,0x00,PAGE_SIZE);
     controller_node->controller = controller;
     int mask=0x01;
     int hda_codec_count=0;
@@ -387,4 +399,66 @@ int bind_stream_to_converter(HDACodec* codec,int stream_id,int converter_widget_
     codec->controller->registers->intctl|=(1<<stream_id);
     return ret;
 }
-
+semaphore* play_pcm(AudioInfo* info_buffer, void* pcm_buffer,HDAConnector* connector)
+{
+    int stream_no;
+    //Get Stream Descriptor.
+    StreamDescRegisters* reg = get_output_stream_desc(connector->codec->controller,&stream_no);
+    PCMFormatStructure s;
+    //Fill in the BDL Buffer.
+    HDABufferDescriptor* desc = &connector->buffer_desciptor_list;
+    U64 number_of_buffers = info_buffer->data_length/HDA_BUFFER_SIZE;
+    if(connector->stream_buffer==nullptr) {
+        connector->stream_buffer = allocate_page(HDA_BUFFER_COUNT*HDA_BUFFER_SIZE/PAGE_SIZE);
+    }
+    U64 buffers_to_use = (number_of_buffers+1<=HDA_BUFFER_COUNT?number_of_buffers+1:HDA_BUFFER_COUNT);
+    U64 off=0;
+    U64 actual_copy_size=0;
+    for(U64 i=0;i<buffers_to_use;i++) {
+        actual_copy_size=(off+HDA_BUFFER_SIZE<info_buffer->data_length?HDA_BUFFER_SIZE:info_buffer->data_length-off);
+        memcpy((((void*)connector->stream_buffer)+(HDA_BUFFER_SIZE*i)),pcm_buffer+off,actual_copy_size);
+        desc[i].address = (((U64)connector->stream_buffer)+(HDA_BUFFER_SIZE*i))&(~KERNEL_ADDR_OFFSET);
+        desc[i].length = actual_copy_size;
+        desc[i].interrupt_on_completion = 1;
+        off+=actual_copy_size;
+    }
+    if(actual_copy_size!=HDA_BUFFER_SIZE) {
+        memset(connector->stream_buffer+off,0,HDA_BUFFER_SIZE-actual_copy_size);
+    }
+    connector->codec->controller->stream_buffer_desc[stream_no].stream_buffer_addr = connector->stream_buffer;
+    connector->codec->controller->stream_buffer_desc[stream_no].buffer = pcm_buffer;
+    connector->codec->controller->stream_buffer_desc[stream_no].buffer_length = info_buffer->data_length;
+    connector->codec->controller->stream_buffer_desc[stream_no].current_buffer_page = HDA_BUFFER_COUNT;
+    connector->codec->controller->stream_buffer_desc[stream_no].total_buffer_page_count = number_of_buffers;
+    //Reset stream.
+    reg->sdctl |= 0x01;
+    while(!(reg->sdctl&0x01));
+    reg->sdctl &= 0xFFFFFFFE;
+    while((reg->sdctl&0x01));
+    //Fill in basic info.
+    reg->sdcbl = info_buffer->data_length>HDA_BUFFER_COUNT*HDA_BUFFER_SIZE?HDA_BUFFER_COUNT*HDA_BUFFER_SIZE:info_buffer->data_length;
+    reg->sdlvi = HDA_BUFFER_COUNT-1;
+    s.raw = 0;
+    s.split.sample_base_rate = (info_buffer->sample_rate==44100?1:0);
+    s.split.num_of_channels = info_buffer->channels-1;
+    switch(info_buffer->sample_depth) {
+        case 8: {s.split.bits_per_sample = 0;break;}
+        case 16: {s.split.bits_per_sample = 1;break;}
+        case 32: {s.split.bits_per_sample = 0b100;break;}
+        default:
+            return nullptr;
+    }
+    reg->sdfmt = s.raw;
+    reg->sdbdpl = (U64)(desc) & 0xFFFFFFFF;
+    reg->sdbdpu = ((U64)(desc) & ~KERNEL_ADDR_OFFSET)>>32;
+    set_widget_power_state(connector->codec,connector->widget_id,0);
+    set_widget_power_state(connector->codec,connector->connected_converter_id,0);
+    int ret = bind_stream_to_converter(connector->codec,stream_no,connector->connected_converter_id);
+    //FIXME:Get connected DAC id when not detected.
+    if(ret!=FzOS_SUCCESS) {
+        return nullptr;
+    }
+    //Play!
+    reg->sdctl |= 0x06;
+    return &connector->codec->controller->stream_buffer_desc[stream_no].stream_semaphore;
+}

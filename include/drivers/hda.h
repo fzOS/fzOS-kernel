@@ -3,9 +3,13 @@
 #include <drivers/blockdev.h>
 #include <drivers/pci.h>
 #include <common/semaphore.h>
+#include <common/wav.h>
+#include <stddef.h>
 #define MAX_STREAM_COUNT 15
 #define MAX_CODEC_COUNT 15
 #define MAX_AFG_COUNT 4
+#define HDA_BUFFER_COUNT 2
+#define HDA_BUFFER_SIZE 262144 //64*4k=256k
 typedef volatile struct
 {
     U32 sdctl:24;
@@ -116,8 +120,10 @@ typedef struct {
     semaphore stream_semaphore;
     AudioPlayPolicy policy;
     void* buffer;
+    U64 buffer_length;
     U64 total_buffer_page_count;
     U64 current_buffer_page;
+    void* stream_buffer_addr;
 }StreamBufferDesc;
 typedef struct
 {
@@ -129,7 +135,7 @@ typedef struct
     U32* corb;
     U64* rirb;
     U32 corb_count,rirb_count;
-    HDABufferDescriptor* buffer_desciptor_list;
+
     StreamBufferDesc stream_buffer_desc[MAX_STREAM_COUNT];
 } HDAController;
 typedef union {
@@ -165,12 +171,20 @@ typedef struct HDACodec
 } HDACodec;
 typedef struct HDAConnector {
     HDAConfigurationDefault pin_default;
+    U8 padding1[4];
     HDACodec* codec;
     char* connector_name;
+    void* stream_buffer;
     U8 connected_converter_id;
     U8 widget_id;
     U8 io_direction; //0:Output;1:Input
+    U8 padding2[45];
+    HDABufferDescriptor buffer_desciptor_list;
 } HDAConnector;
+//Check alignment.
+//Due to the Virtualbox's bug, we must align at 1024 instead of 128!
+_Static_assert((offsetof(HDAConnector,buffer_desciptor_list)+sizeof(device_tree_node))%128==0,"Buffer Descriptor not aligned!");
+
 typedef enum {
     CODEC_GET_PARAMETER=0xf00,
     CODEC_GET_SELECTED_INPUT=0xf01,
@@ -235,6 +249,5 @@ typedef struct {
 void hda_register(U8 bus,U8 slot,U8 func);
 StreamDescRegisters* get_input_stream_desc(HDAController* controller,int* stream_id_buffer);
 StreamDescRegisters* get_output_stream_desc(HDAController* controller,int* stream_id_buffer);
-int bind_stream_to_converter(HDACodec* codec,int stream_id,int converter_widget_id);
-int set_widget_power_state(HDACodec* codec,int widget_id,int power_state);
+semaphore* play_pcm(AudioInfo* info_buffer, void* pcm_buffer,HDAConnector* connector);
 #endif

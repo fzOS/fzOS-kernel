@@ -2,14 +2,13 @@
 #ifndef WAV_H
 #define WAV_H
 #include <types.h>
-#include <drivers/hda.h>
 typedef struct {
     U32 sample_rate;
     U8  sample_depth;
     U8  channels;
     U32 offset_to_data;
     U32 data_length;
-} WavAudioInfo;
+} AudioInfo;
 typedef struct {
     U8  id[4];
     U32 file_size;
@@ -30,6 +29,7 @@ typedef struct {
     U32 size;
     U8  data[0];
 }__attribute__((packed)) WavDataChunk;
-int stat_wav(WavAudioInfo* info_buffer,void* file_buffer,U64 filesize);
-int play_wav(WavAudioInfo* info_buffer,void* file_buffer,HDAConnector* connector);
+int stat_wav(AudioInfo* info_buffer,void* file_buffer,U64 filesize);
+struct HDAConnector;
+int play_wav(AudioInfo* info_buffer,void* file_buffer,struct HDAConnector* connector);
 #endif
