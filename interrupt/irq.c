@@ -10,12 +10,14 @@ extern U64 localapic_address;
 extern U8 acpi_interrupt;
 extern void (*int_handler_irqs[IRQS_MAX])(interrupt_frame* frame);
 void (*irq_handlers[IRQS_MAX])(int);
-void (*irq_register)(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int));
+void (*irq_register)(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int),void* additional_buffer);
 void (*irq_clear)(void);
-void irq_register_ioapic(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int));
-void irq_register_8259(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int));
+void irq_register_ioapic(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int),void* additional_buffer);
+void irq_register_8259(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int),void* additional_buffer);
 void irq_clear_ioapic(void);
 void irq_clear_8259(void);
+//Get buffer pointer by IRQ.
+void* hardware_buffer[IRQS_MAX];
 void write_ioapic_register(U8 offset, U32 val)
 {
     *(volatile U32*)(ioapic_address) = offset;
@@ -56,10 +58,14 @@ void init_irq(void)
     }
     //由于肯定有ACPI，我们在这里注册ACPI关机信号。
     acpi_enable_power_button();
-    irq_register(acpi_interrupt, 0xAC,1,1,acpi_interrupt_handler);
+    irq_register(acpi_interrupt, 0xAC,1,1,acpi_interrupt_handler,nullptr);
 }
 
-void irq_register_ioapic(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int))
+void* get_hardware_by_irq(U8 irq_number)
+{
+    return hardware_buffer[irq_number];
+}
+void irq_register_ioapic(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int),void* additional_buffer)
 {
     U32 begin_offset = (0x10 + 2 * irq_number);
     io_rediection_entry entry;
@@ -73,8 +79,9 @@ void irq_register_ioapic(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin
     write_ioapic_register(begin_offset + 1, entry.raw[1]);
     set_interrupt_handler(desired_int_no, (U64)(int_handler_irqs[irq_number]), INTERRUPT_GATE);
     irq_handlers[irq_number] = handler;
+    hardware_buffer[irq_number] = additional_buffer;
 }
-void irq_register_8259(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int))
+void irq_register_8259(U8 irq_number, U8 desired_int_no,U8 trigger_mode,U8 pin_polarity, void (*handler)(int),void* additional_buffer)
 {
     debug(" Not implemented.\n");
 }

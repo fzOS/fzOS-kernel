@@ -9,7 +9,7 @@ static U8 SCAN_CODE_MAPPING_SHIFTED[] = "\x00""\x1B""!@#$%^&*()_+""\x08""\tQWERT
 U8 keyboard_getchar(struct char_dev*);
 void init_keyboard(void)
 {
-    irq_register(0x01,0x21,0x00,0x00,keyboard_getkey);
+    irq_register(0x01,0x21,0x00,0x00,keyboard_getkey,nullptr);
     default_console->common.getchar = keyboard_getchar;
     default_console->input_sem = 0;
 }

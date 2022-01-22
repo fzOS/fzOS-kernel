@@ -18,6 +18,8 @@
 #include <common/file.h>
 #include <common/random.h>
 #include <coldpoint/classloader.h>
+#include <common/wav.h>
+#include <drivers/hda.h>
 #ifndef VERSION
 #define VERSION "0.1"
 #endif
@@ -54,6 +56,8 @@ void kernel_main_real() {
     init_syscall();
     //然后是PCI设备。
     init_pci();
+
+    //print_device_tree();
     //查找根分区并挂载。
     if(mount_root_partition()!=FzOS_SUCCESS) {
         printk(" Error!No root partition found. FzOS cannot continue.\n");
@@ -61,7 +65,6 @@ void kernel_main_real() {
             halt();
         }
     };
-
     //显示Banner.
     file banner_file;
     generic_open("/banner_color",&banner_file);
@@ -70,8 +73,34 @@ void kernel_main_real() {
     ((U8*)buf)[length] = '\0';
     printk("%s\n",buf);
     free_page(buf,(banner_file.size/PAGE_SIZE+1));
+
+    //播放音乐。
+    file music_file;
+    generic_open("/test.wav",&music_file);
+    buf = allocate_page(music_file.size/PAGE_SIZE+1);
+    length =music_file.filesystem->read(&music_file,buf,(music_file.size/PAGE_SIZE+1)*PAGE_SIZE);
+    AudioInfo info;
+    if(stat_wav(&info,buf,length)==FzOS_SUCCESS) {
+        printk(" Test WAV loaded.%d channels,%d bits per sample, %d Hz sample rate,%d bytes.\n",
+               info.channels,
+               info.sample_depth,
+               info.sample_rate,
+               info.data_length);
+        //FIXME:Use open.
+        HDACodecTreeNode* hda_codec_node = (HDACodecTreeNode*)device_tree_resolve_by_path("/Devices/HDAController0/HDACodec0",nullptr,DT_RETURN_IF_NONEXIST);
+        if(hda_codec_node==nullptr) { //no sound card
+            goto skip_playing_audio;
+        }
+        play_wav(&info,buf,hda_codec_node->codec.default_output);
+        printk(" Play done.\n");
+    }
+    else {
+        printk(" Test WAV not recognized!\n");
+    }
+skip_playing_audio:
+    free_page(buf,(music_file.size/PAGE_SIZE+1));
     //启动jvm！
-    init_classloader();
+    //init_classloader();
 }
 void kernel_main(KernelInfo info) {
     //手动换栈。
