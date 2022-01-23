@@ -8,7 +8,7 @@
 #define FHHFS_CRC_MAGIC_NUMBER 189050311
 
 typedef struct {
-    FileSystem generic;
+    FzOSFileSystem generic;
     U64 node_size;
     U64 physical_blocks_per_node;
     U64 node_total;
@@ -52,10 +52,10 @@ typedef struct {
 } __attribute__((packed))  FhhfsFileHeader;
 
 int fhhfs_mount(GPTPartition* partition,const char* destination);
-int fhhfs_open(struct FileSystem* fs,char* filename,struct file* file);
+int fhhfs_open(struct FzOSFileSystem* fs,char* filename,struct file* file);
 int fhhfs_read(struct file* file,void* buf,U64 buflen);
 int fhhfs_seek(struct file* file,U64 offset,SeekDirection direction);
 int fhhfs_write(struct file* file,void* buf,U64 buflen);
 int fhhfs_close(struct file* file);
-int fhhfs_unmount(FileSystem* fs);
+int fhhfs_unmount(FzOSFileSystem* fs);
 #endif

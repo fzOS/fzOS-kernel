@@ -42,7 +42,7 @@ inline int fhhfs_stat(FhhfsFilesystem* fs,file* file)
 {
     //file中的node必须存在。
     FhhfsFileHeader* buf = allocate_page(1);
-    fhhfs_readnode(fs,file->fs_internal_node[0],buf,1);
+    fhhfs_readnode(fs,file->fs_internal_parameter[0],buf,1);
     file->type = buf->file_type;
     file->offset = 0;
     file->size = buf->filesize;
@@ -146,7 +146,7 @@ int fhhfs_mount(GPTPartition* partition,const char* destination)
     free_page(buf,1);
     return FzOS_ERROR;
 }
-int fhhfs_unmount(FileSystem* fs)
+int fhhfs_unmount(FzOSFileSystem* fs)
 {
     FhhfsFilesystem* fsl = (FhhfsFilesystem*) fs;
     void* buf = allocate_page(1);
@@ -157,7 +157,7 @@ int fhhfs_unmount(FileSystem* fs)
     free_page(buf,1);
     return FzOS_SUCCESS;
 }
-int fhhfs_open(FileSystem* fs,char* filename,struct file* file)
+int fhhfs_open(FzOSFileSystem* fs,char* filename,struct file* file)
 {
     //输入格式：
     //以/开头的地址。
@@ -166,9 +166,9 @@ int fhhfs_open(FileSystem* fs,char* filename,struct file* file)
     file->filesystem = fs;
     //开始循环解析。
     U64 buf_size = 1;
-    file->fs_internal_node[0] = 1;//“/”
+    file->fs_internal_parameter[0] = 1;//“/”
     char bufname[FILENAME_MAX];
-    file->fs_internal_node[0] = 1;
+    file->fs_internal_parameter[0] = 1;
     fhhfs_stat(fsl,file);
     char* p = filename+1;
     void* buf = allocate_page(1);
@@ -189,8 +189,8 @@ int fhhfs_open(FileSystem* fs,char* filename,struct file* file)
             buf=allocate_page(buf_size);
         }
         fhhfs_read(file,buf,file->size);
-        file->fs_internal_node[0] = fhhfs_get_node_from_dir(bufname,buf,file->size);
-        if(file->fs_internal_node[0] == FzOS_FILE_NOT_FOUND) {
+        file->fs_internal_parameter[0] = fhhfs_get_node_from_dir(bufname,buf,file->size);
+        if(file->fs_internal_parameter[0] == FzOS_FILE_NOT_FOUND) {
                 free_page(buf,buf_size);
                 return FzOS_FILE_NOT_FOUND;
         }
@@ -214,7 +214,7 @@ int fhhfs_read(struct file* file,void* buf,U64 buflen)
     void* read_buffer = allocate_page(node_count / (PAGE_SIZE/fsl->node_size)+1);
     void* fat_buffer = allocate_page(1);
     U64 begin_node = (file_offset)/fsl->node_size;
-    U64 current_node = file->fs_internal_node[0];
+    U64 current_node = file->fs_internal_parameter[0];
     while(begin_node--) {
         current_node = fhhfs_get_next_node_id(fsl,current_node,fat_buffer);
     }
@@ -278,7 +278,7 @@ int fhhfs_write(struct file* file,void* buf,U64 buflen)
     void* read_buffer = allocate_page(1);//由于只要写入，因此只要写一块就行了。
     void* fat_buffer = allocate_page(1);
     U64 begin_node = (file_offset)/fsl->node_size;
-    U64 current_node = file->fs_internal_node[0];
+    U64 current_node = file->fs_internal_parameter[0];
     while(begin_node--) {
         current_node = fhhfs_get_next_node_id(fsl,current_node,fat_buffer);
     }

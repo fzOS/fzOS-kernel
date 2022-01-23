@@ -50,7 +50,7 @@ void kernel_main_real() {
     init_gdt();
     init_interrupt();
     init_device_tree();
-    mount_efivars(bss_info.rt);
+    efivarfs_mount(bss_info.rt);
     fbcon_add_to_device_tree();
     init_keyboard();
     init_random();

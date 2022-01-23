@@ -14,19 +14,19 @@ extern int (*registered_filesystem_mounts[])(GPTPartition* partition,const char*
 extern char root_device_path[64];
 
 
-typedef struct FileSystem{
-    int (*open)(struct FileSystem* fs,char* filename,struct file* file);
+typedef struct FzOSFileSystem{
+    int (*open)(struct FzOSFileSystem* fs,char* filename,struct file* file);
     int (*read)(struct file* file,void* buf,U64 buflen);
     int (*seek)(struct file* file,U64 offset,SeekDirection direction);
     int (*write)(struct file* file,void* buf,U64 buflen);
     int (*close)(struct file* file);
-    int (*unmount)(struct FileSystem* fs);
+    int (*unmount)(struct FzOSFileSystem* fs);
     block_dev* dev;
-} FileSystem;
+} FzOSFileSystem;
 
 typedef struct {
     DeviceTreeNode node;
-    FileSystem fs;
+    FzOSFileSystem fs;
 } FileSystemTreeNode;
 int mount(GPTPartition* partition,const char* position);
 int unmount_all_mounted_filesystems();

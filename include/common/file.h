@@ -9,11 +9,11 @@ typedef enum {
     FILE_TYPE_SYMLINK
 } FileType;
 typedef struct file{
-    FileSystem* filesystem;
+    FzOSFileSystem* filesystem;
     U64 size;
     U64 offset;
     FileType type;
-    U64 fs_internal_node[2];
+    U64 fs_internal_parameter[3];
 } file;
 int generic_open(char* filename,file* file);
 #endif
