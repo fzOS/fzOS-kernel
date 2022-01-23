@@ -36,10 +36,10 @@ typedef struct {
     GUID type;
 }GPTPartition;
 typedef struct {
-    device_tree_node node;
+    DeviceTreeNode node;
     GPTPartition partition;
 }GPTPartitionTreeNode;
 extern const GUID FzOS_ROOT_PARTITION_GUID;
 
-int gpt_partition_init(block_dev* dev,device_tree_node* parent);
+int gpt_partition_init(block_dev* dev,DeviceTreeNode* parent);
 #endif

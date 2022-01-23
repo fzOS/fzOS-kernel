@@ -114,13 +114,13 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     controller.registers->intctl |= 0x80000000;
     controller.base.irq = resource.base;
     char buf[DT_NAME_LENGTH_MAX];
-    device_tree_node* base_node = device_tree_resolve_by_path(BASE_DEVICE_TREE_TEMPLATE,nullptr,DT_CREATE_IF_NONEXIST);
+    DeviceTreeNode* base_node = device_tree_resolve_by_path(BASE_DEVICE_TREE_TEMPLATE,nullptr,DT_CREATE_IF_NONEXIST);
     HDAControllerTreeNode* controller_node = allocate_page(1);
     memset(controller_node,0,sizeof(HDAControllerTreeNode));
     sprintk(buf,hda_controller_tree_template,hda_controller_count++);
     strcopy(controller_node->header.name,buf,DT_NAME_LENGTH_MAX);
     controller_node->header.type = DT_BLOCK_DEVICE;
-    device_tree_add_from_parent((device_tree_node*)controller_node,(device_tree_node*)base_node);
+    device_tree_add_from_parent((DeviceTreeNode*)controller_node,(DeviceTreeNode*)base_node);
     irq_register(resource.base, 0xDA,0,0,hda_interrupt_handler,&controller_node->controller);
     //Allocate page for CORB and RIRB.
     void* page_corb_rirb = allocate_page(1);
@@ -198,7 +198,7 @@ void hda_register(U8 bus,U8 slot,U8 func) {
             codec_node->codec.codec_id = i;
             strcopy(codec_node->header.name,buf,DT_NAME_LENGTH_MAX);
             codec_node->header.type = DT_BLOCK_DEVICE;
-            device_tree_add_from_parent((device_tree_node*)codec_node,(device_tree_node*)controller_node);
+            device_tree_add_from_parent((DeviceTreeNode*)codec_node,(DeviceTreeNode*)controller_node);
 
             //Get Dev/Ven/Sub.
             verb.split.codec_addr = i;
@@ -327,7 +327,7 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                             conn_node->header.type=DT_BLOCK_DEVICE;
                             conn_node->connector.pin_default.packed = conf_default.packed;
                             conn_node->connector.io_direction = ((conf_default.split.def_device&0x02)==0x02);
-                            device_tree_add_from_parent((device_tree_node*)conn_node,(device_tree_node*)codec_node);
+                            device_tree_add_from_parent((DeviceTreeNode*)conn_node,(DeviceTreeNode*)codec_node);
                             //by default, we choose Speaker/line-out as desired output,mic/line-in as desired input.
                             if(codec_node->codec.default_output==nullptr) {
                                 if(conf_default.split.def_device==0x00||conf_default.split.def_device==0x01) {

@@ -110,14 +110,14 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
     //扫描端口。
     U32 port_count = popcount(device.ahci_bar->pi);
     device.port_count = port_count;
-    device_tree_node* base_node = device_tree_resolve_by_path(BASE_DEVICE_TREE_TEMPLATE,nullptr,DT_CREATE_IF_NONEXIST);
+    DeviceTreeNode* base_node = device_tree_resolve_by_path(BASE_DEVICE_TREE_TEMPLATE,nullptr,DT_CREATE_IF_NONEXIST);
     AHCIControllerTreeNode* controller_node = allocate_page(1);
     memset(controller_node,0,sizeof(AHCIControllerTreeNode));
     sprintk(buf,ata_controller_tree_template,SATA_device_count++);
     controller_node->controller = device;
     strcopy(controller_node->header.name,buf,DT_NAME_LENGTH_MAX);
     controller_node->header.type = DT_BLOCK_DEVICE;
-    device_tree_add_from_parent((device_tree_node*)controller_node,(device_tree_node*)base_node);
+    device_tree_add_from_parent((DeviceTreeNode*)controller_node,(DeviceTreeNode*)base_node);
     HBA_PORT* port;
     //尝试获取中断信息。
     union {
@@ -174,7 +174,7 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
         port_node->header.type = DT_BLOCK_DEVICE;
         port_node->device.dev.readblock = ahci_readblock;
         port_node->device.dev.writeblock = ahci_writeblock;
-        device_tree_add_from_parent((device_tree_node*)port_node,(device_tree_node*)controller_node);
+        device_tree_add_from_parent((DeviceTreeNode*)port_node,(DeviceTreeNode*)controller_node);
         ata_port_rebase(device,port,i);
         ATA_IDENTIFY_DATA* identify_buffer = &(port_node->device.identify);
         if(type==AHCI_DEV_SATA) { //FIXME:IDENTIFY on SATAPI!.

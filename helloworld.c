@@ -20,6 +20,7 @@
 #include <coldpoint/classloader.h>
 #include <common/wav.h>
 #include <drivers/hda.h>
+#include <filesystem/efivarfs.h>
 #ifndef VERSION
 #define VERSION "0.1"
 #endif
@@ -49,6 +50,7 @@ void kernel_main_real() {
     init_gdt();
     init_interrupt();
     init_device_tree();
+    mount_efivars(bss_info.rt);
     fbcon_add_to_device_tree();
     init_keyboard();
     init_random();
@@ -56,8 +58,6 @@ void kernel_main_real() {
     init_syscall();
     //然后是PCI设备。
     init_pci();
-
-    //print_device_tree();
     //查找根分区并挂载。
     if(mount_root_partition()!=FzOS_SUCCESS) {
         printk(" Error!No root partition found. FzOS cannot continue.\n");
@@ -73,7 +73,6 @@ void kernel_main_real() {
     ((U8*)buf)[length] = '\0';
     printk("%s\n",buf);
     free_page(buf,(banner_file.size/PAGE_SIZE+1));
-
     //播放音乐。
     file music_file;
     generic_open("/test.wav",&music_file);
@@ -99,6 +98,7 @@ void kernel_main_real() {
     }
 skip_playing_audio:
     free_page(buf,(music_file.size/PAGE_SIZE+1));
+    print_device_tree();
     //启动jvm！
     //init_classloader();
 }

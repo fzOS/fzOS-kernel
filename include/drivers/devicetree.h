@@ -20,7 +20,7 @@ typedef struct {
     inline_tree_node node;
     DTNodeTypes type;
     char name[DT_NAME_LENGTH_MAX];
-}device_tree_node;
+}DeviceTreeNode;
 
 typedef enum {
     DT_CREATE_IF_NONEXIST,
@@ -33,11 +33,11 @@ typedef enum {
     DT_KEEP_AFTER_REPLACE
 } DtDestroyMethod;
 void init_device_tree(void);
-void device_tree_add_from_parent(device_tree_node* n,device_tree_node* parent);
-device_tree_node* device_tree_resolve_by_path(const char* full_path,const char** remaining, DtResolveMethod method);
-void device_tree_add_by_path(device_tree_node* n,char* c);
-int device_tree_replace_node(device_tree_node* old,device_tree_node* new,DtDestroyMethod method);
-device_tree_node* device_tree_resolve_from_parent(device_tree_node* n,char* node_name);
+void device_tree_add_from_parent(DeviceTreeNode* n,DeviceTreeNode* parent);
+DeviceTreeNode* device_tree_resolve_by_path(const char* full_path,const char** remaining, DtResolveMethod method);
+void device_tree_add_by_path(DeviceTreeNode* n,char* c);
+int device_tree_replace_node(DeviceTreeNode* old,DeviceTreeNode* new,DtDestroyMethod method);
+DeviceTreeNode* device_tree_resolve_from_parent(DeviceTreeNode* n,char* node_name);
 void print_device_tree(void);
 extern  char* BASE_DEVICE_TREE_TEMPLATE;
 #endif

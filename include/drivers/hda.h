@@ -183,7 +183,7 @@ typedef struct HDAConnector {
 } HDAConnector;
 //Check alignment.
 //Due to the Virtualbox's bug, we must align at 1024 instead of 128!
-_Static_assert((offsetof(HDAConnector,buffer_desciptor_list)+sizeof(device_tree_node))%128==0,"Buffer Descriptor not aligned!");
+_Static_assert((offsetof(HDAConnector,buffer_desciptor_list)+sizeof(DeviceTreeNode))%128==0,"Buffer Descriptor not aligned!");
 
 typedef enum {
     CODEC_GET_PARAMETER=0xf00,
@@ -234,16 +234,16 @@ typedef union {
 
 typedef struct
 {
-    device_tree_node header;
+    DeviceTreeNode header;
     HDAController controller;
 }HDAControllerTreeNode;
 typedef struct
 {
-    device_tree_node header;
+    DeviceTreeNode header;
     HDACodec codec;
 }HDACodecTreeNode;
 typedef struct {
-    device_tree_node header;
+    DeviceTreeNode header;
     HDAConnector connector;
 }HDAConnectorTreeNode;
 void hda_register(U8 bus,U8 slot,U8 func);

@@ -8,28 +8,28 @@ void init_device_tree(void)
 {
     //采用了有头结点的格式，所以需要新建一个child.
     device_tree.entry.child = allocate_page(1);
-    memset(device_tree.entry.child,0,sizeof(device_tree_node));
+    memset(device_tree.entry.child,0,sizeof(DeviceTreeNode));
     device_tree.entry.child->parent = &device_tree.entry;
-    ((device_tree_node*)device_tree.entry.child)->type = DT_BRANCH;
-    memcpy(((device_tree_node*)device_tree.entry.child)->name,"/",2);
+    ((DeviceTreeNode*)device_tree.entry.child)->type = DT_BRANCH;
+    memcpy(((DeviceTreeNode*)device_tree.entry.child)->name,"/",2);
 }
-void device_tree_add_by_path(device_tree_node* n,char* c)
+void device_tree_add_by_path(DeviceTreeNode* n,char* c)
 {
     //首先，解析。
-    device_tree_node* parent = device_tree_resolve_by_path(c,nullptr,DT_CREATE_IF_NONEXIST);
+    DeviceTreeNode* parent = device_tree_resolve_by_path(c,nullptr,DT_CREATE_IF_NONEXIST);
     //偷懒，直接插入。
     n->node.sibling = parent->node.child;
     n->node.parent = (inline_tree_node*)parent;
     parent->node.child = (inline_tree_node*)n;
 }
-void device_tree_add_from_parent(device_tree_node* n,device_tree_node* parent)
+void device_tree_add_from_parent(DeviceTreeNode* n,DeviceTreeNode* parent)
 {
     //偷懒，直接插入。
     n->node.sibling = parent->node.child;
     n->node.parent = (inline_tree_node*)parent;
     parent->node.child = (inline_tree_node*)n;
 }
-device_tree_node* device_tree_resolve_by_path(const char* full_path,const char** remaining,DtResolveMethod method)
+DeviceTreeNode* device_tree_resolve_by_path(const char* full_path,const char** remaining,DtResolveMethod method)
 {
     //Revision Using strmid().
     if(!strcomp(full_path,"/")) {
@@ -38,12 +38,12 @@ device_tree_node* device_tree_resolve_by_path(const char* full_path,const char**
                 *remaining = full_path+1;
             }
         }
-        return (device_tree_node*)device_tree.entry.child;
+        return (DeviceTreeNode*)device_tree.entry.child;
     }
     char buf[FILENAME_MAX];
     const char* p=full_path+1;
-    device_tree_node *node = (device_tree_node*)(device_tree.entry.child);
-    device_tree_node *parent = node;
+    DeviceTreeNode *node = (DeviceTreeNode*)(device_tree.entry.child);
+    DeviceTreeNode *parent = node;
     int len=1;
     while(len) {
         len = strmid(buf,FILENAME_MAX,(char*)p,PATH_SEPARATOR);
@@ -55,7 +55,7 @@ device_tree_node* device_tree_resolve_by_path(const char* full_path,const char**
             switch(method) {
                 case DT_CREATE_IF_NONEXIST: {
                     node = allocate_page(1);
-                    memset(node,0,sizeof(device_tree_node));
+                    memset(node,0,sizeof(DeviceTreeNode));
                     node->type = DT_BRANCH;
                     strcopy(node->name,buf,DT_NAME_LENGTH_MAX);
                     node->node.sibling = parent->node.child;
@@ -91,12 +91,12 @@ device_tree_node* device_tree_resolve_by_path(const char* full_path,const char**
     return node;
 }
 
-device_tree_node* device_tree_resolve_from_parent(device_tree_node* n,char* node_name)
+DeviceTreeNode* device_tree_resolve_from_parent(DeviceTreeNode* n,char* node_name)
 {
-    device_tree_node* node =(device_tree_node*)(n->node.child);
+    DeviceTreeNode* node =(DeviceTreeNode*)(n->node.child);
     while(node!=nullptr) {
         if(strcomp(node_name,node->name)) {
-            node = (device_tree_node*)node->node.sibling;
+            node = (DeviceTreeNode*)node->node.sibling;
         }
         else {
             break;
@@ -112,10 +112,10 @@ void print_device_tree(void)
         for(int i=0;i<iter.count-1;i++) {
             printk("--");
         }
-        printk("%s\n",((device_tree_node*)iter.current)->name);
+        printk("%s\n",((DeviceTreeNode*)iter.current)->name);
     }
 }
-int device_tree_replace_node(device_tree_node* old,device_tree_node* new,DtDestroyMethod method)
+int device_tree_replace_node(DeviceTreeNode* old,DeviceTreeNode* new,DtDestroyMethod method)
 {
     new->node.parent = old->node.parent;
     new->node.child  = old->node.child;

@@ -203,7 +203,7 @@ typedef struct
 //定义AHCI控制器的设备树格式。
 typedef struct
 {
-    device_tree_node header;
+    DeviceTreeNode header;
     AHCIController controller;
 }AHCIControllerTreeNode;
 //定义AHCI ATA IDENTIFY的响应格式。
@@ -323,7 +323,7 @@ typedef struct {
 } AHCIDevice;
 typedef struct
 {
-    device_tree_node header;
+    DeviceTreeNode header;
     AHCIDevice device;
     AHCIController* controller;
 }AHCIDeviceTreeNode;
