@@ -13,7 +13,7 @@ typedef struct file{
     U64 size;
     U64 offset;
     FileType type;
-    U64 fs_internal_parameter[3];
+    U64 fs_internal_parameter[4];
 } file;
 int generic_open(char* filename,file* file);
 #endif

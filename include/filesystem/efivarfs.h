@@ -18,4 +18,5 @@ int efivarfs_seek(struct file* file,U64 offset,SeekDirection direction);
 int efivarfs_write(struct file* file,void* buf,U64 buflen);
 int efivarfs_close(struct file* file);
 int efivarfs_unmount(FzOSFileSystem* fs);
+
 #endif

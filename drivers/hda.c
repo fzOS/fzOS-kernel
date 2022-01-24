@@ -206,7 +206,7 @@ void hda_register(U8 bus,U8 slot,U8 func) {
             verb.split.data       = PARAM_VEN_DEV_ID;
             verb.split.node_id    = 0;
             int ret = hda_execute_verb(&controller,verb.packed);
-            hda_printk("Codec #%d:PID:%w,VID:%w.\n",i,(ret&0xFFFF0000)>>16,ret&0xFFFF);
+            hda_printk("Codec #%d:VID:0x%w,PID:0x%w.\n",i,(ret&0xFFFF0000)>>16,ret&0xFFFF);
             //Get Func Group.
             verb.split.data       = PARAM_NODE_COUNT;
             ret = hda_execute_verb(&controller,verb.packed);

@@ -310,7 +310,7 @@ void pci_check_device(U8 bus,U8 slot,U8 func)
 {
     U8 class = pci_get_class(bus,slot,func);
     U8 subclass = pci_get_subclass(bus,slot,func);
-    printk(" %d:%d:%d %s %w %w\n",bus,slot,func,
+    printk(" %d:%d:%d %s 0x%w 0x%w\n",bus,slot,func,
                                   pci_get_class_name(class,subclass),
                                   pci_get_vendor(bus,slot,func),
                                   pci_get_device(bus,slot,func));

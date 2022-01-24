@@ -20,7 +20,7 @@ int parse_xsdt(void* in) {
         ACPISDTHeader* current_header = (ACPISDTHeader*)entries[i];
         strcopy(tableid,current_header->OEMTableID,8);
         strcopy(sig,current_header->Signature,4);
-        printk(" Entry #%d:%x %s %s\n",i,(entries[i]|KERNEL_ADDR_OFFSET),tableid,sig);
+        printk(" Entry #%d:0x%x %s %s\n",i,(entries[i]|KERNEL_ADDR_OFFSET),tableid,sig);
         for(int j=0;j<table_count;j++) {
             if(!strcomp(acpi_table_names[j],sig)) {
                 acpi_table_entries[j] = (U8*)(entries[i]|KERNEL_ADDR_OFFSET);

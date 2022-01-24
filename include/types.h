@@ -39,6 +39,7 @@ typedef enum {
     FzOS_NOT_IMPLEMENTED=-6,
     FzOS_NO_SPACE_LEFT=-7,
     FzOS_INVALID_INPUT=-8,
+    FzOS_READ_ONLY=-9,
     FzOS_SUCCESS=0,
 } FzOSResult;
 

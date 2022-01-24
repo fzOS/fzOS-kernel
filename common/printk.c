@@ -4,8 +4,6 @@ void putU64hex(U64 data)
 {
     U8 tempint;
     U8 temp1,temp2;
-    default_console->common.putchar(&default_console->common,'0');
-    default_console->common.putchar(&default_console->common,'x');
     for (int i = 0; i < 8; i++){
         /* code */
         tempint = (data&(0xff00000000000000 >> (8*i)) ) >> (56-8*i);
@@ -27,12 +25,11 @@ void putU64hex(U64 data)
         }
     }
 }
+
 void putU16hex(U16 data)
 {
     U8 tempint;
     U8 temp1,temp2;
-     default_console->common.putchar(&default_console->common,'0');
-     default_console->common.putchar(&default_console->common,'x');
     for (int i = 0; i < 2; i++){
         /* code */
         tempint = (data&(0xff00 >> (8*i)) ) >> (8-8*i);
@@ -57,8 +54,6 @@ void putU16hex(U16 data)
 void putU8hex(U8 data)
 {
     U8 temp1,temp2;
-     default_console->common.putchar(&default_console->common,'0');
-     default_console->common.putchar(&default_console->common,'x');
     temp1 = (data&0xf0) >> 4;
     temp2 = data&0x0f;
     if (temp1 < 10){
@@ -95,6 +90,24 @@ void putnum(U64 num)
      default_console->common.putchar(&default_console->common,(char) tempint);
 }
 
+void putguid(GUID guid)
+{
+    //12345678-8765-4321-2333-666666666666
+    putU16hex((guid.first&0xFFFF0000)>>16);
+    putU16hex(guid.first&0xFFFF);
+    default_console->common.putchar(&default_console->common,'-');
+    putU16hex(guid.second);
+    default_console->common.putchar(&default_console->common,'-');
+    putU16hex(guid.third);
+    default_console->common.putchar(&default_console->common,'-');
+    for(int i=0;i<2;i++) {
+        putU8hex(guid.fourth[i]);
+    }
+    default_console->common.putchar(&default_console->common,'-');
+    for(int i=0;i<6;i++) {
+        putU8hex(guid.fifth[i]);
+    }
+}
 int printk(const char* format,...)
 {
     int count=0;
@@ -115,6 +128,7 @@ int printk(const char* format,...)
                 case 'b':{putU8hex(va_arg(arg,int));break;}
                 case 'w':{putU16hex(va_arg(arg,int));break;}
                 case 's':{putstring(va_arg(arg,char*));break;}
+                case 'g':{putguid(va_arg(arg,GUID));break;}
                 //我们支持全彩色了！
                 //支持的颜色设置格式：
                 //%#RRGGBB
