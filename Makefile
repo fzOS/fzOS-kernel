@@ -4,6 +4,8 @@ GNUEFI_PATH=/usr/include/efi
 ifeq '$(USER)' 'fhh'
 export PATH:=/home/fhh/.ccache/:${PATH}
 CC= ccache 
+else
+CC= ""
 endif
 ifeq '$(DEBUG)' '1'
 VERSION := $(shell echo git-`git rev-parse --short HEAD`)
@@ -12,8 +14,8 @@ VERSION := 0.3.0
 endif
 THIS_YEAR := $(shell date +"%Y")
 BASE_DIR=${PWD}
-CC:=${CC} gcc
-CFLAGS=-pie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-red-zone -ffreestanding
+CC:=${CC}gcc
+CFLAGS=-fpie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -isystem "/usr/include/efi/x86_64" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-red-zone -ffreestanding
 SUBDIRS=drivers memory acpi common syscall interrupt filesystem coldpoint
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
@@ -55,3 +57,9 @@ mount:
 	echo "Mounting at $${a}p1" && \
 	losetup -f -P '/home/fhh/VirtualBox VMs/UEFITest/raw.img' && \
 	mount -t auto $${a}p1 /media
+installvm:
+	@echo "Mounting to /data" && \
+	mount /dev/sdb1 /data && \
+	echo "Moving kernel into EFI" && \
+	mv build/kernel /data && \
+	echo "VM kernel setup Success"
