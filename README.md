@@ -77,6 +77,8 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
 + [&ensp;]Step11: 实现JVM的堆机制;
 + [&ensp;]Step12: 实现System类，与Kernel ABI交互;
 + [&ensp;]Step13: 与JVM并行线，GUI开发
++ [x]Step14: 与JVM并行线，实现HDA声卡驱动;
++ [x]Step15: 实现WAV格式的音频播放;
 
 # File Structure
 
