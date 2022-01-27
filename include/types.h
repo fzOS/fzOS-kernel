@@ -30,14 +30,18 @@ typedef U8 byte;
 #define PATH_SEPARATOR '/'
 #define LINE_SEPARATOR '\n'
 
-#define FzOS_ERROR -1
-#define FzOS_BUFFER_TOO_SMALL -2
-#define FzOS_DEVICE_NOT_READY -3
-#define FzOS_POSITION_OVERFLOW -4
-#define FzOS_FILE_NOT_FOUND -5
-#define FzOS_NOT_IMPLEMENTED -6
-#define FzOS_NO_SPACE_LEFT -7
-#define FzOS_SUCCESS 0
+typedef enum {
+    FzOS_ERROR=-1,
+    FzOS_BUFFER_TOO_SMALL=-2,
+    FzOS_DEVICE_NOT_READY=-3,
+    FzOS_POSITION_OVERFLOW=-4,
+    FzOS_FILE_NOT_FOUND=-5,
+    FzOS_NOT_IMPLEMENTED=-6,
+    FzOS_NO_SPACE_LEFT=-7,
+    FzOS_INVALID_INPUT=-8,
+    FzOS_READ_ONLY=-9,
+    FzOS_SUCCESS=0,
+} FzOSResult;
 
 typedef union {
     U64 raw;

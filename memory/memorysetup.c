@@ -65,7 +65,7 @@ void print_linked_list()
     init_iterator(inline_linked_list,&free_page_linked_list_iterator,&free_page_linked_list);
     while(free_page_linked_list_iterator.next(&free_page_linked_list_iterator)) {
         node = (inline_free_page_node*)free_page_linked_list_iterator.current;
-        debug(" begins at %x, %x pages\n",node,node->free_mem_count);
+        debug(" begins at 0x%x, 0x%x pages\n",node,node->free_mem_count);
     }
 }
 

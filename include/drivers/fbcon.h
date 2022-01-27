@@ -16,7 +16,7 @@ typedef struct {
     semaphore output_in_progress;
 } fbcon;
 typedef struct {
-    device_tree_node node;
+    DeviceTreeNode node;
     fbcon con;
 }fbcon_device_tree_node;
 

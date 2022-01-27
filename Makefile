@@ -10,7 +10,7 @@ endif
 ifeq '$(DEBUG)' '1'
 VERSION := $(shell echo git-`git rev-parse --short HEAD`)
 else
-VERSION := 0.2.0
+VERSION := 0.3.0
 endif
 THIS_YEAR := $(shell date +"%Y")
 BASE_DIR=${PWD}
@@ -46,7 +46,7 @@ install:
 	cp -f build/kernel /media/ && \
 	umount /media && \
 	losetup -d $$a
-	@su - fhh -c 'VBoxManage startvm "UEFITest" -E VBOX_GUI_DBG_ENABLED=true' #-E VBOX_GUI_DBG_AUTO_SHOW=true
+	# @su - fhh -c 'VBoxManage startvm "UEFITest" -E VBOX_GUI_DBG_ENABLED=true' #-E VBOX_GUI_DBG_AUTO_SHOW=true
 stat:
 	@a=$$(eval echo $$(wc -l `find acpi/*.c interrupt/ syscall/ drivers/ memory/ common/ coldpoint/ include/ | grep -v "lai" | grep -v "asciifont"` 2>/dev/null |  tail -n 1)) && \
 	echo -e "\e[36;1m[LINES]\e[0m\t$$a"

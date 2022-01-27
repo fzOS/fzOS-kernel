@@ -132,6 +132,6 @@ normal_print_char:;
 }
 void fbcon_add_to_device_tree(void)
 {
-    device_tree_node* base_node = device_tree_resolve_by_path(BASE_DEVICE_TREE_TEMPLATE,nullptr,DT_CREATE_IF_NONEXIST);
+    DeviceTreeNode* base_node = device_tree_resolve_by_path(BASE_DEVICE_TREE_TEMPLATE,nullptr,DT_CREATE_IF_NONEXIST);
     device_tree_add_from_parent(&fbcon_node.node,base_node);
 }

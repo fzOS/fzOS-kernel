@@ -1,5 +1,6 @@
 #include <drivers/pci.h>
 #include <drivers/sata_ahci.h>
+#include <drivers/hda.h>
 const char* pci_class_name[] = {
     "Unclassified",
     "Mass Storage Controller",
@@ -309,13 +310,17 @@ void pci_check_device(U8 bus,U8 slot,U8 func)
 {
     U8 class = pci_get_class(bus,slot,func);
     U8 subclass = pci_get_subclass(bus,slot,func);
-    printk(" %d:%d:%d %s %w %w\n",bus,slot,func,
+    printk(" %d:%d:%d %s 0x%w 0x%w\n",bus,slot,func,
                                   pci_get_class_name(class,subclass),
                                   pci_get_vendor(bus,slot,func),
                                   pci_get_device(bus,slot,func));
     //注册AHCI设备。
     if(class==0x01 && subclass ==0x06) {
         sata_ahci_register(bus,slot,func);
+    }
+    //注册HDA设备。
+    if(class==0x04 && subclass ==0x03) {
+        hda_register(bus,slot,func);
     }
 }
 void pci_check_bus(U8 bus) 

@@ -29,7 +29,7 @@ int gpt_writeblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 bl
     return partition->parent->writeblock(partition->parent,offset+partition->begin_lba,buffer,buffer_size,blockcount);
 }
 
-int gpt_partition_init(block_dev* dev,device_tree_node* parent)
+int gpt_partition_init(block_dev* dev,DeviceTreeNode* parent)
 {
     //首先，分配缓冲，读一块。
     char* buffer = allocate_page(1);

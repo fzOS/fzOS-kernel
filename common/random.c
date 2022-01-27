@@ -5,7 +5,7 @@
 #include <drivers/rtc.h>
 #include <memory/memory.h>
 typedef struct {
-    device_tree_node node;
+    DeviceTreeNode node;
     char_dev dev;
 } random_device_tree_node;
 static int use_software_random = 0;
@@ -32,7 +32,7 @@ int init_random(void)
     random_node->node.type=DT_CHAR_DEVICE;
     memcpy(&(random_node->node.name),"RandomGenerator",DT_NAME_LENGTH_MAX);
     random_node->dev.getchar=random_getchar;
-    device_tree_node* parent = device_tree_resolve_by_path("/Devices",nullptr,DT_CREATE_IF_NONEXIST);
+    DeviceTreeNode* parent = device_tree_resolve_by_path("/Devices",nullptr,DT_CREATE_IF_NONEXIST);
     device_tree_add_from_parent(&(random_node->node),parent);
     return FzOS_SUCCESS;
 }
