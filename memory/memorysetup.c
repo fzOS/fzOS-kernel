@@ -5,6 +5,7 @@
 #include <memory/memorytables.h>
 #include <memory/gdt.h>
 #include <efi/efidef.h>
+#include <common/iterator.h>
 void print_linked_list();
 void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
 {
@@ -24,14 +25,14 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
         : "%rcx", "%rax", "%rdx", "memory");
     if (EFER.split.LME && CR4.split.PAE && CR0.split.PG) {
         // Start read UEFI page settings and creating new page tables
-        memmap* memmappointer = (memmap*)memory_map;
+        MemMap* memmappointer = (MemMap*)memory_map;
         int mem_map_count = mem_map_size / mem_map_descriptor_size;
 
         //To make things easy, We decide to continue using UEFI's mapping method.
         //That is, Physical address is explicitly equivalent to its virtual address.
         //将空闲内存信息插入free_page_linked_list中。
         //听wjs的话。
-        inline_free_page_node* node;
+        InlineFreePageNode* node;
         for (int i = 0; i < mem_map_count; i++) {
             if(memmappointer[i].Type==EfiConventionalMemory
              //||memmappointer[i].Type==EfiBootServicesCode
@@ -39,21 +40,21 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
             ) {
                 node = (void*)memmappointer[i].VirtualStart;
                 node->free_mem_count = memmappointer[i].NumberOfPages;
-                insert_existing_inline_node(&free_page_linked_list,&(node->node),-1);
+                insert_existing_inline_node(&g_free_page_linked_list,&(node->node),-1);
             }
         }
         //合并连续信息。
-        node = (inline_free_page_node*)(free_page_linked_list.head.next->next);
-        inline_free_page_node* prev_node = (inline_free_page_node*)(free_page_linked_list.head.next);
+        node = (InlineFreePageNode*)(g_free_page_linked_list.head.next->next);
+        InlineFreePageNode* prev_node = (InlineFreePageNode*)(g_free_page_linked_list.head.next);
         while(node!=nullptr) {
             if((U64)node == prev_node->free_mem_count*PAGE_SIZE+(U64)prev_node) {
                 prev_node->free_mem_count += node->free_mem_count;
-                remove_inline_node(&free_page_linked_list,&node->node);
+                remove_inline_node(&g_free_page_linked_list,&node->node);
             }
             else {
                 prev_node = node;
             }
-            node = (inline_free_page_node*)node->node.next;
+            node = (InlineFreePageNode*)node->node.next;
 
         }
     }
@@ -61,10 +62,10 @@ void memory_init(U64 mem_map_descriptor_size, U64 mem_map_size, U8* memory_map)
 }
 void print_linked_list()
 {
-    inline_free_page_node* node;
-    init_iterator(inline_linked_list,&free_page_linked_list_iterator,&free_page_linked_list);
-    while(free_page_linked_list_iterator.next(&free_page_linked_list_iterator)) {
-        node = (inline_free_page_node*)free_page_linked_list_iterator.current;
+    InlineFreePageNode* node;
+    init_iterator(InlineLinkedList,&g_free_page_linked_list_iterator,&g_free_page_linked_list);
+    while(g_free_page_linked_list_iterator.next(&g_free_page_linked_list_iterator)) {
+        node = (InlineFreePageNode*)g_free_page_linked_list_iterator.current;
         debug(" begins at 0x%x, 0x%x pages\n",node,node->free_mem_count);
     }
 }

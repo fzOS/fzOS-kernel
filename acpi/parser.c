@@ -7,9 +7,9 @@
 #include <common/io.h>
 #include <common/power_control.h>
 //总共需要识别的表。
-char* acpi_table_names[]={"FACP","APIC","SSDT","BGRT","DSDT"};
-U8*   acpi_table_entries[sizeof(acpi_table_names)/8];
-U8 table_count = sizeof(acpi_table_names)/sizeof(char*);
+char* g_acpi_table_names[]={"FACP","APIC","SSDT","BGRT","DSDT"};
+U8*   g_acpi_table_entries[sizeof(g_acpi_table_names)/8];
+U8 g_table_count = sizeof(g_acpi_table_names)/sizeof(char*);
 //解析RSDT的地址。
 void* get_xsdt_addr(RSDPDescriptor20* rsdp) {
     return (void*)((U64)rsdp->XsdtAddress|KERNEL_ADDR_OFFSET);
@@ -40,7 +40,7 @@ void acpi_interrupt_handler(int no)
 {
     (void)no;
     debug(" Fired ACPI interrupt.\n");
-    FADT* fadt = (FADT*)(acpi_table_entries[0]);
+    FADT* fadt = (FADT*)(g_acpi_table_entries[0]);
     U16 pm1_enable_port = (U16)fadt->X_PM1aEventBlock.Address;
     U16 action = inw((U16)(pm1_enable_port));
     outw(pm1_enable_port,1<<8);

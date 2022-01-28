@@ -83,5 +83,5 @@ typedef union {
         U64 sign_extended:16;//48~63
     } __attribute((packed)) split;
     U64 raw;
-} memory_address;
+} MemoryAddress;
 #endif

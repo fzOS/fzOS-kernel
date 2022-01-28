@@ -2,19 +2,19 @@
 #include <common/printk.h>
 #include <common/bswap.h>
 #include <common/kstring.h>
-int access_flags[] = {ACCESS_ABSTRACT,ACCESS_ANNOTATION,ACCESS_BRIDGE,ACCESS_ENUM,\
+int g_access_flags[] = {ACCESS_ABSTRACT,ACCESS_ANNOTATION,ACCESS_BRIDGE,ACCESS_ENUM,\
                       ACCESS_FINAL,ACCESS_INTERFACE,ACCESS_NATIVE,ACCESS_PRIVATE,\
                       ACCESS_PROTECTED,ACCESS_PUBLIC,ACCESS_STATIC,ACCESS_STRICT,\
                       ACCESS_SUPER,ACCESS_SYNTHETIC,ACCESS_VARARGS};
-char* access_flag_names[] = {"abstract","annotation","bridge","enum",\
+char* g_access_flag_names[] = {"abstract","annotation","bridge","enum",\
                              "final","interface","native","private",\
                              "protected","public","static","strict",\
                              "super","synthetic","varargs"
 };
 void print_class_constants(const class* c)
 {
-    constant_entry* const_entry = (constant_entry*)(c->buffer+c->constant_entry_offset);
-    constant_entry* this_const_entry;
+    ConstantEntry* const_entry = (ConstantEntry*)(c->buffer+c->constant_entry_offset);
+    ConstantEntry* this_const_entry;
     for(int i=0;i<c->constant_pool_entry_count;i++) {
         this_const_entry = &const_entry[i];
         printk("#%d:",i);
@@ -116,9 +116,9 @@ U16 class_get_utf8_string_index(const class* c,const U8* name)
     }
     return 0;
 }
-attribute_info_entry* class_get_class_attribute_by_name(const class* c,U16 name_index)
+AttributeInfoEntry* class_get_class_attribute_by_name(const class* c,U16 name_index)
 {
-    attribute_info_entry* a = (attribute_info_entry*)&c->buffer[c->class_attributes_entry_offset];
+    AttributeInfoEntry* a = (AttributeInfoEntry*)&c->buffer[c->class_attributes_entry_offset];
     for(int i=0;i<c->class_attributes_entry_count;i++) {
         if(a->attribute_name_index==name_index) {
             return a;
@@ -127,9 +127,9 @@ attribute_info_entry* class_get_class_attribute_by_name(const class* c,U16 name_
     }
     return nullptr;
 }
-method_info_entry* class_get_method_by_name_and_desc(const class* c,U16 name_index,U16 desc_index)
+MethodInfoEntry* class_get_method_by_name_and_desc(const class* c,U16 name_index,U16 desc_index)
 {
-    method_info_entry* m = (method_info_entry*)&c->buffer[c->method_pool_entry_offset];
+    MethodInfoEntry* m = (MethodInfoEntry*)&c->buffer[c->method_pool_entry_offset];
     for(int i=0;i<c->method_pool_entry_count;i++) {
         if(m->name_index==name_index&&m->descriptor_index==desc_index) {
             return m;
@@ -140,15 +140,15 @@ method_info_entry* class_get_method_by_name_and_desc(const class* c,U16 name_ind
 }
 void print_field_and_method_info(const class* c)
 {
-    field_info_entry* field_entry = (field_info_entry*)&(c->buffer[c->fields_pool_entry_offset]);
+    FieldInfoEntry* field_entry = (FieldInfoEntry*)&(c->buffer[c->fields_pool_entry_offset]);
     if(c->fields_pool_entry_count) {
         printk("Fields:\n");
     }
     for(int i=0;i<c->fields_pool_entry_count;i++) {
         printk("#%d:",i);
         for(int j=0;j<15;j++) {
-            if(field_entry[i].access_flags&access_flags[j]) {
-                printk("%s ",access_flag_names[j]);
+            if(field_entry[i].access_flags&g_access_flags[j]) {
+                printk("%s ",g_access_flag_names[j]);
             }
         }
         printk("%s %s,attributes_count:%d\n",\
@@ -158,7 +158,7 @@ void print_field_and_method_info(const class* c)
         );
 
     }
-    method_info_entry* method_entry = (method_info_entry*)&(c->buffer[c->method_pool_entry_offset]);
+    MethodInfoEntry* method_entry = (MethodInfoEntry*)&(c->buffer[c->method_pool_entry_offset]);
     U16 code_name_index = class_get_utf8_string_index(c,(U8*)"Code");
     if(c->method_pool_entry_count) {
         printk("Methods:\n");
@@ -166,8 +166,8 @@ void print_field_and_method_info(const class* c)
     for(int i=0;i<c->method_pool_entry_count;i++) {
         printk("#%d:",i);
         for(int j=0;j<15;j++) {
-            if(method_entry[i].access_flags&access_flags[j]) {
-                printk("%s ",access_flag_names[j]);
+            if(method_entry[i].access_flags&g_access_flags[j]) {
+                printk("%s ",g_access_flag_names[j]);
             }
         }
         printk("%s %s,attributes_count:%d\n",\
@@ -176,10 +176,10 @@ void print_field_and_method_info(const class* c)
                method_entry[i].attribute_count
         );
         if(method_entry[i].attribute_count) {
-            attribute_info_entry* attribute_entry = (attribute_info_entry*)&(c->buffer[method_entry[i].attribute_info_entry_offset]);
+            AttributeInfoEntry* attribute_entry = (AttributeInfoEntry*)&(c->buffer[method_entry[i].attribute_info_entry_offset]);
             for(int j=0;j<method_entry[i].attribute_count;j++) {
                  if(code_name_index!=0&&attribute_entry->attribute_name_index==code_name_index) {
-                    code_attribute* attr = (code_attribute*)&c->buffer[attribute_entry->info_offset];
+                    CodeAttribute* attr = (CodeAttribute*)&c->buffer[attribute_entry->info_offset];
                     U32 code_count = bswap32(attr->code_length);
                     printk("Code,max stack:%d,max local var:%d,length:%d\n",\
                             bswap16(attr->max_stack),\
@@ -206,13 +206,13 @@ void print_class_info(const class* c)
 {
     U64 source_file_name_index = class_get_utf8_string_index(c,(U8*)"SourceFile");
     if(source_file_name_index) {
-        attribute_info_entry* e = class_get_class_attribute_by_name(c,source_file_name_index);
+        AttributeInfoEntry* e = class_get_class_attribute_by_name(c,source_file_name_index);
         U16 file_name = bswap16(*(U16*)&(c->buffer[e->info_offset]));
         printk("Source File:%s\n",class_get_utf8_string(c,file_name));
     }
     for(int j=0;j<15;j++) {
-        if(c->access_flag&access_flags[j]) {
-            printk("%s ",access_flag_names[j]);
+        if(c->access_flag&g_access_flags[j]) {
+            printk("%s ",g_access_flag_names[j]);
         }
     }
     printk("class %s extends %s ",class_get_utf8_string(c,class_get_class_name_index(c,c->this_class)),
@@ -227,9 +227,9 @@ void print_class_info(const class* c)
     printk("\n");
 
 }
-attribute_info_entry* class_get_method_attribute_by_name(const class* c,const method_info_entry* entry,U16 name_index)
+AttributeInfoEntry* class_get_method_attribute_by_name(const class* c,const MethodInfoEntry* entry,U16 name_index)
 {
-    attribute_info_entry* a = (attribute_info_entry*)&c->buffer[entry->attribute_info_entry_offset];
+    AttributeInfoEntry* a = (AttributeInfoEntry*)&c->buffer[entry->attribute_info_entry_offset];
     for(int i=0;i<c->class_attributes_entry_count;i++) {
         if(a->attribute_name_index==name_index) {
             return a;

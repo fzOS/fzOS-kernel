@@ -2,9 +2,9 @@
 #define ACPI_PARSER
 #include <common/halt.h>
 #include <types.h>
-extern char* acpi_table_names[];
-extern U8*   acpi_table_entries[];
-extern U8 table_count;
+extern char* g_acpi_table_names[];
+extern U8*   g_acpi_table_entries[];
+extern U8 g_table_count;
 //定义ACPI RSDP指针文件结构。
 typedef struct {
     char Signature[8];

@@ -50,7 +50,6 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
 + 变量
     + 常规变量使用 小写下划线命名 ( 例如: bss_info )
     + 全局变量使用 g_小写下划线命名（ 例如: g_gui_service_window_list ）
-    + 注意某些全局变量采用的还是 小写下划线命名
 + 宏定义
     + 全大写下划线命名 （ 例如: GUI_DEFAULT_WINDOW_SIZE ）
     + 下划线开头结尾的全大写（ 例如: _GUI_DEFAULT_WINDOW_SIZE_ ）
@@ -77,6 +76,8 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
 + [&ensp;]Step11: 实现JVM的堆机制;
 + [&ensp;]Step12: 实现System类，与Kernel ABI交互;
 + [&ensp;]Step13: 与JVM并行线，GUI开发
++ [x]Step14: 与JVM并行线，实现HDA声卡驱动;
++ [x]Step15: 实现WAV格式的音频播放;
 
 # File Structure
 

@@ -2,7 +2,7 @@
 //FIXME:重写！咕咕 #3
 inline cpstatus load_internal(thread* t,int no)
 {
-    stack_var* const_val_entry = &t->stack[t->rbp+4];
+    StackVar* const_val_entry = &t->stack[t->rbp+4];
     t->stack[t->rsp].data = const_val_entry[no].data;
     t->stack[t->rsp].type = const_val_entry[no].type;
     t->rsp++;
@@ -10,7 +10,7 @@ inline cpstatus load_internal(thread* t,int no)
 }
 inline cpstatus store_internal(thread* t,int no)
 {
-    stack_var* const_val_entry = &t->stack[t->rbp+4];
+    StackVar* const_val_entry = &t->stack[t->rbp+4];
     const_val_entry[no].data = t->stack[t->rsp].data;
     const_val_entry[no].type = t->stack[t->rsp].type;
     t->rsp--;

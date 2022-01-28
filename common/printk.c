@@ -11,17 +11,17 @@ void putU64hex(U64 data)
         temp2 = tempint&0x0f;
         if (temp1 < 10){
             temp1 = temp1 + 48;
-             default_console->common.putchar(&default_console->common,temp1);
+             g_default_console->common.putchar(&g_default_console->common,temp1);
         }else{
             temp1 = temp1 + 87;
-             default_console->common.putchar(&default_console->common,temp1);
+             g_default_console->common.putchar(&g_default_console->common,temp1);
         }
         if (temp2 < 10){
             temp2 = temp2 + 48;
-             default_console->common.putchar(&default_console->common,temp2);
+             g_default_console->common.putchar(&g_default_console->common,temp2);
         }else{
             temp2 = temp2 + 87;
-             default_console->common.putchar(&default_console->common,temp2);
+             g_default_console->common.putchar(&g_default_console->common,temp2);
         }
     }
 }
@@ -37,17 +37,17 @@ void putU16hex(U16 data)
         temp2 = tempint&0x0f;
         if (temp1 < 10){
             temp1 = temp1 + 48;
-             default_console->common.putchar(&default_console->common,temp1);
+            g_default_console->common.putchar(&g_default_console->common,temp1);
         }else{
             temp1 = temp1 + 87;
-             default_console->common.putchar(&default_console->common,temp1);
+            g_default_console->common.putchar(&g_default_console->common,temp1);
         }
         if (temp2 < 10){
             temp2 = temp2 + 48;
-             default_console->common.putchar(&default_console->common,temp2);
+            g_default_console->common.putchar(&g_default_console->common,temp2);
         }else{
             temp2 = temp2 + 87;
-             default_console->common.putchar(&default_console->common,temp2);
+            g_default_console->common.putchar(&g_default_console->common,temp2);
         }
     }
 }
@@ -58,17 +58,17 @@ void putU8hex(U8 data)
     temp2 = data&0x0f;
     if (temp1 < 10){
         temp1 = temp1 + 48;
-         default_console->common.putchar(&default_console->common,temp1);
+        g_default_console->common.putchar(&g_default_console->common,temp1);
     }else{
         temp1 = temp1 + 87;
-         default_console->common.putchar(&default_console->common,temp1);
+        g_default_console->common.putchar(&g_default_console->common,temp1);
     }
     if (temp2 < 10){
         temp2 = temp2 + 48;
-         default_console->common.putchar(&default_console->common,temp2);
+        g_default_console->common.putchar(&g_default_console->common,temp2);
     }else{
         temp2 = temp2 + 87;
-         default_console->common.putchar(&default_console->common,temp2);
+        g_default_console->common.putchar(&g_default_console->common,temp2);
     }
 }
 
@@ -87,7 +87,7 @@ void putnum(U64 num)
     if ((num / 10) != 0){
         putnum((num/10));
     }
-     default_console->common.putchar(&default_console->common,(char) tempint);
+    g_default_console->common.putchar(&g_default_console->common,(char) tempint);
 }
 
 void putguid(GUID guid)
@@ -95,15 +95,15 @@ void putguid(GUID guid)
     //12345678-8765-4321-2333-666666666666
     putU16hex((guid.first&0xFFFF0000)>>16);
     putU16hex(guid.first&0xFFFF);
-    default_console->common.putchar(&default_console->common,'-');
+   g_default_console->common.putchar(&g_default_console->common,'-');
     putU16hex(guid.second);
-    default_console->common.putchar(&default_console->common,'-');
+   g_default_console->common.putchar(&g_default_console->common,'-');
     putU16hex(guid.third);
-    default_console->common.putchar(&default_console->common,'-');
+   g_default_console->common.putchar(&g_default_console->common,'-');
     for(int i=0;i<2;i++) {
         putU8hex(guid.fourth[i]);
     }
-    default_console->common.putchar(&default_console->common,'-');
+   g_default_console->common.putchar(&g_default_console->common,'-');
     for(int i=0;i<6;i++) {
         putU8hex(guid.fifth[i]);
     }
@@ -122,7 +122,7 @@ int printk(const char* format,...)
             pointer++;
             switch(*pointer)
             {
-                case 'c':{default_console->common.putchar(&default_console->common,va_arg(arg,int));break;}
+                case 'c':{g_default_console->common.putchar(&g_default_console->common,va_arg(arg,int));break;}
                 case 'd':{putnum(va_arg(arg,U64));break;}
                 case 'x':{putU64hex(va_arg(arg,U64));break;}
                 case 'b':{putU8hex(va_arg(arg,int));break;}
@@ -134,12 +134,12 @@ int printk(const char* format,...)
                 //%#RRGGBB
                 case '#':{
                     //只有屏幕终端显示颜色。
-                    if(default_console->common.putchar!=fbcon_putchar) {
+                    if(g_default_console->common.putchar!=fbcon_putchar) {
                         pointer+=6;
                         break;
                     }
                     //放入神奇的颜色转换代码！
-                    fbcon_putchar(&default_console->common,COLOR_SWITCH_CHAR);
+                    fbcon_putchar(&g_default_console->common,COLOR_SWITCH_CHAR);
                     break;
                 }
                 default:{count--;break;}
@@ -147,13 +147,13 @@ int printk(const char* format,...)
         }
         else
         {
-             default_console->common.putchar(&default_console->common,*pointer);
+            g_default_console->common.putchar(&g_default_console->common,*pointer);
         }
         pointer++;
     }
     va_end(arg);
     if(*(pointer-1)!=LINE_SEPARATOR) {
-        default_console->common.flush(&default_console->common);
+       g_default_console->common.flush(&g_default_console->common);
     }
     return count;
     

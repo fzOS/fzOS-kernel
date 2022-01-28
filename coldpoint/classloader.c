@@ -19,15 +19,15 @@ class* loadclass(void* class_file)
         p+=sizeof(U16);
         c->constant_entry_offset=0;
         c->constant_pool_entry_count = const_pool_count;
-        c->buffer_size += sizeof(constant_entry)*const_pool_count;
-        needed_size+=sizeof(constant_entry)*const_pool_count;
+        c->buffer_size += sizeof(ConstantEntry)*const_pool_count;
+        needed_size+=sizeof(ConstantEntry)*const_pool_count;
         if(needed_size>=allocated_size) {
             allocated_size = ((needed_size/PAGE_SIZE)+1)*PAGE_SIZE;
             c = memrealloc(c,allocated_size);
         }
         c->constant_entry_offset=0;
-        constant_entry* const_entry = (constant_entry*)(c->buffer+c->constant_entry_offset);
-        constant_entry* this_const_entry;
+        ConstantEntry* const_entry = (ConstantEntry*)(c->buffer+c->constant_entry_offset);
+        ConstantEntry* this_const_entry;
         for(int i=1;i<const_pool_count;i++) {
             this_const_entry = &const_entry[i];
             this_const_entry->type=*p;
@@ -41,7 +41,7 @@ class* loadclass(void* class_file)
                     if(needed_size>=allocated_size) {
                         allocated_size = ((needed_size/PAGE_SIZE)+1)*PAGE_SIZE;
                         c = memrealloc(c,allocated_size);
-                        const_entry = (constant_entry*)(c->buffer+c->constant_entry_offset);
+                        const_entry = (ConstantEntry*)(c->buffer+c->constant_entry_offset);
                         this_const_entry = &const_entry[i];
                     }
                     for(U16 j=0;j<((UTF8InfoConstant*)this_const_entry)->length;j++) {
@@ -146,13 +146,13 @@ class* loadclass(void* class_file)
         p+=sizeof(U16);
         c->fields_pool_entry_offset = c->buffer_size;
         if(c->fields_pool_entry_count) {
-            c->buffer_size+=sizeof(field_info_entry)*c->fields_pool_entry_count;
-            needed_size+=sizeof(field_info_entry)*c->fields_pool_entry_count;
+            c->buffer_size+=sizeof(FieldInfoEntry)*c->fields_pool_entry_count;
+            needed_size+=sizeof(FieldInfoEntry)*c->fields_pool_entry_count;
             if(needed_size>=allocated_size) {
                 allocated_size = ((needed_size/PAGE_SIZE)+1)*PAGE_SIZE;
                 c = memrealloc(c,allocated_size);
             }
-            field_info_entry* field_entry = (field_info_entry*)&(c->buffer[c->fields_pool_entry_offset]);
+            FieldInfoEntry* field_entry = (FieldInfoEntry*)&(c->buffer[c->fields_pool_entry_offset]);
             for(int j=0;j<c->fields_pool_entry_count;j++) {
                 field_entry->access_flags = bswap16(*((U16*)p));
                 field_entry->name_index = bswap16(*((U16*)(p+2)));
@@ -161,13 +161,13 @@ class* loadclass(void* class_file)
                 field_entry->attribute_info_entry_offset = c->buffer_size;
                 p+=sizeof(U16)*4;
                 if(field_entry->attribute_count) {
-                    c->buffer_size+=sizeof(attribute_info_entry)*field_entry->attribute_count;
-                    needed_size+=sizeof(attribute_info_entry)*field_entry->attribute_count;
+                    c->buffer_size+=sizeof(AttributeInfoEntry)*field_entry->attribute_count;
+                    needed_size+=sizeof(AttributeInfoEntry)*field_entry->attribute_count;
                     if(needed_size>=allocated_size) {
                         allocated_size = ((needed_size/PAGE_SIZE)+1)*PAGE_SIZE;
                         c = memrealloc(c,allocated_size);
                     }
-                    attribute_info_entry* attribute_entry = (attribute_info_entry*)&(c->buffer[field_entry->attribute_info_entry_offset]);
+                    AttributeInfoEntry* attribute_entry = (AttributeInfoEntry*)&(c->buffer[field_entry->attribute_info_entry_offset]);
                     for(int k=0;k<field_entry->attribute_count;k++) {
                         attribute_entry->attribute_name_index = bswap16(*((U16*)p));
                         attribute_entry->attribute_length = bswap32(*((U32*)(p+2)));
@@ -196,13 +196,13 @@ class* loadclass(void* class_file)
         p+=sizeof(U16);
         c->method_pool_entry_offset = c->buffer_size;
         if(c->method_pool_entry_count) {
-            c->buffer_size+=sizeof(method_info_entry)*c->method_pool_entry_count;
-            needed_size+=sizeof(method_info_entry)*c->method_pool_entry_count;
+            c->buffer_size+=sizeof(MethodInfoEntry)*c->method_pool_entry_count;
+            needed_size+=sizeof(MethodInfoEntry)*c->method_pool_entry_count;
             if(needed_size>=allocated_size) {
                 allocated_size = ((needed_size/PAGE_SIZE)+1)*PAGE_SIZE;
                 c = memrealloc(c,allocated_size);
             }
-            method_info_entry* method_entry = (method_info_entry*)&(c->buffer[c->method_pool_entry_offset]);
+            MethodInfoEntry* method_entry = (MethodInfoEntry*)&(c->buffer[c->method_pool_entry_offset]);
             for(int j=0;j<c->method_pool_entry_count;j++) {
                 method_entry->access_flags = bswap16(*((U16*)p));
                 method_entry->name_index = bswap16(*((U16*)(p+2)));
@@ -211,13 +211,13 @@ class* loadclass(void* class_file)
                 method_entry->attribute_info_entry_offset = c->buffer_size;
                 p+=sizeof(U16)*4;
                 if(method_entry->attribute_count) {
-                    c->buffer_size+=sizeof(attribute_info_entry)*method_entry->attribute_count;
-                    needed_size+=sizeof(attribute_info_entry)*method_entry->attribute_count;
+                    c->buffer_size+=sizeof(AttributeInfoEntry)*method_entry->attribute_count;
+                    needed_size+=sizeof(AttributeInfoEntry)*method_entry->attribute_count;
                     if(needed_size>=allocated_size) {
                         allocated_size = ((needed_size/PAGE_SIZE)+1)*PAGE_SIZE;
                         c = memrealloc(c,allocated_size);
                     }
-                    attribute_info_entry* attribute_entry = (attribute_info_entry*)&(c->buffer[method_entry->attribute_info_entry_offset]);
+                    AttributeInfoEntry* attribute_entry = (AttributeInfoEntry*)&(c->buffer[method_entry->attribute_info_entry_offset]);
                     for(int k=0;k<method_entry->attribute_count;k++) {
                         attribute_entry->attribute_name_index = bswap16(*((U16*)p));
                         attribute_entry->attribute_length = bswap32(*((U32*)(p+2)));
@@ -243,13 +243,13 @@ class* loadclass(void* class_file)
         p+=sizeof(U16);
         c->class_attributes_entry_offset = c->buffer_size;
         if(c->class_attributes_entry_count) {
-            c->buffer_size+=sizeof(attribute_info_entry)*c->class_attributes_entry_count;
-            needed_size+=sizeof(attribute_info_entry)*c->class_attributes_entry_count;
+            c->buffer_size+=sizeof(AttributeInfoEntry)*c->class_attributes_entry_count;
+            needed_size+=sizeof(AttributeInfoEntry)*c->class_attributes_entry_count;
             if(needed_size>=allocated_size) {
                 allocated_size = ((needed_size/PAGE_SIZE)+1)*PAGE_SIZE;
                 c = memrealloc(c,allocated_size);
             }
-            attribute_info_entry* class_attribute_entry = (attribute_info_entry*)&(c->buffer[c->class_attributes_entry_offset]);
+            AttributeInfoEntry* class_attribute_entry = (AttributeInfoEntry*)&(c->buffer[c->class_attributes_entry_offset]);
             for(int k=0;k<c->class_attributes_entry_count;k++) {
                 class_attribute_entry->attribute_name_index = bswap16(*((U16*)p));
                 class_attribute_entry->attribute_length = bswap32(*((U32*)(p+2)));

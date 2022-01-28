@@ -2,7 +2,7 @@
 #include <common/kstring.h>
 #include <common/printk.h>
 #include <types.h>
-struct gdt_entry {
+struct GDTEntry {
     U16 limit15_0;
     U16 base15_0;
     U8 base23_16;
@@ -11,7 +11,7 @@ struct gdt_entry {
     U8 base31_24;
 } __attribute__((packed));
 
-struct tss {
+struct TSS {
     U32 reserved0;
     U64 rsp0;
     U64 rsp1;
@@ -27,18 +27,18 @@ struct tss {
     U64 reserved2;
     U16 reserved3;
     U16 iopb_offset;
-} __attribute__((packed)) tss;
+} __attribute__((packed)) TSS;
 
 __attribute__((aligned(4096))) struct {
-    struct gdt_entry null;
-    struct gdt_entry kernel_code;
-    struct gdt_entry kernel_data;
-    struct gdt_entry null2;
-    struct gdt_entry user_data;
-    struct gdt_entry user_code;
-    struct gdt_entry tss_low;
-    struct gdt_entry tss_high;
-} gdt_table = {
+    struct GDTEntry null;
+    struct GDTEntry kernel_code;
+    struct GDTEntry kernel_data;
+    struct GDTEntry null2;
+    struct GDTEntry user_data;
+    struct GDTEntry user_code;
+    struct GDTEntry tss_low;
+    struct GDTEntry tss_high;
+} GDTTable = {
     { 0, 0, 0, 0x00, 0x00, 0 }, /* 0x00 null  */
     { 0xff, 0, 0, 0x9a, 0xaf, 0 }, /* 0x08 kernel code (kernel base selector) */
     { 0xff, 0, 0, 0x92, 0xaf, 0 }, /* 0x10 kernel data */
@@ -49,16 +49,14 @@ __attribute__((aligned(4096))) struct {
     { 0, 0, 0, 0x00, 0x00, 0 }, /* 0x38 tss high */
 };
 
-struct table_ptr {
+struct TablePtr {
     U16 limit;
     U64 base;
 } __attribute__((packed));
 
-extern void gdt_flush(struct table_ptr* gdt_ptr); //在汇编中
+struct TablePtr g_gdt_ptr = { sizeof(GDTTable) - 1, (U64)&GDTTable };
 
-struct table_ptr gdt_ptr = { sizeof(gdt_table) - 1, (U64)&gdt_table };
-
-void __attribute__ ((noinline))  gdt_flush_c(struct table_ptr* gdt_ptr)
+void __attribute__ ((noinline))  gdt_flush_c(struct TablePtr* gdt_ptr)
 {
     __asm__ volatile(
         "movq $0x0,%%rax\n"
@@ -84,12 +82,12 @@ void __attribute__ ((noinline))  gdt_flush_c(struct table_ptr* gdt_ptr)
 }
 void init_gdt()
 {
-    memset((void*)&tss, 0x00, sizeof(tss));
-    U64 tss_base = ((U64)&tss)&~(KERNEL_ADDR_OFFSET);
-    gdt_table.tss_low.base15_0 = tss_base & 0xffff;
-    gdt_table.tss_low.base23_16 = (tss_base >> 16) & 0xff;
-    gdt_table.tss_low.base31_24 = (tss_base >> 24) & 0xff;
-    gdt_table.tss_low.limit15_0 = sizeof(tss);
-    gdt_table.tss_high.limit15_0 = (tss_base >> 32) & 0xffff;
-    gdt_flush_c(&gdt_ptr);
+    memset((void*)&TSS, 0x00, sizeof(TSS));
+    U64 tss_base = ((U64)&TSS)&~(KERNEL_ADDR_OFFSET);
+    GDTTable.tss_low.base15_0 = tss_base & 0xffff;
+    GDTTable.tss_low.base23_16 = (tss_base >> 16) & 0xff;
+    GDTTable.tss_low.base31_24 = (tss_base >> 24) & 0xff;
+    GDTTable.tss_low.limit15_0 = sizeof(TSS);
+    GDTTable.tss_high.limit15_0 = (tss_base >> 32) & 0xffff;
+    gdt_flush_c(&g_gdt_ptr);
 }

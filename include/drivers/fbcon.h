@@ -7,22 +7,22 @@
 
 #define COLOR_SWITCH_CHAR 0x1A
 typedef struct {
-    console con;
+    Console con;
     U64 max_x;
     U64 max_y;
     U64 current_x;
     U64 current_y;
     U32 color;
     semaphore output_in_progress;
-} fbcon;
+} FBCon;
 typedef struct {
     DeviceTreeNode node;
-    fbcon con;
-}fbcon_device_tree_node;
+    FBCon con;
+}FbconDeviceTreeNode;
 
-void fbcon_putchar(char_dev* dev, U8 c);
+void fbcon_putchar(CharDev* dev, U8 c);
 void fbcon_init(void);
 void fbcon_set_color(U32 color);
 void fbcon_add_to_device_tree(void);
-void fbcon_flush(char_dev* dev);
+void fbcon_flush(CharDev* dev);
 #endif

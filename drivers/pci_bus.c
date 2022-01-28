@@ -1,7 +1,7 @@
 #include <drivers/pci.h>
 #include <drivers/sata_ahci.h>
 #include <drivers/hda.h>
-const char* pci_class_name[] = {
+const char* PCI_CLASS_NAME[] = {
     "Unclassified",
     "Mass Storage Controller",
     "Network Controller",
@@ -21,11 +21,11 @@ const char* pci_class_name[] = {
     "Signal Processing Controller",
     "Reserved",
 };
-const char* pci_subclass_0_name[] = {
+const char* PCI_SUBCLASS_0_NAME[] = {
     "Non-VGA-Compatible devices",
     "VGA-Compatible Device",
 };
-const char* pci_subclass_1_name[] = {
+const char* PCI_SUBCLASS_1_NAME[] = {
     "SCSI Bus Controller",
     "IDE Controller",
     "Floppy Disk Controller",
@@ -36,7 +36,7 @@ const char* pci_subclass_1_name[] = {
     "Serial Attached SCSI",
     "Non-Volatile Memory Controller",
 };
-const char* pci_subclass_2_name[] = {
+const char* PCI_SUBCLASS_2_NAME[] = {
     "Ethernet Controller",
     "Token Ring Controller",
     "FDDI Controller",
@@ -46,22 +46,22 @@ const char* pci_subclass_2_name[] = {
     "PICMG 2.14 Multi Computing",
     "Fabric Controller",
 };
-const char* pci_subclass_3_name[] = {
+const char* PCI_SUBCLASS_3_NAME[] = {
     "VGA Compatible Controller",
     "XGA Controller",
     "3D Controller (Not VGA-Compatible)",
 };
-const char* pci_subclass_4_name[] = {
+const char* PCI_SUBCLASS_4_NAME[] = {
     "Multimedia Video Controller",
     "Multimedia Audio Controller",
     "Computer Telephony Device",
     "Audio Device",
 };
-const char* pci_subclass_5_name[] = {
+const char* PCI_SUBCLASS_5_NAME[] = {
     "RAM Controller",
     "Flash Controller",
 };
-const char* pci_subclass_6_name[] = {
+const char* PCI_SUBCLASS_6_NAME[] = {
     "Host Bridge",
     "ISA Bridge",
     "EISA Bridge",
@@ -74,7 +74,7 @@ const char* pci_subclass_6_name[] = {
     "PCI-to-PCI Bridge",
     "InfiniBand-to-PCI Host Bridge",
 };
-const char* pci_subclass_7_name[] = {
+const char* PCI_SUBCLASS_7_NAME[] = {
     "Serial Controller",
     "Parallel Controller",
     "Multiport Serial Controller",
@@ -82,7 +82,7 @@ const char* pci_subclass_7_name[] = {
     "IEEE 488.1/2 (GPIB) Controller",
     "Smart Card",
 };
-const char* pci_subclass_8_name[] = {
+const char* PCI_SUBCLASS_8_NAME[] = {
     "PIC",
     "DMA Controller",
     "Timer",
@@ -91,23 +91,23 @@ const char* pci_subclass_8_name[] = {
     "SD Host controller",
     "IOMMU",
 };
-const char* pci_subclass_9_name[] = {
+const char* PCI_SUBCLASS_9_NAME[] = {
     "Keyboard Controller",
     "Digitizer Pen",
     "Mouse Controller",
     "Scanner Controller",
     "Gameport Controller",
 };
-const char* pci_subclass_a_name[] = {
+const char* PCI_SUBCLASS_A_NAME[] = {
     "Generic",
 };
-const char* pci_subclass_b_name[] = {
+const char* PCI_SUBCLASS_B_NAME[] = {
     "386",
     "486",
     "Pentium",
     "Pentium Pro",
 };
-const char* pci_subclass_c_name[] = {
+const char* PCI_SUBCLASS_C_NAME[] = {
     "FireWire (IEEE 1394) Controller",
     "ACCESS Bus",
     "SSA",
@@ -119,7 +119,7 @@ const char* pci_subclass_c_name[] = {
     "SERCOS Interface (IEC 61491)",
     "CANbus",
 };
-const char* pci_subclass_d_name[] = {
+const char* PCI_SUBCLASS_D_NAME[] = {
     "iRDA Compatible Controller",
     "Consumer IR Controller",
     "",
@@ -155,16 +155,16 @@ const char* pci_subclass_d_name[] = {
     "Ethernet Controller (802.1a)",
     "Ethernet Controller (802.1b)",
 };
-const char* pci_subclass_e_name[] = {
+const char* PCI_SUBCLASS_E_NAME[] = {
     "I20",
 };
-const char* pci_subclass_f_name[] = {
+const char* PCI_SUBCLASS_F_NAME[] = {
     "Satellite TV Controller",
     "Satellite Audio Controller",
     "Satellite Voice Controller",
     "Satellite Data Controller",
 };
-const char* pci_subclass_10_name[] = {
+const char* PCI_SUBCLASS_10_NAME[] = {
     "Network and Computing Encrpytion/Decryption",
     "",
     "",
@@ -182,50 +182,50 @@ const char* pci_subclass_10_name[] = {
     "",
     "Entertainment Encryption/Decryption",
 };
-const char* pci_subclass_11_name[] = {
+const char* PCI_SUBCLASS_11_NAME[] = {
     "DPIO Modules",
     "Performance Counters",
 };
-static const int pci_class_name_size = sizeof(pci_class_name)/sizeof(unsigned char*);
-static const char** pci_subclass_name[] = {
-    pci_subclass_0_name,
-    pci_subclass_1_name, 
-    pci_subclass_2_name, 
-    pci_subclass_3_name, 
-    pci_subclass_4_name, 
-    pci_subclass_5_name, 
-    pci_subclass_6_name, 
-    pci_subclass_7_name, 
-    pci_subclass_8_name, 
-    pci_subclass_9_name, 
-    pci_subclass_a_name, 
-    pci_subclass_b_name, 
-    pci_subclass_c_name, 
-    pci_subclass_d_name, 
-    pci_subclass_e_name, 
-    pci_subclass_f_name, 
-    pci_subclass_10_name, 
-    pci_subclass_11_name, 
+static const int PCI_CLASS_NAME_SIZE = sizeof(PCI_CLASS_NAME)/sizeof(unsigned char*);
+static const char** PCI_SUBCLASS_NAME[] = {
+    PCI_SUBCLASS_0_NAME,
+    PCI_SUBCLASS_1_NAME,
+    PCI_SUBCLASS_2_NAME,
+    PCI_SUBCLASS_3_NAME,
+    PCI_SUBCLASS_4_NAME,
+    PCI_SUBCLASS_5_NAME,
+    PCI_SUBCLASS_6_NAME,
+    PCI_SUBCLASS_7_NAME,
+    PCI_SUBCLASS_8_NAME,
+    PCI_SUBCLASS_9_NAME,
+    PCI_SUBCLASS_A_NAME,
+    PCI_SUBCLASS_B_NAME,
+    PCI_SUBCLASS_C_NAME,
+    PCI_SUBCLASS_D_NAME,
+    PCI_SUBCLASS_E_NAME,
+    PCI_SUBCLASS_F_NAME,
+    PCI_SUBCLASS_10_NAME,
+    PCI_SUBCLASS_11_NAME,
 };
-static const int pci_subclass_name_size[] = {
-    sizeof(pci_subclass_0_name)/sizeof(const char*),
-    sizeof(pci_subclass_1_name)/sizeof(const char*), 
-    sizeof(pci_subclass_2_name)/sizeof(const char*), 
-    sizeof(pci_subclass_3_name)/sizeof(const char*), 
-    sizeof(pci_subclass_4_name)/sizeof(const char*), 
-    sizeof(pci_subclass_5_name)/sizeof(const char*), 
-    sizeof(pci_subclass_6_name)/sizeof(const char*), 
-    sizeof(pci_subclass_7_name)/sizeof(const char*), 
-    sizeof(pci_subclass_8_name)/sizeof(const char*), 
-    sizeof(pci_subclass_9_name)/sizeof(const char*), 
-    sizeof(pci_subclass_a_name)/sizeof(const char*), 
-    sizeof(pci_subclass_b_name)/sizeof(const char*), 
-    sizeof(pci_subclass_c_name)/sizeof(const char*), 
-    sizeof(pci_subclass_d_name)/sizeof(const char*), 
-    sizeof(pci_subclass_e_name)/sizeof(const char*), 
-    sizeof(pci_subclass_f_name)/sizeof(const char*), 
-    sizeof(pci_subclass_10_name)/sizeof(const char*), 
-    sizeof(pci_subclass_11_name)/sizeof(const char*),
+static const int PCI_SUBCLASS_NAME_SIZE[] = {
+    sizeof(PCI_SUBCLASS_0_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_1_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_2_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_3_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_4_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_5_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_6_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_7_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_8_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_9_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_A_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_B_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_C_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_D_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_E_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_F_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_10_NAME)/sizeof(const char*),
+    sizeof(PCI_SUBCLASS_11_NAME)/sizeof(const char*),
 }; 
 U16 pci_config_read_word (U8 bus, U8 device, U8 func, U8 offset)
 {
@@ -304,7 +304,7 @@ void pci_write_byte(U8 bus, U8 device, U8 func, U8 offset,U8 val)
     address = (U32)((lbus << 16) | (ldevice << 11) |
               (lfunc << 8) | (offset & 0xfc) |  0x80<<24);
     outl(0xCF8, address);
-    outl(0xCFC, val);
+    outl(0xCFC, orig_val);
 }
 void pci_check_device(U8 bus,U8 slot,U8 func)
 {
@@ -355,11 +355,11 @@ void init_pci()
 }
 const char* pci_get_class_name(U8 class, U8 subclass)
 {
-    if(class >= pci_class_name_size) {
-        return pci_class_name[pci_class_name_size-1];
+    if(class >= PCI_CLASS_NAME_SIZE) {
+        return PCI_CLASS_NAME[PCI_CLASS_NAME_SIZE-1];
     }
-    if(subclass>=pci_subclass_name_size[class]||*(pci_subclass_name[class][subclass])=='\0') {
-        return pci_class_name[class];        
+    if(subclass>=PCI_SUBCLASS_NAME_SIZE[class]||*(PCI_SUBCLASS_NAME[class][subclass])=='\0') {
+        return PCI_CLASS_NAME[class];
     }
-    return pci_subclass_name[class][subclass];
+    return PCI_SUBCLASS_NAME[class][subclass];
 }

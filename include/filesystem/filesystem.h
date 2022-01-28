@@ -9,9 +9,9 @@ typedef enum {
     SEEK_FROM_CURRENT
 }SeekDirection;
 
-extern const GUID* registered_filesystems[];
+extern const GUID* g_registered_filesystems[];
 extern int (*registered_filesystem_mounts[])(GPTPartition* partition,const char* position);
-extern char root_device_path[64];
+extern char g_root_device_path[64];
 
 
 typedef struct FzOSFileSystem{
@@ -21,7 +21,7 @@ typedef struct FzOSFileSystem{
     int (*write)(struct file* file,void* buf,U64 buflen);
     int (*close)(struct file* file);
     int (*unmount)(struct FzOSFileSystem* fs);
-    block_dev* dev;
+    BlockDev* dev;
 } FzOSFileSystem;
 
 typedef struct {

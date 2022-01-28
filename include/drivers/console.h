@@ -7,17 +7,17 @@
 typedef struct {
     queue queue;
     U8 buffer[BUFFER_MAX];
-} console_buffer_queue;
+} ConsoleBufferQueue;
 //定义终端的数据结构类型。
 typedef struct {
-    char_dev common;
+    CharDev common;
     //一个输入，一个输出。
     //输出缓冲。
-    console_buffer_queue input_buffer;
-    console_buffer_queue output_buffer;
+    ConsoleBufferQueue input_buffer;
+    ConsoleBufferQueue output_buffer;
     //两个信号量。
     semaphore input_sem;
     semaphore output_sem;
-} console;
+} Console;
 //貌似别的……也没了？
 #endif

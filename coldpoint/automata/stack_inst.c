@@ -128,7 +128,7 @@ cpstatus opcode_dup2_x2(thread* t)
 }
 cpstatus opcode_swap(thread* t)
 {
-    stack_var val = t->stack[t->rsp-1];
+    StackVar val = t->stack[t->rsp-1];
     t->stack[t->rsp-1]=t->stack[t->rsp];
     t->stack[t->rsp] = val;
     return COLD_POINT_SUCCESS;

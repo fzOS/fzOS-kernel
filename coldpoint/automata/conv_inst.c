@@ -1,7 +1,7 @@
 #include <coldpoint/automata/conv_inst.h>
 cpstatus opcode_to_long(thread* t)
 {
-    stack_var v1=t->stack[t->rsp];
+    StackVar v1=t->stack[t->rsp];
     long* val = (long*)&(v1.data);
     switch(v1.type) {
         case STACK_TYPE_DOUBLE: {
@@ -32,7 +32,7 @@ cpstatus opcode_to_long(thread* t)
 }
 cpstatus opcode_to_int(thread* t)
 {
-    stack_var v1=t->stack[t->rsp];
+    StackVar v1=t->stack[t->rsp];
     int* val = (int*)&(v1.data);
     switch(v1.type) {
         case STACK_TYPE_DOUBLE: {
@@ -63,7 +63,7 @@ cpstatus opcode_to_int(thread* t)
 }
 cpstatus opcode_to_float(thread* t)
 {
-    stack_var v1=t->stack[t->rsp];
+    StackVar v1=t->stack[t->rsp];
     float* val = (float*)&(v1.data);
     switch(v1.type) {
         case STACK_TYPE_DOUBLE: {
@@ -94,7 +94,7 @@ cpstatus opcode_to_float(thread* t)
 }
 cpstatus opcode_to_double(thread* t)
 {
-    stack_var v1=t->stack[t->rsp];
+    StackVar v1=t->stack[t->rsp];
     double* val = (double*)&(v1.data);
     switch(v1.type) {
         case STACK_TYPE_DOUBLE: {

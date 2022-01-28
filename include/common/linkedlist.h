@@ -2,45 +2,45 @@
 #define LINKEDLIST
 #include <types.h>
 #include <common/iterator.h>
-typedef struct linked_list_node 
+typedef struct LinkedListNode
 {
-    struct linked_list_node* prev;
+    struct LinkedListNode* prev;
     void* data;
-    struct linked_list_node* next;
-} linked_list_node;
+    struct LinkedListNode* next;
+} LinkedListNode;
 
-typedef struct inline_linked_list_node 
+typedef struct InlineLinkedListNode
 {
-    struct inline_linked_list_node* prev;
-    struct inline_linked_list_node* next;
-} inline_linked_list_node;
+    struct InlineLinkedListNode* prev;
+    struct InlineLinkedListNode* next;
+} InlineLinkedListNode;
 typedef struct  
 {
     //带头结点，head->next为第一个数据。
-    linked_list_node head;
+    LinkedListNode head;
     //尾结点就是最后一个数据。
-    linked_list_node* tail;
-} linked_list;
+    LinkedListNode* tail;
+} LinkedList;
 typedef struct  
 {
     //带头结点，head->next为第一个数据。
-    inline_linked_list_node head;
+    InlineLinkedListNode head;
     //尾结点就是最后一个数据。
-    inline_linked_list_node* tail;
-} inline_linked_list;
+    InlineLinkedListNode* tail;
+} InlineLinkedList;
 
 
-typedef iterator_raw(linked_list) iterator_linked_list;
-typedef iterator_raw(inline_linked_list) iterator_inline_linked_list;
+typedef IteratorRaw(LinkedList) IteratorLinkedList;
+typedef IteratorRaw(InlineLinkedList) IteratorInlineLinkedList;
 
-void insert_existing_node(linked_list* list,linked_list_node* node,int pos);
-void insert_existing_node_before_existing(linked_list* list,linked_list_node* node,linked_list_node* existing);
-void remove_node(linked_list* list,linked_list_node* node);
-void remove_node_pos(linked_list* list,int pos);
-void insert_existing_inline_node(inline_linked_list* list,inline_linked_list_node* node,int pos);
-void insert_existing_inline_node_before_existing(inline_linked_list* list,inline_linked_list_node* node,inline_linked_list_node* existing);
-void remove_inline_node(inline_linked_list* list,inline_linked_list_node* node);
-void remove_inline_node_pos(inline_linked_list* list,int pos);
-void init_iterator_linked_list(iterator(linked_list)* iterator,linked_list* source);
-void init_iterator_inline_linked_list(iterator(inline_linked_list)* iterator,inline_linked_list* source);
+void insert_existing_node(LinkedList* list,LinkedListNode* node,int pos);
+void insert_existing_node_before_existing(LinkedList* list,LinkedListNode* node,LinkedListNode* existing);
+void remove_node(LinkedList* list,LinkedListNode* node);
+void remove_node_pos(LinkedList* list,int pos);
+void insert_existing_inline_node(InlineLinkedList* list,InlineLinkedListNode* node,int pos);
+void insert_existing_inline_node_before_existing(InlineLinkedList* list,InlineLinkedListNode* node,InlineLinkedListNode* existing);
+void remove_inline_node(InlineLinkedList* list,InlineLinkedListNode* node);
+void remove_inline_node_pos(InlineLinkedList* list,int pos);
+void init_iterator_LinkedList(Iterator(LinkedList)* iterator,LinkedList* source);
+void init_iterator_InlineLinkedList(Iterator(InlineLinkedList)* iterator,InlineLinkedList* source);
 #endif
