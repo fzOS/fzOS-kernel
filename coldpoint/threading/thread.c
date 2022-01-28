@@ -6,12 +6,12 @@ void thread_test(const class* c)
 {
     U64 code_name_index = class_get_utf8_string_index(c,(U8*)"Code");
     thread* main_thread = memalloc(sizeof(thread));
-    method_info_entry* main = class_get_method_by_name_and_desc(c, class_get_utf8_string_index(c,(U8*)"main"), class_get_utf8_string_index(c,(U8*)"([Ljava/lang/String;)V"));
+    MethodInfoEntry* main = class_get_method_by_name_and_desc(c, class_get_utf8_string_index(c,(U8*)"main"), class_get_utf8_string_index(c,(U8*)"([Ljava/lang/String;)V"));
     if(main==nullptr) {
         printk("Cannot load public static void main(String[] args).");
     }
     main_thread->pc = 0;
-    main_thread->code = (code_attribute*)&c->buffer[class_get_method_attribute_by_name(c,main,code_name_index)->info_offset];
+    main_thread->code = (CodeAttribute*)&c->buffer[class_get_method_attribute_by_name(c,main,code_name_index)->info_offset];
     main_thread->rbp=0;
     main_thread->rsp = sizeof(stack_frame)+main_thread->code->max_locals;
     printk("Now executing %b.\n",main_thread->code->code[main_thread->pc]);
@@ -37,9 +37,9 @@ void thread_test(const class* c)
     main_thread->stack[new_stack_begin_offset+sizeof(stack_frame)/sizeof(U64)+main_thread->code->max_locals].type = STACK_TYPE_INT;
     //加载第二个方法。
 
-    method_info_entry* area = class_get_method_by_name_and_desc(c, class_get_utf8_string_index(c,(U8*)"<init>"), class_get_utf8_string_index(c,(U8*)"()V"));
+    MethodInfoEntry* area = class_get_method_by_name_and_desc(c, class_get_utf8_string_index(c,(U8*)"<init>"), class_get_utf8_string_index(c,(U8*)"()V"));
     main_thread->pc=0;
-    main_thread->code = (code_attribute*)&c->buffer[class_get_method_attribute_by_name(c,area,code_name_index)->info_offset];
+    main_thread->code = (CodeAttribute*)&c->buffer[class_get_method_attribute_by_name(c,area,code_name_index)->info_offset];
     main_thread->rbp = new_stack_begin_offset;
     main_thread->rsp = new_stack_begin_offset+sizeof(stack_frame)/sizeof(U64)+main_thread->code->max_locals;
     //完成跳转！
@@ -49,7 +49,7 @@ void thread_test(const class* c)
     main_thread->pc++;
     printk("Now executing %b.\n",main_thread->code->code[main_thread->pc]);
     //返回！
-    main_thread->code = (code_attribute*)main_thread->stack[main_thread->rbp].data;
+    main_thread->code = (CodeAttribute*)main_thread->stack[main_thread->rbp].data;
     main_thread->pc   = main_thread->stack[main_thread->rbp+1].data;
     main_thread->rsp  = main_thread->stack[main_thread->rbp+2].data;
     main_thread->rbp  = main_thread->stack[main_thread->rbp+3].data;

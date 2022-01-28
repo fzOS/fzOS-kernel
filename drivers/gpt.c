@@ -11,8 +11,8 @@ const GUID FzOS_ROOT_PARTITION_GUID = {
     .fourth = {0x23,0x33},
     .fifth = {0x66,0x66,0x66,0x66,0x66,0x66}
 };
-static const char* partition_name_template = "Partition%d";
-int gpt_readblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
+static const char* g_partition_name_template = "Partition%d";
+int gpt_readblock(BlockDev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
 {
     GPTPartition* partition = (GPTPartition*)dev;
     if(offset+blockcount>(partition->end_lba)) {
@@ -20,7 +20,7 @@ int gpt_readblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blo
     }
     return partition->parent->readblock(partition->parent,offset+partition->begin_lba,buffer,buffer_size,blockcount);
 }
-int gpt_writeblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
+int gpt_writeblock(BlockDev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
 {
     GPTPartition* partition = (GPTPartition*)dev;
     if(offset+blockcount>(partition->end_lba)) {
@@ -29,7 +29,7 @@ int gpt_writeblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 bl
     return partition->parent->writeblock(partition->parent,offset+partition->begin_lba,buffer,buffer_size,blockcount);
 }
 
-int gpt_partition_init(block_dev* dev,DeviceTreeNode* parent)
+int gpt_partition_init(BlockDev* dev,DeviceTreeNode* parent)
 {
     //首先，分配缓冲，读一块。
     char* buffer = allocate_page(1);
@@ -59,7 +59,7 @@ int gpt_partition_init(block_dev* dev,DeviceTreeNode* parent)
             node = allocate_page((sizeof(GPTPartitionTreeNode)-1)/PAGE_SIZE +1);
             memset(node,0,sizeof(GPTPartitionTreeNode));
             node->node.type = DT_BLOCK_DEVICE;
-            sprintk(buf,partition_name_template,i*entry_count_in_a_block+j);
+            sprintk(buf,g_partition_name_template,i*entry_count_in_a_block+j);
             memcpy(node->node.name,buf,DT_NAME_LENGTH_MAX);
             node->partition.parent = dev;
             node->partition.begin_lba = entry->starting_lba;
@@ -79,3 +79,4 @@ out:
     free_page(buffer,1);
     return ret;
 }
+

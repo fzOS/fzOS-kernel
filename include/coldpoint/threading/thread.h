@@ -20,13 +20,13 @@ typedef enum {
 typedef struct {
     StackVarType type;
     U64 data;
-} stack_var;
+} StackVar;
 typedef struct {
-    code_attribute* code;
+    CodeAttribute* code;
     U64 pc;
     U64 rsp;
     U64 rbp;
-    stack_var stack[JVM_MAX_STACK_SIZE/sizeof(U64)];
+    StackVar stack[JVM_MAX_STACK_SIZE/sizeof(U64)];
 } thread;
 /*
     我们的JVM栈结构：
@@ -43,11 +43,11 @@ typedef struct {
          浮点类型-> double;
 */
 typedef struct {
-    stack_var return_code;//code_attribute*
-    stack_var pc;
-    stack_var return_rsp;
-    stack_var return_rbp;
-    stack_var variables[0];
+    StackVar return_code;//code_attribute*
+    StackVar pc;
+    StackVar return_rsp;
+    StackVar return_rbp;
+    StackVar variables[0];
 } stack_frame;
 void thread_test(const class* c);
 #endif

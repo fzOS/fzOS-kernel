@@ -3,7 +3,7 @@
 #include <coldpoint/automata/load_inst.h>
 #include <coldpoint/automata/stack_inst.h>
 #include <coldpoint/automata/math_inst.h>
-cpstatus (*automata_opcode[256])(thread* c)= {
+cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_nop,opcode_aconst_null,opcode_iconst_m1,opcode_iconst_0,//0x00~0x03
     opcode_iconst_1,opcode_iconst_2,opcode_iconst_3,opcode_iconst_4,//0x04~0x07
     opcode_iconst_5,opcode_lconst_0,opcode_lconst_1,opcode_fconst_0,//0x08~0x0b
@@ -39,3 +39,4 @@ cpstatus (*automata_opcode[256])(thread* c)= {
     opcode_or,opcode_or,opcode_xor,opcode_xor,//0x80~0x84
     opcode_inc,
 };
+

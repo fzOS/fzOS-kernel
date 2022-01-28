@@ -5,10 +5,10 @@
 #include <memory/memory.h>
 #include <common/kstring.h>
 #define hda_printk(x...) printk(" HDA:" x)
-static U8 hda_controller_count=0;
-static char* hda_controller_tree_template = "HDAController%d";
-static char* hda_codec_tree_template = "HDACodec%d";
-static char* hda_connector_type[] = {
+static U8 g_hda_controller_count=0;
+static char* g_hda_controller_tree_template = "HDAController%d";
+static char* g_hda_codec_tree_template = "HDACodec%d";
+static char* g_hda_connector_type[] = {
     "LineOut",
     "Speaker",
     "HPOut",
@@ -117,7 +117,7 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     DeviceTreeNode* base_node = device_tree_resolve_by_path(BASE_DEVICE_TREE_TEMPLATE,nullptr,DT_CREATE_IF_NONEXIST);
     HDAControllerTreeNode* controller_node = allocate_page(1);
     memset(controller_node,0,sizeof(HDAControllerTreeNode));
-    sprintk(buf,hda_controller_tree_template,hda_controller_count++);
+    sprintk(buf,g_hda_controller_tree_template,g_hda_controller_count++);
     strcopy(controller_node->header.name,buf,DT_NAME_LENGTH_MAX);
     controller_node->header.type = DT_BLOCK_DEVICE;
     device_tree_add_from_parent((DeviceTreeNode*)controller_node,(DeviceTreeNode*)base_node);
@@ -186,13 +186,13 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     int mask=0x01;
     int hda_codec_count=0;
     HDAVerb verb;
-    U8 hda_connector_type_count[sizeof(hda_connector_type)/sizeof(char*)];
+    U8 hda_connector_type_count[sizeof(g_hda_connector_type)/sizeof(char*)];
     char hda_connector_name_with_number[DT_NAME_LENGTH_MAX];
     for(int i=0;i<MAX_CODEC_COUNT;i++) {
         if((controller.registers->statests)&mask) {
             HDACodecTreeNode* codec_node = allocate_page(1);
             memset(codec_node,0,sizeof(HDACodecTreeNode));
-            sprintk(buf,hda_codec_tree_template,hda_codec_count++);
+            sprintk(buf,g_hda_codec_tree_template,hda_codec_count++);
             codec_node->codec.controller = &(controller_node->controller);
             controller_node->controller.codecs[i] = &(codec_node->codec);
             codec_node->codec.codec_id = i;
@@ -314,10 +314,10 @@ void hda_register(U8 bus,U8 slot,U8 func) {
                             HDAConnectorTreeNode* conn_node = allocate_page(1);
                             memset(conn_node,0x00,PAGE_SIZE);
                             if(hda_connector_type_count[conf_default.split.def_device]==0) {
-                                strcopy(conn_node->header.name,hda_connector_type[conf_default.split.def_device],DT_NAME_LENGTH_MAX);
+                                strcopy(conn_node->header.name,g_hda_connector_type[conf_default.split.def_device],DT_NAME_LENGTH_MAX);
                             }
                             else {
-                                sprintk(hda_connector_name_with_number,"%s%d",hda_connector_type[conf_default.split.def_device],hda_connector_type_count[conf_default.split.def_device]+1);
+                                sprintk(hda_connector_name_with_number,"%s%d",g_hda_connector_type[conf_default.split.def_device],hda_connector_type_count[conf_default.split.def_device]+1);
                                 strcopy(conn_node->header.name,hda_connector_name_with_number,DT_NAME_LENGTH_MAX);
                             }
                             hda_connector_type_count[conf_default.split.def_device]++;
@@ -369,7 +369,7 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     if(!hda_codec_count) { //No codec found, rubbish.
         return;
     }
-    hda_controller_count++;
+    g_hda_controller_count++;
 }
 StreamDescRegisters* get_input_stream_desc(HDAController* controller,int* stream_id_buffer)
 {

@@ -21,20 +21,20 @@ int parse_xsdt(void* in) {
         strcopy(tableid,current_header->OEMTableID,8);
         strcopy(sig,current_header->Signature,4);
         printk(" Entry #%d:0x%x %s %s\n",i,(entries[i]|KERNEL_ADDR_OFFSET),tableid,sig);
-        for(int j=0;j<table_count;j++) {
-            if(!strcomp(acpi_table_names[j],sig)) {
-                acpi_table_entries[j] = (U8*)(entries[i]|KERNEL_ADDR_OFFSET);
+        for(int j=0;j<g_table_count;j++) {
+            if(!strcomp(g_acpi_table_names[j],sig)) {
+                g_acpi_table_entries[j] = (U8*)(entries[i]|KERNEL_ADDR_OFFSET);
                 break;
             }
         }
     }
-    return (parse_fadt(acpi_table_entries[0])|parse_apic(acpi_table_entries[1]));
+    return (parse_fadt(g_acpi_table_entries[0])|parse_apic(g_acpi_table_entries[1]));
 }
 void* acpi_get_table_by_name(char* name) 
 {
-    for(int j=0;j<table_count;j++) {
-        if(!strcomp(acpi_table_names[j],name)) {
-            return acpi_table_entries[j];
+    for(int j=0;j<g_table_count;j++) {
+        if(!strcomp(g_acpi_table_names[j],name)) {
+            return g_acpi_table_entries[j];
         }
     }
     return nullptr;

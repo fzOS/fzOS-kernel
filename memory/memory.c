@@ -4,10 +4,10 @@
 #include <types.h>
 
 
-inline_linked_list free_page_linked_list = {
-    .tail = &(free_page_linked_list.head)
+InlineLinkedList g_free_page_linked_list = {
+    .tail = &(g_free_page_linked_list.head)
 };
-iterator(inline_linked_list) free_page_linked_list_iterator;
+Iterator(InlineLinkedList) g_free_page_linked_list_iterator;
 void* memalloc(U64 size)
 {
     //奢侈一把！
@@ -40,18 +40,18 @@ void* allocate_page(int count)
         return p;
     }
     //倒着分配。
-    inline_free_page_node* node = (inline_free_page_node*)free_page_linked_list.tail;
-    while(node!=(inline_free_page_node*)&free_page_linked_list.head) {
+    InlineFreePageNode* node = (InlineFreePageNode*)g_free_page_linked_list.tail;
+    while(node!=(InlineFreePageNode*)&g_free_page_linked_list.head) {
         if(node->free_mem_count>=count) {
             U64 top = (U64)node + (node->free_mem_count)*PAGE_SIZE - count*PAGE_SIZE;
             node->free_mem_count -= count;
             p = (void*) top;
             if(!node->free_mem_count) {
-                remove_inline_node(&free_page_linked_list,&node->node);
+                remove_inline_node(&g_free_page_linked_list,&node->node);
             }
             return p;
         }
-        node = (inline_free_page_node*)(node->node.prev);
+        node = (InlineFreePageNode*)(node->node.prev);
     }
     return p;
 }
@@ -61,43 +61,43 @@ void free_page(void* page_address,int count)
     if(count<=0) {
         return;
     }
-    inline_free_page_node* node = (inline_free_page_node*)(free_page_linked_list.tail);
-    inline_free_page_node* prev_node = (inline_free_page_node*)(free_page_linked_list.tail);
-    while(prev_node!=(inline_free_page_node*)&(free_page_linked_list.head)
+    InlineFreePageNode* node = (InlineFreePageNode*)(g_free_page_linked_list.tail);
+    InlineFreePageNode* prev_node = (InlineFreePageNode*)(g_free_page_linked_list.tail);
+    while(prev_node!=(InlineFreePageNode*)&(g_free_page_linked_list.head)
        &&(void*)prev_node>page_address) {
         node = prev_node;
-        prev_node = (inline_free_page_node*)(prev_node->node.prev);
+        prev_node = (InlineFreePageNode*)(prev_node->node.prev);
     }
 
 
-    if((prev_node!=(inline_free_page_node*)&(free_page_linked_list.head))
+    if((prev_node!=(InlineFreePageNode*)&(g_free_page_linked_list.head))
      &&(U64)(prev_node->free_mem_count)*PAGE_SIZE + (U64)prev_node == (U64)page_address) {
         //拼到前面去
         prev_node->free_mem_count += count;
         //如果和后面也相连，合并。
         if((prev_node!=node)&&(page_address+count*PAGE_SIZE == node)) {
             prev_node->free_mem_count += node->free_mem_count;
-            remove_inline_node(&free_page_linked_list,(inline_linked_list_node*)node);
+            remove_inline_node(&g_free_page_linked_list,(InlineLinkedListNode*)node);
         }
     }
     else {
-        inline_free_page_node* new_node = page_address;
+        InlineFreePageNode* new_node = page_address;
         //和后面相连，合并。
         if((prev_node!=node)&&(page_address+count*PAGE_SIZE == node)) {
-            prev_node->node.next = (inline_linked_list_node*)new_node;
-            node->node.next->prev = (inline_linked_list_node*)new_node;
+            prev_node->node.next = (InlineLinkedListNode*)new_node;
+            node->node.next->prev = (InlineLinkedListNode*)new_node;
             new_node->free_mem_count = node->free_mem_count + count;
-            new_node->node.prev = (inline_linked_list_node*)prev_node;
+            new_node->node.prev = (InlineLinkedListNode*)prev_node;
             new_node->node.next = node->node.next;
         }
         else {
             //都不相连，创建新节点。
             new_node->free_mem_count = count;
             if(prev_node!=node) {
-                insert_existing_inline_node_before_existing(&free_page_linked_list,(inline_linked_list_node*)new_node,(inline_linked_list_node*)node);
+                insert_existing_inline_node_before_existing(&g_free_page_linked_list,(InlineLinkedListNode*)new_node,(InlineLinkedListNode*)node);
             }
             else {
-                insert_existing_inline_node(&free_page_linked_list,(inline_linked_list_node*)new_node,-1);
+                insert_existing_inline_node(&g_free_page_linked_list,(InlineLinkedListNode*)new_node,-1);
             }
 //             new_node->node.prev = (inline_linked_list_node*)prev_node;
 //             prev_node->node.next = (inline_linked_list_node*)new_node;
@@ -105,7 +105,7 @@ void free_page(void* page_address,int count)
 //             new_node->node.next = (inline_linked_list_node*) node;
         }
         if(new_node->node.next==nullptr) {
-            free_page_linked_list.tail = (inline_linked_list_node*)new_node;
+            g_free_page_linked_list.tail = (InlineLinkedListNode*)new_node;
         }
     }
 }

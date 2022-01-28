@@ -16,7 +16,7 @@ typedef struct {
     U16 target_offset_middle;
     U32 target_offset_high;
     U32 reserved2;
-} __attribute__((packed)) interrupt_gate_descriptor;
+} __attribute__((packed)) InterruptGateDescriptor;
 
 //中断帧定义。
 typedef struct {
@@ -25,8 +25,8 @@ typedef struct {
     U64 RFLAGS;
     U64 RSP;
     U64 SS;
-} interrupt_frame;
-extern interrupt_gate_descriptor IDT[256];
+} InterruptFrame;
+extern InterruptGateDescriptor g_IDT[256];
 void set_interrupt_handler(int index,U64 addr,U8 type);
 void init_interrupt(void);
 #endif

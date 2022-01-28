@@ -16,15 +16,15 @@
 #define ATA_CMD_WRITE_DMA_EX 0x35
 #define ATA_CMD_WRITE_DMA 0xCA
 #define ATA_CMD_IDENTIFY 0xEC
-void ata_port_rebase(AHCIController device, HBA_PORT *port, int portno);
-int ahci_readblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount);
-int ahci_writeblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount);
+void ata_port_rebase(AHCIController device, HBAPort *port, int portno);
+int ahci_readblock(BlockDev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount);
+int ahci_writeblock(BlockDev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount);
 
-static char* ata_controller_tree_template = "ATAController%d";
-static char* ata_port_tree_template = "ATADevice%d";
-static U8 SATA_device_count = 0;
-int sata_identify(HBA_PORT* port, void *buffer);
-char* AHCIDeviceTypeName[] =
+static char* ATA_CONTROLLER_TREE_TEMPLATE = "ATAController%d";
+static char* ATA_PORT_TREE_TEMPLATE = "ATADevice%d";
+static U8 g_SATA_device_count = 0;
+int sata_identify(HBAPort* port, void *buffer);
+char* AHCI_DEVICE_TYPE_NAME[] =
 {
     "NULL",
     "Serial ATA",
@@ -55,7 +55,7 @@ void ata_interrupt_handler(int no)
 {
     //首先，获取到AHCI的控制器。
     char buf[200];
-    for(int i=0;i<SATA_device_count;i++) {
+    for(int i=0;i<g_SATA_device_count;i++) {
         sprintk(buf,"/Devices/ATAController%d/",i);
         AHCIControllerTreeNode* node = (AHCIControllerTreeNode*)device_tree_resolve_by_path(buf,nullptr,DT_RETURN_IF_NONEXIST);
         if(node != nullptr) {
@@ -67,7 +67,7 @@ void ata_interrupt_handler(int no)
                 //遍历。
                 for(int j=0;j<node->controller.port_count;j++) {
                     if(interrupts & (1<<j)) {
-                        HBA_PORT* port = &(node->controller.ahci_bar->ports[j]);
+                        HBAPort* port = &(node->controller.ahci_bar->ports[j]);
                         if(port->is & 0x01) {
                             //received.
                             port->is = 0;
@@ -113,12 +113,12 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
     DeviceTreeNode* base_node = device_tree_resolve_by_path(BASE_DEVICE_TREE_TEMPLATE,nullptr,DT_CREATE_IF_NONEXIST);
     AHCIControllerTreeNode* controller_node = allocate_page(1);
     memset(controller_node,0,sizeof(AHCIControllerTreeNode));
-    sprintk(buf,ata_controller_tree_template,SATA_device_count++);
+    sprintk(buf,ATA_CONTROLLER_TREE_TEMPLATE,g_SATA_device_count++);
     controller_node->controller = device;
     strcopy(controller_node->header.name,buf,DT_NAME_LENGTH_MAX);
     controller_node->header.type = DT_BLOCK_DEVICE;
     device_tree_add_from_parent((DeviceTreeNode*)controller_node,(DeviceTreeNode*)base_node);
-    HBA_PORT* port;
+    HBAPort* port;
     //尝试获取中断信息。
     union {
         U16 raw;
@@ -164,7 +164,7 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
             }
 
         }
-        sprintk(buf,ata_port_tree_template,i);
+        sprintk(buf,ATA_PORT_TREE_TEMPLATE,i);
         AHCIDeviceTreeNode* port_node = allocate_page((sizeof(AHCIDeviceTreeNode)/PAGE_SIZE)+1);
         memset(port_node,0,sizeof(AHCIDeviceTreeNode));
         port_node->controller = &(controller_node->controller);
@@ -176,7 +176,7 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
         port_node->device.dev.writeblock = ahci_writeblock;
         device_tree_add_from_parent((DeviceTreeNode*)port_node,(DeviceTreeNode*)controller_node);
         ata_port_rebase(device,port,i);
-        ATA_IDENTIFY_DATA* identify_buffer = &(port_node->device.identify);
+        ATAIdentifyData* identify_buffer = &(port_node->device.identify);
         if(type==AHCI_DEV_SATA) { //FIXME:IDENTIFY on SATAPI!.
             sata_identify(&(device.ahci_bar->ports[i]),identify_buffer);
             char name_buf[41];
@@ -193,20 +193,20 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
                 name_buf[k-1] = c;
             }
             ata_parse_identify(&port_node->device);
-            printk(" AHCI %d-%d:%s device %s, %d bytes.\n",SATA_device_count-1,i, AHCIDeviceTypeName[type],name_buf,port_node->device.sector_count*port_node->device.sector_size);
+            printk(" AHCI %d-%d:%s device %s, %d bytes.\n",g_SATA_device_count-1,i, AHCI_DEVICE_TYPE_NAME[type],name_buf,port_node->device.sector_count*port_node->device.sector_size);
             //测试。
             U64 ret = gpt_partition_init(&port_node->device.dev,&port_node->header);
             if(ret&FzOS_ROOT_PARTITION_FOUND) {
-                sprintk(root_device_path,"/Devices/ATAController%d/ATADevice%d/Partition%d",SATA_device_count-1,i,ret&0x3FFFFFFF);
+                sprintk(g_root_device_path,"/Devices/ATAController%d/ATADevice%d/Partition%d",g_SATA_device_count-1,i,ret&0x3FFFFFFF);
             }
         }
         else {
-            printk(" AHCI %d-%d:%s device.\n",SATA_device_count-1,i,AHCIDeviceTypeName[type]);
+            printk(" AHCI %d-%d:%s device.\n",g_SATA_device_count-1,i,AHCI_DEVICE_TYPE_NAME[type]);
         }
     }
 }
 
-static int find_command_slot(HBA_PORT *port)
+static int find_command_slot(HBAPort *port)
 {
     // If bit isn't set in SACT and CI, the slot is free
     uint32_t slots = (port->sact | port->ci);
@@ -217,14 +217,14 @@ static int find_command_slot(HBA_PORT *port)
     }
     return FzOS_ERROR;
 }
-int ahci_begin_command(HBA_PORT *port)
+int ahci_begin_command(HBAPort *port)
 {
     int slot = find_command_slot(port);
     return slot;
 }
 
 // Attempt to issue command, true when completed, false if error
-int ahci_issue_command(HBA_PORT* port, int slot)
+int ahci_issue_command(HBAPort* port, int slot)
 {
 
     // Wait until the port is free
@@ -245,7 +245,7 @@ int ahci_issue_command(HBA_PORT* port, int slot)
     return FzOS_SUCCESS;
 }
 // Start command engine
-void ata_start_cmd(HBA_PORT *port)
+void ata_start_cmd(HBAPort *port)
 {
     // Wait until CR (bit15) is cleared
     while (port->cmd & HBA_PxCMD_CR);
@@ -255,7 +255,7 @@ void ata_start_cmd(HBA_PORT *port)
     port->ie = 0xFFFFFFFF;
 }
 // Stop command engine
-void ata_stop_cmd(HBA_PORT *port)
+void ata_stop_cmd(HBAPort *port)
 {
     // Clear ST (bit0)
     port->cmd &= ~HBA_PxCMD_ST;
@@ -271,7 +271,7 @@ void ata_stop_cmd(HBA_PORT *port)
     }
 
 }
-void ata_port_rebase(AHCIController device, HBA_PORT *port, int portno)
+void ata_port_rebase(AHCIController device, HBAPort *port, int portno)
 {
     ata_stop_cmd(port); // Stop command engine
     // Command list offset: 1K*portno
@@ -288,7 +288,7 @@ void ata_port_rebase(AHCIController device, HBA_PORT *port, int portno)
     memset((void*)((port->fb)|KERNEL_ADDR_OFFSET), 0, 256);
     // Command table offset: 40K + 8K*portno
     // Command table size = 256*32 = 8K per port
-    HBA_CMD_HEADER *cmdheader = (HBA_CMD_HEADER*)((port->clb)|KERNEL_ADDR_OFFSET);
+    HBACmdHeader *cmdheader = (HBACmdHeader*)((port->clb)|KERNEL_ADDR_OFFSET);
     for (int i=0; i<32; i++)
     {
         cmdheader[i].prdtl = 8; // 8 prdt entries per command table
@@ -300,7 +300,7 @@ void ata_port_rebase(AHCIController device, HBA_PORT *port, int portno)
     }
     ata_start_cmd(port); // Start command engine
 }
-FIS_REG_H2D *ahci_initialize_command_fis(HBA_PORT* port,
+FISRegH2d *ahci_initialize_command_fis(HBAPort* port,
                                          int slot,
                                          AHCIOperationType write,
                                          AHCIPrefetchType prefetchable,
@@ -314,10 +314,10 @@ FIS_REG_H2D *ahci_initialize_command_fis(HBA_PORT* port,
     // TODO: Refactor this into a #define or something
     U64 command_header_address = port->clb;
     command_header_address |= ((U64)port->clbu)<< 32;
-    command_header_address += slot * sizeof(HBA_CMD_HEADER);
-    HBA_CMD_HEADER *command_header = (HBA_CMD_HEADER*)command_header_address;
-    memset(command_header, 0, sizeof(HBA_CMD_HEADER));
-    command_header->cfl = sizeof(FIS_REG_H2D) / sizeof(U32);  // Command FIS size in dwords
+    command_header_address += slot * sizeof(HBACmdHeader);
+    HBACmdHeader *command_header = (HBACmdHeader*)command_header_address;
+    memset(command_header, 0, sizeof(HBACmdHeader));
+    command_header->cfl = sizeof(FISRegH2d) / sizeof(U32);  // Command FIS size in dwords
     command_header->w = write;
     command_header->p = prefetchable;
     command_header->prdtl = ((byte_size - 1) / MAX_BYTES_PER_PRDT) + 1;
@@ -328,8 +328,8 @@ FIS_REG_H2D *ahci_initialize_command_fis(HBA_PORT* port,
     command_table_address |=
         ((U64)command_header->ctbau) << 32;
 
-    HBA_CMD_TBL *command_table = (HBA_CMD_TBL*)command_table_address;
-    memset(command_table, 0,sizeof(HBA_CMD_TBL) +(command_header->prdtl * sizeof(HBA_PRDT_ENTRY)));
+    HBACommandTable *command_table = (HBACommandTable*)command_table_address;
+    memset(command_table, 0,sizeof(HBACommandTable) +(command_header->prdtl * sizeof(HBAPrdtEntry)));
 
     if (atapi && atapi_command) {
         command_header->a = 1;
@@ -337,8 +337,8 @@ FIS_REG_H2D *ahci_initialize_command_fis(HBA_PORT* port,
     }
 
     // Get PRDT from command table
-    HBA_PRDT_ENTRY *prdt = command_table->prdt_entry;
-    val_splitter splitter;
+    HBAPrdtEntry *prdt = command_table->prdt_entry;
+    ValSplitter splitter;
     // Fill PRDT. 4MB (8192 sectors) per PRDT entrt
     for (int i = 0; i < command_header->prdtl; ++i) {
         splitter.raw = (U64)dma_buffer;
@@ -352,21 +352,21 @@ FIS_REG_H2D *ahci_initialize_command_fis(HBA_PORT* port,
         byte_size -= prdt[i].dbc + 1;
     }
     // Setup command
-    FIS_REG_H2D *command_fis =(FIS_REG_H2D *)(&command_table->cfis);
-    memset(command_fis, 0, sizeof(FIS_REG_H2D));
+    FISRegH2d *command_fis =(FISRegH2d *)(&command_table->cfis);
+    memset(command_fis, 0, sizeof(FISRegH2d));
     command_fis->fis_type = FIS_TYPE_REG_H2D;
     command_fis->c = 1;
     return command_fis;
 }
 
-int sata_identify(HBA_PORT* port, void *buffer) {
+int sata_identify(HBAPort* port, void *buffer) {
     buffer = (void*)((U64)buffer&(~KERNEL_ADDR_OFFSET));
     int slot = ahci_begin_command(port);
     if (slot == -1) {
         return FzOS_ERROR;
     }
     // Setup command
-    FIS_REG_H2D *command_fis = ahci_initialize_command_fis(
+    FISRegH2d *command_fis = ahci_initialize_command_fis(
         port, slot, AHCI_COMMAND_H2D, AHCI_COMMAND_PREFETCHABLE, 512, buffer, 0, NULL);
     command_fis->command = ATA_CMD_IDENTIFY;
     command_fis->device = 0;
@@ -374,9 +374,9 @@ int sata_identify(HBA_PORT* port, void *buffer) {
 }
 
 
-void ahci_set_command_fis_lba(FIS_REG_H2D *command_fis, U64 address,
+void ahci_set_command_fis_lba(FISRegH2d *command_fis, U64 address,
                               U64 block_count) {
-    val_splitter splitter;
+    ValSplitter splitter;
     splitter.raw = address;
     command_fis->lba0 = splitter.byte[0];
     command_fis->lba1 = splitter.byte[1];
@@ -406,7 +406,7 @@ int sata_rw_command(ATAOperationType type, AHCIDevice *device,
 
     // Setup command
     U64 requested_bytes = block_count * device->sector_size;
-    FIS_REG_H2D *command_fis = ahci_initialize_command_fis(
+    FISRegH2d *command_fis = ahci_initialize_command_fis(
         device->port, slot,(type==ATA_OPERATION_WRITE?AHCI_COMMAND_D2H:AHCI_COMMAND_H2D),AHCI_COMMAND_PREFETCHABLE, requested_bytes, buffer, 0, NULL);
 
     if (device->lba48_enabled) {
@@ -419,13 +419,13 @@ int sata_rw_command(ATAOperationType type, AHCIDevice *device,
     return ahci_issue_command(device->port, slot) ? FzOS_SUCCESS
                                             : FzOS_DEVICE_NOT_READY;
 }
-int ahci_readblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
+int ahci_readblock(BlockDev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
 {
     AHCIDevice* device = (AHCIDevice*) dev;
     return sata_rw_command(ATA_OPERATION_READ, device, offset, blockcount, buffer,
                          buffer_size);
 }
-int ahci_writeblock(block_dev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
+int ahci_writeblock(BlockDev* dev,U64 offset,void* buffer,U64 buffer_size,U64 blockcount)
 {
     AHCIDevice* device = (AHCIDevice*) dev;
     return sata_rw_command(ATA_OPERATION_WRITE, device, offset, blockcount, buffer,

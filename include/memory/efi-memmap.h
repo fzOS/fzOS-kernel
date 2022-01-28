@@ -8,8 +8,8 @@ typedef struct {
     U64 NumberOfPages;
     U64 Attribute;
     U64 StrangePadding;
-} memmap;
-char* __attribute__((weak)) mem_types[]= {
+} MemMap;
+char* __attribute__((weak)) MEM_TYPES[]= {
     "EfiReservedMemoryType     ",
     "EfiLoaderCode             ",
     "EfiLoaderData             ",

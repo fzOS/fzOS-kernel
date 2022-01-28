@@ -1,6 +1,6 @@
 #include <common/tree.h>
 
-int iterator_inline_tree_next(iterator(inline_tree)* this)
+int iterator_inline_tree_next(Iterator(InlineTree)* this)
 {;
     //我们只支持先根遍历（这也是用的最多的）
     //换句话说，自己-孩子-兄弟，即深度有限遍历（DFS）
@@ -25,7 +25,7 @@ int iterator_inline_tree_next(iterator(inline_tree)* this)
     }
     return 0;
 }
-int iterator_inline_tree_prev(iterator(inline_tree)* this)
+int iterator_inline_tree_prev(Iterator(InlineTree)* this)
 {
     if(this->current==(&this->list->entry)) {
         return 0;
@@ -36,7 +36,7 @@ int iterator_inline_tree_prev(iterator(inline_tree)* this)
         this->count--;
         return 1;
     }
-    inline_tree_node* child = this->current->parent->child;
+    InlineTreeNode* child = this->current->parent->child;
     while(child->sibling!=this->current) {
         this->current = child->sibling;
         child = child->sibling;
@@ -44,12 +44,12 @@ int iterator_inline_tree_prev(iterator(inline_tree)* this)
     this->current = child;
     return 1;
 }
-void iterator_inline_tree_remove(iterator(inline_tree)* this)
+void iterator_inline_tree_remove(Iterator(InlineTree)* this)
 {
     //暂时不实现删除。
     return;
 }
-void init_iterator_inline_tree(iterator(inline_tree)* iterator,inline_tree* source)
+void init_iterator_InlineTree(Iterator(InlineTree)* iterator,InlineTree* source)
 {
     iterator->list = source;
     iterator->count = 0;
@@ -58,10 +58,10 @@ void init_iterator_inline_tree(iterator(inline_tree)* iterator,inline_tree* sour
     iterator->prev = (void*)iterator_inline_tree_prev;
     iterator->remove = (void*)iterator_inline_tree_remove;
 }
-void insert_tree_node_as_child(inline_tree_node* parent,inline_tree_node* data)
+void insert_tree_node_as_child(InlineTreeNode* parent,InlineTreeNode* data)
 {
     if(parent->child) {
-        inline_tree_node* child = parent->child;
+        InlineTreeNode* child = parent->child;
         while(child->sibling) {
             child = child->sibling;
         }

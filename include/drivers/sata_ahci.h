@@ -14,7 +14,7 @@ typedef enum
     FIS_TYPE_BIST = 0x58, // BIST activate FIS - bidirectional
     FIS_TYPE_PIO_SETUP = 0x5F, // PIO setup FIS - device to host
     FIS_TYPE_DEV_BITS = 0xA1, // Set device bits FIS - device to host
-} FIS_TYPE;
+} FISType;
 
 #define SATA_SIG_ATA 0x00000101 // SATA drive
 #define SATA_SIG_ATAPI 0xEB140101 // SATAPI drive
@@ -32,7 +32,7 @@ typedef enum
     AHCI_DEV_PM,
     AHCI_DEV_SATAPI,
 } AHCIDeviceType;
-extern char* AHCIDeviceTypeName[];
+extern char* AHCI_DEVICE_TYPE_NAME[];
 
 #define HBA_PORT_IPM_ACTIVE 1
 #define HBA_PORT_DET_PRESENT 3
@@ -73,7 +73,7 @@ typedef volatile struct
     U32 fbs;       // 0x40, FIS-based switch control
     U32 rsv1[11];  // 0x44 ~ 0x6F, Reserved
     U32 vendor[4]; // 0x70 ~ 0x7F, vendor specific
-} __attribute__((packed)) HBA_PORT;
+} __attribute__((packed)) HBAPort;
 
 //HBA Memory Registers
 typedef volatile struct
@@ -93,8 +93,8 @@ typedef volatile struct
     // 0xA0 - 0xFF, Vendor specific registers
     U8  vendor[0x100-0xA0];
     // 0x100 - 0x10FF, Port control registers
-    HBA_PORT ports[1];// 1 ~ 32
-} __attribute__((packed)) HBA_MEM;
+    HBAPort ports[1];// 1 ~ 32
+} __attribute__((packed)) HBAMem;
 typedef struct
 {
     // DW0
@@ -115,7 +115,7 @@ typedef struct
     U32 ctbau; // Command table descriptor base address upper 32 bits
     // DW4 - 7
     U32 rsv1[4]; // Reserved
-} HBA_CMD_HEADER;
+} HBACmdHeader;
 typedef struct
 {
     U32 dba;    // Data base address
@@ -125,7 +125,7 @@ typedef struct
     U32 dbc:22; // Byte count, 4M max
     U32 rsv1:9; // Reserved
     U32 i:1;    // Interrupt on completion
-} HBA_PRDT_ENTRY;
+} HBAPrdtEntry;
 typedef struct
 {
     // 0x00
@@ -135,8 +135,8 @@ typedef struct
     // 0x50
     U8 rsv[48]; // Reserved
     // 0x80
-    HBA_PRDT_ENTRY prdt_entry[1]; // Physical region descriptor table entries, 0 ~
-} HBA_CMD_TBL;
+    HBAPrdtEntry prdt_entry[1]; // Physical region descriptor table entries, 0 ~
+} HBACommandTable;
 typedef struct
 {
     // DWORD 0
@@ -163,7 +163,7 @@ typedef struct
     U8 control; // Control register
     // DWORD 4
     U8 rsv1[4]; // Reserved
-} __attribute__((packed)) FIS_REG_H2D;
+} __attribute__((packed)) FISRegH2d;
 
 typedef struct
 {
@@ -191,12 +191,12 @@ typedef struct
     U8 rsv3[2]; // Reserved
     // DWORD 4
     U8 rsv4[4]; // Reserved
-} __attribute__((packed)) FIS_REG_D2H;
+} __attribute__((packed)) FISRegD2h;
 typedef struct 
 {
-    block_dev dev;
+    BlockDev dev;
     PCIDevice base;
-    HBA_MEM* ahci_bar;
+    HBAMem* ahci_bar;
     U32 command_base;
     U32 port_count;
 } AHCIController;
@@ -309,17 +309,17 @@ typedef struct {
     U16  max_number_per_download_microcode_mode3; ///< word 235
     U16  reserved_236_254[19];
     U16  integrity_word;
-} __attribute__((packed)) ATA_IDENTIFY_DATA;
+} __attribute__((packed)) ATAIdentifyData;
 //定义AHCI控制器端口的设备树格式。
 typedef struct {
-    block_dev dev;
-    HBA_PORT* port;
+    BlockDev dev;
+    HBAPort* port;
     U32 port_no; //为了跳过不存在的端口。
     U8 lba48_enabled;
     U16 sector_size;
     semaphore sem;
     U64 sector_count;
-    ATA_IDENTIFY_DATA identify;
+    ATAIdentifyData identify;
 } AHCIDevice;
 typedef struct
 {

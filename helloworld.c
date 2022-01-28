@@ -26,23 +26,23 @@
 #endif
 
 //定义的标准输入/输出。
-static volatile KernelInfo bss_info;
+static volatile KernelInfo g_bss_info;
 void print_motd(void);
 void show_banner(void);
 void play_startup_audio(void);
 void print_boot_arg(void);
 void kernel_main_real() {
     __asm__("cli");
-    graphics_init(bss_info.gop);
+    graphics_init(g_bss_info.gop);
     graphics_clear_screen(0x001e1e1e);
     fbcon_init();
     print_motd();
-    memory_init(bss_info.mem_map_descriptor_size,bss_info.mem_map_size,bss_info.memory_map);
-    parse_acpi(bss_info.rsdp_address);
+    memory_init(g_bss_info.mem_map_descriptor_size,g_bss_info.mem_map_size,g_bss_info.memory_map);
+    parse_acpi(g_bss_info.rsdp_address);
     init_gdt();
     init_interrupt();
     init_device_tree();
-    efivarfs_mount(bss_info.rt);
+    efivarfs_mount(g_bss_info.rt);
     print_boot_arg();
     fbcon_add_to_device_tree();
     init_keyboard();
@@ -66,14 +66,14 @@ void kernel_main_real() {
 }
 void kernel_main(KernelInfo info) {
     //手动换栈。
-    bss_info = info;
-    bss_info.new_empty_stack+=PAGE_SIZE*KERNEL_STACK_PAGES; //栈反向生长。
-    bss_info.new_empty_stack |= KERNEL_ADDR_OFFSET;//保护模式分页
+    g_bss_info = info;
+    g_bss_info.new_empty_stack+=PAGE_SIZE*KERNEL_STACK_PAGES; //栈反向生长。
+    g_bss_info.new_empty_stack |= KERNEL_ADDR_OFFSET;//保护模式分页
     __asm__(
         "movq %0,%%rsp\n"
         "movq %0,%%rbp\n"
         :
-        :"g"(bss_info.new_empty_stack)
+        :"g"(g_bss_info.new_empty_stack)
         :"memory"
     );
     kernel_main_real();
@@ -85,7 +85,7 @@ void print_motd(void)
 {
     printk("\n Hello World! I am fzOS.\n");
     printk(" Kernel version: %s\n",VERSION);
-    int width=bss_info.gop->Mode->Info->PixelsPerScanLine/8-1;
+    int width=g_bss_info.gop->Mode->Info->PixelsPerScanLine/8-1;
     for(int i=0;i<width-2;i++)
     {
         printk("+");

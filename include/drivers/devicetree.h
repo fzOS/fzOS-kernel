@@ -6,7 +6,7 @@
 #include <limit.h>
 //一个设备结点16个字母的名字怎么也够了……
 #define DT_NAME_LENGTH_MAX 16
-extern inline_tree device_tree;
+extern InlineTree g_device_tree;
 
 //定义设备树的结点类型。
 typedef enum {
@@ -17,7 +17,7 @@ typedef enum {
 } DTNodeTypes;
 
 typedef struct {
-    inline_tree_node node;
+    InlineTreeNode node;
     DTNodeTypes type;
     char name[DT_NAME_LENGTH_MAX];
 }DeviceTreeNode;
@@ -39,5 +39,5 @@ void device_tree_add_by_path(DeviceTreeNode* n,char* c);
 int device_tree_replace_node(DeviceTreeNode* old,DeviceTreeNode* new,DtDestroyMethod method);
 DeviceTreeNode* device_tree_resolve_from_parent(DeviceTreeNode* n,char* node_name);
 void print_device_tree(void);
-extern  char* BASE_DEVICE_TREE_TEMPLATE;
+extern const char* BASE_DEVICE_TREE_TEMPLATE;
 #endif

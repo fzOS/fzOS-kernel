@@ -4,38 +4,38 @@
 #include <common/power_control.h>
 #include <interrupt/irq.h>
 #include <common/printk.h>
-extern U8 acpi_poweroff_interrupt;
+extern U8 g_acpi_poweroff_interrupt;
 static struct IDTR {
   U16 size;
   U64 address;
 } __attribute__((packed)) IDTR;
-__attribute__ ((interrupt)) void int_handler_DE (interrupt_frame* frame)
+__attribute__ ((interrupt)) void int_handler_DE (InterruptFrame* frame)
 {
     die("Divided by Zero",frame);
 }
-__attribute__ ((interrupt)) void int_handler_UD (interrupt_frame* frame)
+__attribute__ ((interrupt)) void int_handler_UD (InterruptFrame* frame)
 {
     die("Invalid OP Code",frame);
 }
-__attribute__ ((interrupt)) void int_handler_DF (interrupt_frame* frame)
+__attribute__ ((interrupt)) void int_handler_DF (InterruptFrame* frame)
 {
     die("Another Fault in Fault Processing",frame);
 }
-__attribute__ ((interrupt)) void int_handler_GP (interrupt_frame* frame)
+__attribute__ ((interrupt)) void int_handler_GP (InterruptFrame* frame)
 {
     die("General Protection",frame);
 }
-__attribute__ ((interrupt)) void int_handler_PF (interrupt_frame* frame)
+__attribute__ ((interrupt)) void int_handler_PF (InterruptFrame* frame)
 {
     die("Page Fault",frame);
 }
-__attribute__ ((interrupt)) void int_handler_dummy (interrupt_frame* frame)
+__attribute__ ((interrupt)) void int_handler_dummy (InterruptFrame* frame)
 {
     debug("Interrupt triggered.\n");
 }
 //虽然很难看但是还是得写……
 //用宏定义会好看一些？
-#define irq_handler_reg(x) __attribute__ ((interrupt)) void int_handler_irq_##x (interrupt_frame* frame)\
+#define irq_handler_reg(x) __attribute__ ((interrupt)) void int_handler_irq_##x (InterruptFrame* frame)\
 {\
     irq_handlers[x](x);\
     irq_clear();\
@@ -64,7 +64,7 @@ irq_handler_reg(20);
 irq_handler_reg(21);
 irq_handler_reg(22);
 irq_handler_reg(23);
-void (*int_handler_irqs[IRQS_MAX])(interrupt_frame* frame) = {
+void (*g_int_handler_irqs[IRQS_MAX])(InterruptFrame* frame) = {
     int_handler_irq_0,
     int_handler_irq_1,
     int_handler_irq_2,
@@ -91,17 +91,17 @@ void (*int_handler_irqs[IRQS_MAX])(interrupt_frame* frame) = {
     int_handler_irq_23
 };
 //以上。
-interrupt_gate_descriptor IDT[256];
+InterruptGateDescriptor g_IDT[256];
 void set_interrupt_handler(int index,U64 addr,U8 type)
 {
-    memset(IDT+index,0x00,sizeof(interrupt_gate_descriptor));
-    IDT[index].target_offset_low = (addr & 0xFFFF);
-    IDT[index].target_offset_middle = (addr >> 16) & 0xFFFF;
-    IDT[index].target_offset_high = (addr >> 32) & 0xFFFFFFFF;
-    IDT[index].target_selector = 0x08;
-    IDT[index].type = type;
-    IDT[index].present = 1;
-    IDT[index].dpl = 3;
+    memset(g_IDT+index,0x00,sizeof(InterruptGateDescriptor));
+    g_IDT[index].target_offset_low = (addr & 0xFFFF);
+    g_IDT[index].target_offset_middle = (addr >> 16) & 0xFFFF;
+    g_IDT[index].target_offset_high = (addr >> 32) & 0xFFFFFFFF;
+    g_IDT[index].target_selector = 0x08;
+    g_IDT[index].type = type;
+    g_IDT[index].present = 1;
+    g_IDT[index].dpl = 3;
 }
 void init_interrupt(void)
 {
@@ -114,8 +114,8 @@ void init_interrupt(void)
     set_interrupt_handler(8,(U64)int_handler_DF,TRAP_GATE);   
     set_interrupt_handler(13,(U64)int_handler_GP,TRAP_GATE);   
     set_interrupt_handler(14,(U64)int_handler_PF,TRAP_GATE);   
-    IDTR.size = sizeof(IDT)-1;
-    IDTR.address = (U64)IDT;
+    IDTR.size = sizeof(g_IDT)-1;
+    IDTR.address = (U64)g_IDT;
     __asm__ volatile (
         "lidt %0"
         :

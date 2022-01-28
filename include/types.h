@@ -48,7 +48,7 @@ typedef union {
     U32 dword[2];
     U16 word[4];
     U8 byte[8];
-}val_splitter;
+}ValSplitter;
 
 typedef struct {
     U32 first;

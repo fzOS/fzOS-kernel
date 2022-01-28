@@ -127,7 +127,7 @@ typedef struct {
 }StreamBufferDesc;
 typedef struct
 {
-    block_dev dev;
+    BlockDev dev;
     PCIDevice base;
     struct HDACodec* codecs[MAX_CODEC_COUNT];
     U8 afg_nodes[MAX_AFG_COUNT];//Static storage of AFG tree.

@@ -29,8 +29,8 @@ typedef struct {
 }__attribute__((packed)) GPTEntry;
 
 typedef struct {
-    block_dev header;
-    block_dev* parent;
+    BlockDev header;
+    BlockDev* parent;
     U64 begin_lba;
     U64 end_lba;
     GUID type;
@@ -41,5 +41,5 @@ typedef struct {
 }GPTPartitionTreeNode;
 extern const GUID FzOS_ROOT_PARTITION_GUID;
 
-int gpt_partition_init(block_dev* dev,DeviceTreeNode* parent);
+int gpt_partition_init(BlockDev* dev,DeviceTreeNode* parent);
 #endif

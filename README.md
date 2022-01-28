@@ -50,7 +50,6 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
 + 变量
     + 常规变量使用 小写下划线命名 ( 例如: bss_info )
     + 全局变量使用 g_小写下划线命名（ 例如: g_gui_service_window_list ）
-    + 注意某些全局变量采用的还是 小写下划线命名
 + 宏定义
     + 全大写下划线命名 （ 例如: GUI_DEFAULT_WINDOW_SIZE ）
     + 下划线开头结尾的全大写（ 例如: _GUI_DEFAULT_WINDOW_SIZE_ ）

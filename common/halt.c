@@ -4,7 +4,7 @@ inline void halt(void)
 {
     __asm__("hlt");
 }
-inline void die(char* reason,interrupt_frame* frame)
+inline void die(char* reason,InterruptFrame* frame)
 {
     printk(" Exception caught:%s.\n",reason);
     printk(" RIP is at 0x%x.\n",frame->RIP);

@@ -7,9 +7,9 @@ typedef union {
         U32 padding;
     } __attribute((packed)) split;
     U64 raw;
-} cpuid_registers;
+} CpuidRegisters;
 
-static cpuid_registers rax,rbx,rcx,rdx;
+static CpuidRegisters g_rax,g_rbx,g_rcx,g_rdx;
 int do_cpuid(void) 
 {
     __asm__(
@@ -22,36 +22,36 @@ int do_cpuid(void)
         "movq %%rbx, %1;"
         "movq %%rcx, %2;"
         "movq %%rdx, %3;"
-        : "=g"(rax.raw), "=g"(rbx.raw), "=g"(rcx.raw), "=g"(rdx.raw)
-        : "r"(rax.raw), "r"(rbx.raw), "r"(rcx.raw), "r"(rdx.raw)
+        : "=g"(g_rax.raw), "=g"(g_rbx.raw), "=g"(g_rcx.raw), "=g"(g_rdx.raw)
+        : "r"(g_rax.raw), "r"(g_rbx.raw), "r"(g_rcx.raw), "r"(g_rdx.raw)
         : "%rax","%rbx","%rcx","%rdx","memory");
     return FzOS_SUCCESS;
 }
 int get_processor_vendor(char* buff)
 {
-    rax.raw=0;
+    g_rax.raw=0;
     do_cpuid();
     //把CPUID拆解开。(Ugly)
     for(int i=0;i<4;i++)
     {
-        buff[i]=rbx.split.data[i];
+        buff[i]=g_rbx.split.data[i];
     }
     for(int i=4;i<8;i++)
     {
-        buff[i]=rdx.split.data[i-4];
+        buff[i]=g_rdx.split.data[i-4];
     }
     for(int i=8;i<12;i++)
     {
-        buff[i]=rcx.split.data[i-8];
+        buff[i]=g_rcx.split.data[i-8];
     }
     return 0;
 }
 int get_processor_rdseed_support(void)
 {
-    rcx.raw=0;
-    rax.raw=7;
+    g_rcx.raw=0;
+    g_rax.raw=7;
     do_cpuid();
-    if(rbx.raw&(1<<18)) {
+    if(g_rbx.raw&(1<<18)) {
         return FzOS_SUCCESS;
     }
     return FzOS_NOT_IMPLEMENTED;
@@ -60,23 +60,23 @@ int get_processor_name(char* buff)
 {
     for(int j=0;j<3;j++)
     {
-        rax.raw=0x80000002+j;
+        g_rax.raw=0x80000002+j;
         do_cpuid();
         for(int i=0;i<4;i++)
         {
-            buff[i+16*j]=rax.split.data[i];
+            buff[i+16*j]=g_rax.split.data[i];
         }
         for(int i=4;i<8;i++)
         {
-            buff[i+16*j]=rbx.split.data[i-4];
+            buff[i+16*j]=g_rbx.split.data[i-4];
         }
         for(int i=8;i<12;i++)
         {
-            buff[i+16*j]=rcx.split.data[i-8];
+            buff[i+16*j]=g_rcx.split.data[i-8];
         }
         for(int i=12;i<16;i++)
         {
-            buff[i+16*j]=rdx.split.data[i-12];
+            buff[i+16*j]=g_rdx.split.data[i-12];
         }
     }
     return FzOS_SUCCESS;

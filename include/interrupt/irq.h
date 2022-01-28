@@ -17,7 +17,7 @@ typedef union {
     } __attribute__ ((packed)) split;
     U32 raw[2];
     U64 total;
-} io_rediection_entry;
+} IORediectionEntry;
 void init_irq(void);
 void* get_hardware_by_irq(U8 irq_number);
 extern void (*irq_handlers[IRQS_MAX])(int);

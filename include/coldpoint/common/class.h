@@ -5,7 +5,7 @@
 typedef struct {
     U8 type;
     U64 padding;
-} __attribute__((packed)) constant_entry;
+} __attribute__((packed)) ConstantEntry;
 typedef struct {
     //由于JVM的奇怪的特性，只能用静态结构+索引的方式进行数据存储了……
     U64 constant_entry_offset;
@@ -42,50 +42,50 @@ typedef enum {
 typedef struct {
     U8 type;
     U16 name_index;
-    U8 padding[sizeof(constant_entry)-1-2];
+    U8 padding[sizeof(ConstantEntry)-1-2];
 }__attribute__((packed)) ClassInfoConstant;
 typedef struct {
     U8 type;
     U16 class_index;
     U16 name_and_type_index;
-    U8 padding[sizeof(constant_entry)-1-2-2];
+    U8 padding[sizeof(ConstantEntry)-1-2-2];
 }__attribute__((packed)) FieldRefConstant,MethodRefConstant,InterfaceRefConstant;
 typedef struct {
     U8 type;
     U16 string_index;
-    U8 padding[sizeof(constant_entry)-1-2];
+    U8 padding[sizeof(ConstantEntry)-1-2];
 }__attribute__((packed)) StringInfoConstant;
 typedef struct {
     U8 type;
     I32 val;
-    U8 padding[sizeof(constant_entry)-1-4];
+    U8 padding[sizeof(ConstantEntry)-1-4];
 }__attribute__((packed)) IntegerInfoConstant;
 typedef struct {
     U8 type;
     float val;
-    U8 padding[sizeof(constant_entry)-1-4];
+    U8 padding[sizeof(ConstantEntry)-1-4];
 }__attribute__((packed)) FloatInfoConstant;
 typedef struct {
     U8 type;
     I64 val;
-    U8 padding[sizeof(constant_entry)-1-8];
+    U8 padding[sizeof(ConstantEntry)-1-8];
 }__attribute__((packed)) LongInfoConstant;
 typedef struct {
     U8 type;
     double val;
-    U8 padding[sizeof(constant_entry)-1-8];
+    U8 padding[sizeof(ConstantEntry)-1-8];
 }__attribute__((packed)) DoubleInfoConstant;
 typedef struct {
     U8 type;
     U16 name_index;
     U16 descriptor_index;
-    U8 padding[sizeof(constant_entry)-1-2-2];
+    U8 padding[sizeof(ConstantEntry)-1-2-2];
 }__attribute__((packed)) NameAndTypeInfoConstant;
 typedef struct {
     U8 type;
     U8 reference_kind;
     U16 reference_index;
-    U8 padding[sizeof(constant_entry)-1-1-2];
+    U8 padding[sizeof(ConstantEntry)-1-1-2];
 }__attribute__((packed)) MethodHandleInfoConstant;
 typedef struct {
     U8 type;
@@ -95,16 +95,16 @@ typedef struct {
 typedef struct {
     U8 type;
     U16 descriptor_index;
-    U8 padding[sizeof(constant_entry)-1-2];
+    U8 padding[sizeof(ConstantEntry)-1-2];
 }__attribute__((packed)) MethodTypeInfoConstant;
 typedef struct {
     U8 type;
     U16 bootstrap_method_attr_index;
     U16 name_and_type_index;
-    U8 padding[sizeof(constant_entry)-1-2-2];
+    U8 padding[sizeof(ConstantEntry)-1-2-2];
 }__attribute__((packed)) InvokeDynamicInfoConstant;
 //防止自己翻车/在不兼容的编译器平台上构建，导致运行时异常。
-_Static_assert(sizeof(constant_entry)==sizeof(ClassInfoConstant)
+_Static_assert(sizeof(ConstantEntry)==sizeof(ClassInfoConstant)
              &&sizeof(ClassInfoConstant)==sizeof(FieldRefConstant)
              &&sizeof(FieldRefConstant)==sizeof(StringInfoConstant)
              &&sizeof(StringInfoConstant)==sizeof(IntegerInfoConstant)
@@ -140,26 +140,26 @@ typedef struct {
     U16 descriptor_index;
     U16 attribute_count;
     U64 attribute_info_entry_offset;
-} field_info_entry,method_info_entry;
+} FieldInfoEntry,MethodInfoEntry;
 typedef struct {
     U16 attribute_name_index;
     U16 attribute_length;
     U64 info_offset;
-} attribute_info_entry;
+} AttributeInfoEntry;
 typedef struct {
     U16 max_stack;
     U16 max_locals;
     U32 code_length;
     U8 code[];
     //下面的暂时不解析。
-}code_attribute;
+}CodeAttribute;
 void print_class_constants(const class* c);
 void print_class_info(const class* c);
 const U8* class_get_utf8_string(const class* c,int no);
 const U16 class_get_class_name_index(const class* c,int no);
-attribute_info_entry* class_get_class_attribute_by_name(const class* c,U16 name_index);
-attribute_info_entry* class_get_method_attribute_by_name(const class* c,const method_info_entry* entry,U16 name_index);
+AttributeInfoEntry* class_get_class_attribute_by_name(const class* c,U16 name_index);
+AttributeInfoEntry* class_get_method_attribute_by_name(const class* c,const MethodInfoEntry* entry,U16 name_index);
 U16 class_get_utf8_string_index(const class* c,const U8* name);
-method_info_entry* class_get_method_by_name_and_desc(const class* c,U16 name_index,U16 desc_index);
+MethodInfoEntry* class_get_method_by_name_and_desc(const class* c,U16 name_index,U16 desc_index);
 void print_field_and_method_info(const class* c);
 #endif
