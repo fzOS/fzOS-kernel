@@ -5,18 +5,18 @@ cpstatus opcode_to_long(thread* t)
     long* val = (long*)&(v1.data);
     switch(v1.type) {
         case STACK_TYPE_DOUBLE: {
-            double var = *((double*)&v1.data);
-            *val = (long) var;
+            double *var = ((double*)&v1.data);
+            *val = (long) *var;
             break;
         }
         case STACK_TYPE_FLOAT : {
-            float var = *((float*)&v1.data);
-            *val = (long) var;
+            float *var = ((float*)&v1.data);
+            *val = (long) *var;
             break;
         }
         case STACK_TYPE_INT: {
-            int var = *((int*)&v1.data);
-            *val = (long) var;
+            int *var = ((int*)&v1.data);
+            *val = (long) *var;
             break;
         }
         case STACK_TYPE_LONG: {
@@ -36,21 +36,21 @@ cpstatus opcode_to_int(thread* t)
     int* val = (int*)&(v1.data);
     switch(v1.type) {
         case STACK_TYPE_DOUBLE: {
-            double var = *((double*)&v1.data);
-            *val = (int) var;
+            double *var = ((double*)&v1.data);
+            *val = (int) *var;
             break;
         }
         case STACK_TYPE_FLOAT : {
-            float var = *((float*)&v1.data);
-            *val = (int) var;
+            float *var = ((float*)&v1.data);
+            *val = (int) *var;
             break;
         }
         case STACK_TYPE_INT: {
             break;
         }
         case STACK_TYPE_LONG: {
-            long var = *((long*)&v1.data);
-            *val = (int) var;
+            long *var = ((long*)&v1.data);
+            *val = (int) *var;
             break;
         }
         default: {
@@ -67,21 +67,21 @@ cpstatus opcode_to_float(thread* t)
     float* val = (float*)&(v1.data);
     switch(v1.type) {
         case STACK_TYPE_DOUBLE: {
-            double var = *((double*)&v1.data);
-            *val = (float) var;
+            double *var = ((double*)&v1.data);
+            *val = (float) *var;
             break;
         }
         case STACK_TYPE_FLOAT : {
             break;
         }
         case STACK_TYPE_INT: {
-            int var = *((int*)&v1.data);
-            *val = (float) var;
+            int *var = ((int*)&v1.data);
+            *val = (float) *var;
             break;
         }
         case STACK_TYPE_LONG: {
-            long var = *((long*)&v1.data);
-            *val = (float) var;
+            long *var = ((long*)&v1.data);
+            *val = (float) *var;
             break;
         }
         default: {
@@ -101,18 +101,18 @@ cpstatus opcode_to_double(thread* t)
             break;
         }
         case STACK_TYPE_FLOAT : {
-            float var = *((float*)&v1.data);
-            *val = (double) var;
+            float *var = ((float*)&v1.data);
+            *val = (double) *var;
             break;
         }
         case STACK_TYPE_INT: {
-            int var = *((int*)&v1.data);
-            *val = (double) var;
+            int *var = ((int*)&v1.data);
+            *val = (double) *var;
             break;
         }
         case STACK_TYPE_LONG: {
-            long var = *((long*)&v1.data);
-            *val = (double) var;
+            long *var = ((long*)&v1.data);
+            *val = (double) *var;
             break;
         }
         default: {
