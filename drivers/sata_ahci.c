@@ -1,6 +1,7 @@
 #include <drivers/sata_ahci.h>
 #include <common/popcount.h>
 #include <interrupt/irq.h>
+#include <interrupt/interrupt.h>
 #include <memory/memory.h>
 #include <drivers/devicetree.h>
 #include <common/kstring.h>
@@ -130,7 +131,13 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
     if(lai_pci_route_pin(&resource,0,bus,slot,func,interrupt_info.split[1])!=LAI_ERROR_NONE) {
         printk(" LAI:Cannot find interrupt for ATA controller!\n");
     }
-    irq_register(resource.base, 0xDD,0,0,ata_interrupt_handler,&controller_node->controller);
+    int int_no = get_available_interrupt();
+    if(int_no == (int)FzOS_ERROR) {
+        printk("Cannot allocate interrupt for ATA Controller #d.Stop.\n",--g_SATA_device_count);
+        free_page(controller_node,1);
+        return;
+    }
+    irq_register(resource.base,int_no,0,0,ata_interrupt_handler,&controller_node->controller);
     controller_node->controller.base.irq = resource.base;
     //为AHCI设备分配buffer空间。
     //Command List+FIS+Command Table
