@@ -54,32 +54,18 @@ static inline void ata_parse_identify(AHCIDevice* device)
 }
 void ata_interrupt_handler(int no)
 {
-    //首先，获取到AHCI的控制器。
-    char buf[200];
-    for(int i=0;i<g_SATA_device_count;i++) {
-        sprintk(buf,"/Devices/ATAController%d/",i);
-        AHCIControllerTreeNode* node = (AHCIControllerTreeNode*)device_tree_resolve_by_path(buf,nullptr,DT_RETURN_IF_NONEXIST);
-        if(node != nullptr) {
-            if(node->controller.base.irq!=no) {
-                continue;
-            }
-            else {
-                U32 interrupts = node->controller.ahci_bar->is;
-                //遍历。
-                for(int j=0;j<node->controller.port_count;j++) {
-                    if(interrupts & (1<<j)) {
-                        HBAPort* port = &(node->controller.ahci_bar->ports[j]);
-                        if(port->is & 0x01) {
-                            //received.
-                            port->is = 0;
-                            return;
-                        }
-                    }
-                }
+    AHCIController* controller = get_hardware_by_irq(no);
+    U32 interrupts = controller->ahci_bar->is;
+    for(int j=0;j<controller->port_count;j++) {
+        if(interrupts & (1<<j)) {
+            HBAPort* port = &(controller->ahci_bar->ports[j]);
+            if(port->is & 0x01) {
+                //received.
+                port->is = 0;
+                return;
             }
         }
     }
-    printk(" SATA: Cannot determine which Controller!\n");
 }
 void sata_ahci_register(U8 bus,U8 slot,U8 func)
 {
