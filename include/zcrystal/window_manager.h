@@ -34,6 +34,7 @@ typedef struct
     U16 start_point_h;
     U16 start_point_v;
     U16 layer;
+    U8 in_use;
 } WindowManageData;
 
 typedef struct{
@@ -41,21 +42,19 @@ typedef struct{
     U16 window_available;
     U16 window_focus_index;
     U8 window_in_loading;
+    U16 current_max_layer;
+    U16 top_layer_window_index;
 } WindowManageConfig;
-
-
-extern ScreenDefinition g_screen_resolution;
-extern WindowManageData *g_window_list;
-extern WindowManageConfig g_window_config;
 
 U8 gui_init_window_manager();
 U8 gui_window_manager_offline();
 U8 gui_loading_screen_request(WindowData *info_receiver);
 U8 gui_trigger_loading_screen_status(U8 status);
 // focus mode: 0 for focus at top layer, 1 for trigger lower than it
-U8 window_manager_create_window(U16 window_index, U8 focus_mode, WindowData *info_receiver);
+U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, WindowData *info_receiver);
 // if want later allow the c program/or change this to system call
-U8 window_manager_get_window_info(U16 window_index, WindowData *info_receiver);
-U8 window_manager_focus_change(U16 window_index);
+U8 gui_window_manager_get_window_info(U16 window_index, WindowData *info_receiver);
+U8 gui_window_manager_focus_change(U16 window_index);
+U8 gui_window_manager_destory_window(U16 PID, U16 window_index);
 void gui_log_print_hand_over(CharDev* dev, U8 c);
 void gui_log_flush_hand_over(CharDev* dev);
