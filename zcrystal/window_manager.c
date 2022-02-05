@@ -8,6 +8,7 @@ ScreenDefinition g_screen_resolution;
 WindowManageData *g_window_list;
 // in use and available
 WindowManageConfig g_window_config;
+U8 g_gui_in_loading_screen = 1;
 
 void gui_log_print_hand_over(CharDev* dev, U8 c)
 {
@@ -37,7 +38,9 @@ U8 gui_init_window_manager()
         g_window_list[i].is_hide = 0;
         g_window_config.layer_index[i].window_in_use = 0;
     }
-    
+    // setup loading screen
+    WindowData loading_screen_info_receiver;
+    gui_window_manager_create_window(2, 0, &loading_screen_info_receiver);
     // Clear debug info, make screen ready for desktop
     graphics_clear_screen(0xFFFFFFFF);
     // overide the fbcon default kernel print
@@ -52,8 +55,10 @@ U8 gui_init_window_manager()
 
 U8 gui_trigger_loading_screen_status(U8 status)
 {
-    // status:  0: hide loading screen
-    //          1: trigger loading screen
+    // status:  ==0: hide loading screen
+    //          > 0: trigger loading screen
+    g_gui_in_loading_screen = status;
+    return 1;
 }
 
 U8 gui_window_manager_offline()
