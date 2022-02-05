@@ -34,6 +34,7 @@ U8 gui_init_window_manager()
     {
         // initialize the config
         g_window_list[i].in_use = 0;
+        g_window_list[i].is_hide = 0;
         g_window_config.layer_index[i].window_in_use = 0;
     }
     
@@ -103,24 +104,46 @@ U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, WindowData *info_rec
         memrealloc(g_window_config.layer_index, sizeof(WindowLayerConfig) * (g_window_config.window_available + 10));
         g_window_config.window_available += 10;
     }
+    for (U16 i = g_window_config.window_in_use; i < g_window_config.window_available; i++)
+    {
+        // initialize the new config data
+        g_window_list[i].in_use = 0;
+        g_window_list[i].is_hide = 0;
+        g_window_config.layer_index[i].window_in_use = 0;
+    }
     g_window_list[temp_window_index].in_use = 1;
     g_window_list[temp_window_index].PID = PID;
-    g_window_list[temp_window_index].start_point_h = 0.2 * g_screen_resolution.horizontal;
-    g_window_list[temp_window_index].start_point_v = 0.2 * g_screen_resolution.vertical;
-    g_window_list[temp_window_index].base_info.vertical = 0.6 * g_screen_resolution.horizontal;
-    g_window_list[temp_window_index].base_info.horizontal = 0.6 * g_screen_resolution.vertical;
-    g_window_list[temp_window_index].base_info.frame_buffer_base = memalloc(sizeof(U32)*g_window_list[temp_window_index].base_info.vertical*g_window_list[temp_window_index].base_info.horizontal);
-    if (focus_mode == 1)
+    if (temp_window_index == 0 && PID == 2)
     {
+        //loading screen
+        g_window_list[temp_window_index].start_point_h = 0;
+        g_window_list[temp_window_index].start_point_v = 0;
+        g_window_list[temp_window_index].base_info.vertical = g_screen_resolution.horizontal;
+        g_window_list[temp_window_index].base_info.horizontal = g_screen_resolution.vertical;
+        // the loading/desktop screen is always at bottom, only triggered once
         g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_index = temp_window_index;
         g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_in_use = 1;
     }
     else
     {
-        g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_index = g_window_config.layer_index[g_window_config.max_window_layer_in_use-2].window_index;
-        g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_in_use = 1;
-        g_window_config.layer_index[g_window_config.max_window_layer_in_use-2].window_index = temp_window_index;
+        //normal procedure
+        g_window_list[temp_window_index].start_point_h = 0.2 * g_screen_resolution.horizontal;
+        g_window_list[temp_window_index].start_point_v = 0.2 * g_screen_resolution.vertical;
+        g_window_list[temp_window_index].base_info.vertical = 0.6 * g_screen_resolution.horizontal;
+        g_window_list[temp_window_index].base_info.horizontal = 0.6 * g_screen_resolution.vertical;
+        if (focus_mode == 1)
+        {
+            g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_index = temp_window_index;
+            g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_in_use = 1;
+        }
+        else
+        {
+            g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_index = g_window_config.layer_index[g_window_config.max_window_layer_in_use-2].window_index;
+            g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_in_use = 1;
+            g_window_config.layer_index[g_window_config.max_window_layer_in_use-2].window_index = temp_window_index;
+        }
     }
+    g_window_list[temp_window_index].base_info.frame_buffer_base = memalloc(sizeof(U32)*g_window_list[temp_window_index].base_info.vertical*g_window_list[temp_window_index].base_info.horizontal);
     info_receiver = g_window_list[temp_window_index];
     return 1; 
 }
@@ -139,6 +162,7 @@ U8 gui_window_manager_focus_change(U16 window_index)
     {
         // resort the layer here
         U16 temp_layer_index = 0;
+        // ignore layer 0, which is loading screen
         for (U16 i = 1; i < g_window_config.max_window_layer_in_use; i++)
         {
             if ((g_window_config.layer_index[i].window_in_use) && (g_window_config.layer_index[i].window_index == window_index))
@@ -161,9 +185,23 @@ U8 gui_window_manager_focus_change(U16 window_index)
     }
 }
 
+U8 gui_window_manager_get_window_info(U16 PID, U16 window_index, WindowData *info_receiver)
+{
+    if (PID != g_window_list[window_index].PID)
+    {
+        // fail to verify, if system trigger force quit, read the PID in g_window_list
+        return 0;
+    }
+    else
+    {
+        info_receiver = g_window_list[temp_window_index];
+        return 1;
+    }
+}
+
 U8 gui_window_manager_destory_window(U16 PID, U16 window_index)
 {
-    if (PID != g_window_list.PID)
+    if (PID != g_window_list[window_index].PID)
     {
         // fail to verify, if system trigger force quit, read the PID in g_window_list
         return 0;
