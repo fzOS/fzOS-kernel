@@ -21,7 +21,6 @@ typedef struct {
 
 typedef struct {
     /* data */
-    U16 index;
     U16 horizontal;
     U16 vertical;
     U32 *frame_buffer_base;
@@ -33,17 +32,22 @@ typedef struct
     U16 PID;
     U16 start_point_h;
     U16 start_point_v;
-    U16 layer;
     U8 in_use;
 } WindowManageData;
+
+typedef struct
+{
+    U16 window_index;
+    U8  window_in_use;
+} WindowLayerConfig;
 
 typedef struct{
     U16 window_in_use;
     U16 window_available;
     U16 window_focus_index;
     U8 window_in_loading;
-    U16 current_max_layer;
-    U16 top_layer_window_index;
+    U16 max_window_layer_in_use;
+    WindowLayerConfig *layer_index;
 } WindowManageConfig;
 
 U8 gui_init_window_manager();
