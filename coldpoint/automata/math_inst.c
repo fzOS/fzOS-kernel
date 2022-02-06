@@ -4,6 +4,7 @@
 #pragma GCC diagnostic ignored "-Wswitch"
 cpstatus opcode_add(thread* t)
 {
+    print_opcode("i/l/f/d/add\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
@@ -32,6 +33,7 @@ cpstatus opcode_add(thread* t)
 }
 cpstatus opcode_sub(thread* t)
 {
+    print_opcode("i/l/f/d/sub\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
@@ -60,6 +62,7 @@ cpstatus opcode_sub(thread* t)
 }
 cpstatus opcode_mul(thread* t)
 {
+    print_opcode("i/l/f/d/mul\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
@@ -88,6 +91,7 @@ cpstatus opcode_mul(thread* t)
 }
 cpstatus opcode_div(thread* t)
 {
+    print_opcode("i/l/f/d/div\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
@@ -116,6 +120,7 @@ cpstatus opcode_div(thread* t)
 }
 cpstatus opcode_mod(thread* t)
 {
+    print_opcode("i/l/f/d/mod\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
@@ -141,6 +146,7 @@ cpstatus opcode_mod(thread* t)
 }
 cpstatus opcode_neg(thread* t)
 {
+    print_opcode("i/l/f/d/neg\n");
     StackVar v1=t->stack[t->rsp];
     switch(v1.type) {
         case STACK_TYPE_DOUBLE: {
@@ -168,6 +174,7 @@ cpstatus opcode_neg(thread* t)
 }
 cpstatus opcode_shl(thread* t)
 {
+    print_opcode("i/l/f/d/shl\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
@@ -186,6 +193,7 @@ cpstatus opcode_shl(thread* t)
 }
 cpstatus opcode_shr(thread* t)
 {
+    print_opcode("i/l/f/d/shr\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
@@ -204,6 +212,7 @@ cpstatus opcode_shr(thread* t)
 }
 cpstatus opcode_ushr(thread* t)
 {
+    print_opcode("i/l/f/d/ushr\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
@@ -222,6 +231,7 @@ cpstatus opcode_ushr(thread* t)
 }
 cpstatus opcode_and(thread* t)
 {
+    print_opcode("i/l/and\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
@@ -240,6 +250,7 @@ cpstatus opcode_and(thread* t)
 }
 cpstatus opcode_or(thread* t)
 {
+    print_opcode("i/l/or\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
@@ -258,6 +269,7 @@ cpstatus opcode_or(thread* t)
 }
 cpstatus opcode_xor(thread* t)
 {
+    print_opcode("i/l/xor\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
@@ -276,6 +288,7 @@ cpstatus opcode_xor(thread* t)
 }
 cpstatus opcode_inc(thread* t)
 {
+    print_opcode("i/l/inc\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     StackVar v3=t->stack[t->rbp+v1.data];
     v3.data += v2.data;

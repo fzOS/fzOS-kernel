@@ -32,7 +32,7 @@ cpstatus opcode_dconst_1(thread* t) {
 }
 cpstatus opcode_fconst_0(thread* t) {
     print_opcode("fconst_0\n");
-    float* sp = (float*)(&(t->stack[t->rsp].data));
+    double* sp = (double*)(&(t->stack[t->rsp].data));
     *sp=0.0;
     t->stack[t->rsp].type=STACK_TYPE_FLOAT;
     t->rsp++;
@@ -41,7 +41,7 @@ cpstatus opcode_fconst_0(thread* t) {
 cpstatus opcode_fconst_1(thread* t) {
 
     print_opcode("fconst_1\n");
-    float* sp = (float*)(&(t->stack[t->rsp].data));
+    double* sp = (double*)(&(t->stack[t->rsp].data));
     *sp=1.0;
     t->stack[t->rsp].type=STACK_TYPE_FLOAT;
     t->rsp++;
@@ -50,7 +50,7 @@ cpstatus opcode_fconst_1(thread* t) {
 cpstatus opcode_fconst_2(thread* t) {
 
     print_opcode("fconst_2\n");
-    float* sp = (float*)(&(t->stack[t->rsp].data));
+    double* sp = (double*)(&(t->stack[t->rsp].data));
     *sp=2.0;
     t->stack[t->rsp].type=STACK_TYPE_FLOAT;
     t->rsp++;
@@ -58,7 +58,7 @@ cpstatus opcode_fconst_2(thread* t) {
 }
 cpstatus opcode_iconst_m1(thread* t) {
     print_opcode("iconst_m1\n");
-    t->stack[t->rsp].data=((int)-1);
+    t->stack[t->rsp].data=-1;
     t->stack[t->rsp].type=STACK_TYPE_INT;
     t->rsp++;
     return COLD_POINT_SUCCESS;
@@ -125,6 +125,7 @@ cpstatus opcode_bipush(thread* t) {
     t->stack[t->rsp].type=STACK_TYPE_INT;
     t->stack[t->rsp].data=(I32)val;
     t->rsp++;
+    t->pc++;
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_sipush(thread* t) {
@@ -133,5 +134,6 @@ cpstatus opcode_sipush(thread* t) {
     t->stack[t->rsp].type=STACK_TYPE_INT;
     t->stack[t->rsp].data=(I32)val;
     t->rsp++;
+    t->pc+=sizeof(U16);
     return COLD_POINT_SUCCESS;
 }
