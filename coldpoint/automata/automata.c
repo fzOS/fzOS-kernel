@@ -3,6 +3,7 @@
 #include <coldpoint/automata/load_inst.h>
 #include <coldpoint/automata/stack_inst.h>
 #include <coldpoint/automata/math_inst.h>
+#include <coldpoint/automata/conv_inst.h>
 cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_nop,opcode_aconst_null,opcode_iconst_m1,opcode_iconst_0,//0x00~0x03
     opcode_iconst_1,opcode_iconst_2,opcode_iconst_3,opcode_iconst_4,//0x04~0x07
@@ -36,8 +37,11 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_neg,opcode_neg,opcode_neg,opcode_neg,//0x74~0x77
     opcode_shl,opcode_shl,opcode_shr,opcode_shr,//0x78~0x7b
     opcode_ushr,opcode_ushr,opcode_and,opcode_and,//0x7c~0x7f
-    opcode_or,opcode_or,opcode_xor,opcode_xor,//0x80~0x84
-    opcode_inc,
+    opcode_or,opcode_or,opcode_xor,opcode_xor,//0x80~0x83
+    opcode_inc,opcode_to_long,opcode_to_float,opcode_to_double,//0x84~0x87
+    opcode_to_int,opcode_to_float,opcode_to_double,opcode_to_int,//0x88~0x8b
+    opcode_to_long,opcode_to_double,opcode_to_int,opcode_to_long,//0x8c~0x8f
+    opcode_to_float,opcode_int_to_byte,opcode_int_to_char,opcode_int_to_short
 };
 void except(thread* t,char* msg)
 {
