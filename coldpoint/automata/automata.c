@@ -39,4 +39,7 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_or,opcode_or,opcode_xor,opcode_xor,//0x80~0x84
     opcode_inc,
 };
-
+void except(thread* t,char* msg)
+{
+    printk(" Exception caught at %x :%s.\n",t->pc,msg);
+}

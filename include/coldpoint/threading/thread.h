@@ -1,6 +1,7 @@
 #ifndef THREAD_H
 #define THREAD_H
 #include <types.h>
+#include <coldpoint/threading/process.h>
 #include <coldpoint/common/class.h>
 #define JVM_MAX_STACK_SIZE 1048576
 typedef enum {
@@ -22,6 +23,8 @@ typedef struct {
     U64 data;
 } StackVar;
 typedef struct {
+    process* p;
+    U64 tid;
     CodeAttribute* code;
     U64 pc;
     U64 rsp;

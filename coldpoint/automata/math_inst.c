@@ -8,23 +8,23 @@ cpstatus opcode_add(thread* t)
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
-        case STACK_TYPE_DOUBLE: {
+        case STACK_TYPE_DOUBLE:
+        case STACK_TYPE_FLOAT: {
             double *p1 = (double*)(&(v1.data)),*p2 = (double*)(&(v2.data));
             *p1 += *p2;
+            if(v1.type==STACK_TYPE_FLOAT) {
+                *p1 = (float)*p1;
+            }
             break;
         }
-        case STACK_TYPE_FLOAT : {
-            float *p1 = (float*)(&(v1.data)),*p2 = (float*)(&(v2.data));
-            *p1 += *p2;
-            break;
-        }
+        case STACK_TYPE_LONG:
         case STACK_TYPE_INT: {
-            int *p1 = (int*)(&(v1.data)),*p2 = (int*)(&(v2.data));
-            *p1 += *p2;
-            break;
-        }
-        case STACK_TYPE_LONG: {
-            v1.data += v2.data;
+            long val1=(long)v1.data;
+            long val2=(long)v2.data;
+            v1.data = val1+val2;
+            if(v1.type==STACK_TYPE_INT) {
+                v1.data = (int)v1.data;
+            }
             break;
         }
     }
@@ -37,23 +37,23 @@ cpstatus opcode_sub(thread* t)
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
-        case STACK_TYPE_DOUBLE: {
+        case STACK_TYPE_DOUBLE:
+        case STACK_TYPE_FLOAT: {
             double *p1 = (double*)(&(v1.data)),*p2 = (double*)(&(v2.data));
             *p1 -= *p2;
+            if(v1.type==STACK_TYPE_FLOAT) {
+                *p1 = (float)*p1;
+            }
             break;
         }
-        case STACK_TYPE_FLOAT : {
-            float *p1 = (float*)(&(v1.data)),*p2 = (float*)(&(v2.data));
-            *p1 -= *p2;
-            break;
-        }
+        case STACK_TYPE_LONG:
         case STACK_TYPE_INT: {
-            int *p1 = (int*)(&(v1.data)),*p2 = (int*)(&(v2.data));
-            *p1 -= *p2;
-            break;
-        }
-        case STACK_TYPE_LONG: {
-            v1.data -= v2.data;
+            long val1=(long)v1.data;
+            long val2=(long)v2.data;
+            v1.data = val1-val2;
+            if(v1.type==STACK_TYPE_INT) {
+                v1.data = (int)v1.data;
+            }
             break;
         }
     }
@@ -66,23 +66,23 @@ cpstatus opcode_mul(thread* t)
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
-        case STACK_TYPE_DOUBLE: {
+        case STACK_TYPE_DOUBLE:
+        case STACK_TYPE_FLOAT: {
             double *p1 = (double*)(&(v1.data)),*p2 = (double*)(&(v2.data));
             *p1 *= *p2;
+            if(v1.type==STACK_TYPE_FLOAT) {
+                *p1 = (float)*p1;
+            }
             break;
         }
-        case STACK_TYPE_FLOAT : {
-            float *p1 = (float*)(&(v1.data)),*p2 = (float*)(&(v2.data));
-            *p1 *= *p2;
-            break;
-        }
+        case STACK_TYPE_LONG:
         case STACK_TYPE_INT: {
-            int *p1 = (int*)(&(v1.data)),*p2 = (int*)(&(v2.data));
-            *p1 *= *p2;
-            break;
-        }
-        case STACK_TYPE_LONG: {
-            v1.data *= v2.data;
+            long val1=(long)v1.data;
+            long val2=(long)v2.data;
+            v1.data = val1*val2;
+            if(v1.type==STACK_TYPE_INT) {
+                v1.data = (int)v1.data;
+            }
             break;
         }
     }
@@ -95,23 +95,29 @@ cpstatus opcode_div(thread* t)
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
-        case STACK_TYPE_DOUBLE: {
+        case STACK_TYPE_DOUBLE:
+        case STACK_TYPE_FLOAT: {
             double *p1 = (double*)(&(v1.data)),*p2 = (double*)(&(v2.data));
+            if(*p2==0.0) {
+                except(t,"Div by 0");
+            }
             *p1 /= *p2;
+            if(v1.type==STACK_TYPE_FLOAT) {
+                *p1 = (float)*p1;
+            }
             break;
         }
-        case STACK_TYPE_FLOAT : {
-            float *p1 = (float*)(&(v1.data)),*p2 = (float*)(&(v2.data));
-            *p1 /= *p2;
-            break;
-        }
+        case STACK_TYPE_LONG:
         case STACK_TYPE_INT: {
-            int *p1 = (int*)(&(v1.data)),*p2 = (int*)(&(v2.data));
-            *p1 /= *p2;
-            break;
-        }
-        case STACK_TYPE_LONG: {
-            v1.data /= v2.data;
+            long val1=(long)v1.data;
+            long val2=(long)v2.data;
+            if(val2==0) {
+                except(t,"Div by 0");
+            }
+            v1.data = val1/val2;
+            if(v1.type==STACK_TYPE_INT) {
+                v1.data = (int)v1.data;
+            }
             break;
         }
     }
@@ -131,13 +137,12 @@ cpstatus opcode_mod(thread* t)
             return COLD_POINT_NOT_IMPLEMENTED;
             break;
         }
-        case STACK_TYPE_INT: {
-            int *p1 = (int*)(&(v1.data)),*p2 = (int*)(&(v2.data));
-            *p1 %= *p2;
-            break;
-        }
+        case STACK_TYPE_INT:
         case STACK_TYPE_LONG: {
             v1.data %= v2.data;
+            if(v1.type ==STACK_TYPE_INT) {
+                v1.data = (int)v1.data;
+            }
             break;
         }
     }
@@ -149,21 +154,13 @@ cpstatus opcode_neg(thread* t)
     print_opcode("i/l/f/d/neg\n");
     StackVar v1=t->stack[t->rsp];
     switch(v1.type) {
+        case STACK_TYPE_FLOAT:
         case STACK_TYPE_DOUBLE: {
             double *p1 = (double*)(&(v1.data));
             *p1 = -*p1;
             break;
         }
-        case STACK_TYPE_FLOAT : {
-            float *p1 = (float*)(&(v1.data));
-            *p1 = -*p1;
-            break;
-        }
-        case STACK_TYPE_INT: {
-            int *p1 = (int*)(&(v1.data));
-            *p1 = -*p1;
-            break;
-        }
+        case STACK_TYPE_INT:
         case STACK_TYPE_LONG: {
             v1.data = -v1.data;
             break;
@@ -178,11 +175,7 @@ cpstatus opcode_shl(thread* t)
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
-        case STACK_TYPE_INT: {
-            int *p1 = (int*)(&(v1.data)),*p2 = (int*)(&(v2.data));
-            *p1 <<= *p2;
-            break;
-        }
+        case STACK_TYPE_INT:
         case STACK_TYPE_LONG: {
             v1.data <<= v2.data;
             break;
@@ -198,8 +191,9 @@ cpstatus opcode_shr(thread* t)
     t->rsp -= 1;
     switch(v1.type) {
         case STACK_TYPE_INT: {
-            int *p1 = (int*)(&(v1.data)),*p2 = (int*)(&(v2.data));
-            *p1 >>= *p2;
+            int p1 = v1.data,p2 = v2.data;
+            p1 >>= p2;
+            v1.data = p1;
             break;
         }
         case STACK_TYPE_LONG: {
@@ -217,8 +211,9 @@ cpstatus opcode_ushr(thread* t)
     t->rsp -= 1;
     switch(v1.type) {
         case STACK_TYPE_INT: {
-            unsigned int *p1 = (unsigned int*)(&(v1.data)),*p2 = (unsigned int*)(&(v2.data));
-            *p1 >>= *p2;
+            unsigned int p1 = v1.data;
+            unsigned int p2 = v2.data;
+            v1.data =(p1 >> p2);
             break;
         }
         case STACK_TYPE_LONG: {
@@ -234,17 +229,7 @@ cpstatus opcode_and(thread* t)
     print_opcode("i/l/and\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
-    switch(v1.type) {
-        case STACK_TYPE_INT: {
-            unsigned int *p1 = (unsigned int*)(&(v1.data)),*p2 = (unsigned int*)(&(v2.data));
-            *p1 &= *p2;
-            break;
-        }
-        case STACK_TYPE_LONG: {
-            v1.data &= v2.data;
-            break;
-        }
-    }
+    v1.data &= v2.data;
     t->stack[t->rsp] = v1;
     return COLD_POINT_SUCCESS;
 }
@@ -253,17 +238,7 @@ cpstatus opcode_or(thread* t)
     print_opcode("i/l/or\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
-    switch(v1.type) {
-        case STACK_TYPE_INT: {
-            unsigned int *p1 = (unsigned int*)(&(v1.data)),*p2 = (unsigned int*)(&(v2.data));
-            *p1 |= *p2;
-            break;
-        }
-        case STACK_TYPE_LONG: {
-            v1.data |= v2.data;
-            break;
-        }
-    }
+    v1.data &= v2.data;
     t->stack[t->rsp] = v1;
     return COLD_POINT_SUCCESS;
 }
@@ -272,17 +247,7 @@ cpstatus opcode_xor(thread* t)
     print_opcode("i/l/xor\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
-    switch(v1.type) {
-        case STACK_TYPE_INT: {
-            unsigned int *p1 = (unsigned int*)(&(v1.data)),*p2 = (unsigned int*)(&(v2.data));
-            *p1 ^= *p2;
-            break;
-        }
-        case STACK_TYPE_LONG: {
-            v1.data ^= v2.data;
-            break;
-        }
-    }
+    v1.data &= v2.data;
     t->stack[t->rsp] = v1;
     return COLD_POINT_SUCCESS;
 }
@@ -292,5 +257,8 @@ cpstatus opcode_inc(thread* t)
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     StackVar v3=t->stack[t->rbp+v1.data];
     v3.data += v2.data;
+    if(v3.type==STACK_TYPE_INT) {
+        v3.data = (int)v3.data;
+    }
     t->stack[t->rbp+v1.data] = v3;
 }
