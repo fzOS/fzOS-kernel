@@ -4,6 +4,7 @@
 #include <coldpoint/automata/stack_inst.h>
 #include <coldpoint/automata/math_inst.h>
 #include <coldpoint/automata/conv_inst.h>
+#include <coldpoint/automata/comp_inst.h>
 cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_nop,opcode_aconst_null,opcode_iconst_m1,opcode_iconst_0,//0x00~0x03
     opcode_iconst_1,opcode_iconst_2,opcode_iconst_3,opcode_iconst_4,//0x04~0x07
@@ -41,7 +42,12 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_inc,opcode_to_long,opcode_to_float,opcode_to_double,//0x84~0x87
     opcode_to_int,opcode_to_float,opcode_to_double,opcode_to_int,//0x88~0x8b
     opcode_to_long,opcode_to_double,opcode_to_int,opcode_to_long,//0x8c~0x8f
-    opcode_to_float,opcode_int_to_byte,opcode_int_to_char,opcode_int_to_short
+    opcode_to_float,opcode_int_to_byte,opcode_int_to_char,opcode_int_to_short,//0x90~0x93
+    opcode_lcmp,opcode_cmpl,opcode_cmpg,opcode_cmpl,//0x94~0x97
+    opcode_cmpg,opcode_ifeq,opcode_ifne,opcode_iflt,//0x98~0x9b
+    opcode_ifge,opcode_ifgt,opcode_ifle,opcode_ificmpeq,//0x9c~0x9f
+    opcode_ificmpne,opcode_ificmplt,opcode_ificmpge,opcode_ificmpgt,//0xa0~0xa3
+    opcode_ificmple,opcode_ifacmpeq,opcode_ifacmpne
 };
 void except(thread* t,char* msg)
 {

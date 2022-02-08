@@ -1,5 +1,13 @@
 #include <coldpoint/automata/comp_inst.h>
 #include <common/math.h>
+static inline void relative_jump(thread* t)
+{
+    U8 offset1=t->code->code[t->pc];
+    U8 offset2=t->code->code[t->pc+1];
+    t->pc+=2;
+    short offset = (offset1<<8)|offset2;
+    t->pc += offset;
+}
 cpstatus opcode_lcmp(thread* t)
 {
     print_opcode("lcmp\n");
@@ -54,6 +62,150 @@ cpstatus opcode_cmpl(thread* t)
     }
     else {
         t->stack[t->rsp].data = -1;
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ifeq(thread* t)
+{
+    print_opcode("ifeq\n");
+    t->rsp -= 1;
+    StackVar *v1=&t->stack[t->rsp];
+    int val = (int)(v1->data);
+    if(val==0) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ifne(thread* t)
+{
+    print_opcode("ifne\n");
+    t->rsp -= 1;
+    StackVar *v1=&t->stack[t->rsp];
+    int val = (int)(v1->data);
+    if(val!=0) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_iflt(thread* t)
+{
+    print_opcode("iflt\n");
+    t->rsp -= 1;
+    StackVar *v1=&t->stack[t->rsp];
+    int val = (int)(v1->data);
+    if(val<0) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ifle(thread* t)
+{
+    print_opcode("ifle\n");
+    t->rsp -= 1;
+    StackVar *v1=&t->stack[t->rsp];
+    int val = (int)(v1->data);
+    if(val<=0) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ifgt(thread* t)
+{
+    print_opcode("ifgt\n");
+    t->rsp -= 1;
+    StackVar *v1=&t->stack[t->rsp];
+    int val = (int)(v1->data);
+    if(val>0) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ifge(thread* t)
+{
+    print_opcode("ifge\n");
+    t->rsp -= 1;
+    StackVar *v1=&t->stack[t->rsp];
+    int val = (int)(v1->data);
+    if(val>=0) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ificmpeq(thread* t)
+{
+    StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
+    t->rsp -= 2;
+    int val1 = (int)(v1->data),val2 = (int)(v2->data);
+    if(val1==val2) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ificmpne(thread* t)
+{
+    StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
+    t->rsp -= 2;
+    int val1 = (int)(v1->data),val2 = (int)(v2->data);
+    if(val1!=val2) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ificmplt(thread* t)
+{
+    StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
+    t->rsp -= 2;
+    int val1 = (int)(v1->data),val2 = (int)(v2->data);
+    if(val1<val2) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ificmple(thread* t)
+{
+    StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
+    t->rsp -= 2;
+    int val1 = (int)(v1->data),val2 = (int)(v2->data);
+    if(val1<=val2) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ificmpgt(thread* t)
+{
+    StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
+    t->rsp -= 2;
+    int val1 = (int)(v1->data),val2 = (int)(v2->data);
+    if(val1>val2) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ificmpge(thread* t)
+{
+    StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
+    t->rsp -= 2;
+    int val1 = (int)(v1->data),val2 = (int)(v2->data);
+    if(val1>=val2) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ifacmpeq(thread* t)
+{
+    StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
+    t->rsp -= 2;
+    if(v1->data==v2->data) {
+        relative_jump(t);
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_ifacmpne(thread* t)
+{
+    StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
+    t->rsp -= 2;
+    if(v1->data!=v2->data) {
+        relative_jump(t);
     }
     return COLD_POINT_SUCCESS;
 }
