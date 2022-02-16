@@ -1,4 +1,3 @@
-#if we are debugging?
 DEBUG=1
 GNUEFI_PATH=/usr/include/efi
 ifeq '$(USER)' 'fhh'
