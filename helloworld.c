@@ -146,7 +146,7 @@ void print_boot_arg(void)
             printk(" Boot parameters:%s\n",buf);
         }
         free_page(buf,(uefi_file.size/PAGE_SIZE+1));
-    };
+    }
     else {
         printk(" No boot parameter found. Using default boot procedure.\n");
     }
