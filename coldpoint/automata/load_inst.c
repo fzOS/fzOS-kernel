@@ -18,9 +18,17 @@ inline cpstatus store_internal(thread* t,int no)
 }
 cpstatus opcode_load(thread* t)
 {
-    U8 no = t->code->code[t->pc];
+    U32 no;
+    if(t->is_wide&0x1) {
+        no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+        t->pc+=2;
+        t->is_wide&=(~0x1);
+    }
+    else {
+        no = t->code->code[t->pc];
+        t->pc++;
+    }
     print_opcode("i/l/f/d/aload %d\n",no);
-    t->pc++;
     return load_internal(t,no);
 }
 cpstatus opcode_load0(thread* t)
@@ -45,8 +53,16 @@ cpstatus opcode_load3(thread* t)
 }
 cpstatus opcode_store(thread* t)
 {
-    U8 no = t->code->code[t->pc];
-    t->pc++;
+    U32 no;
+    if(t->is_wide&0x1) {
+        no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+        t->pc+=2;
+        t->is_wide&=(~0x1);
+    }
+    else {
+        no = t->code->code[t->pc];
+        t->pc++;
+    }
     print_opcode("i/l/f/d/astore %d\n",no);
     return store_internal(t,no);
 }

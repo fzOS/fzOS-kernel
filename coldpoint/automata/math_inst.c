@@ -254,11 +254,24 @@ cpstatus opcode_xor(thread* t)
 cpstatus opcode_inc(thread* t)
 {
     print_opcode("i/l/inc\n");
-    StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
-    StackVar v3=t->stack[t->rbp+v1.data];
-    v3.data += v2.data;
-    if(v3.type==STACK_TYPE_INT) {
-        v3.data = (int)v3.data;
+    StackVar* const_val_entry = &t->stack[t->rbp+4];
+    U32 index;
+    I32 val;
+    if(t->is_wide&0x01) {
+        index = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+        t->pc+=2;
+        val = (I16)((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+        t->pc+=2;
+        t->is_wide&=(~0x1);
     }
-    t->stack[t->rbp+v1.data] = v3;
+    else {
+        index = t->code->code[t->pc];
+        val = (I8)t->code->code[t->pc+1];
+        t->pc+=2;
+    }
+    const_val_entry[index].data += val;
+    if(const_val_entry[index].type==STACK_TYPE_INT) {
+        const_val_entry[index].data = (int)const_val_entry[index].data;
+    }
+    return COLD_POINT_SUCCESS;
 }

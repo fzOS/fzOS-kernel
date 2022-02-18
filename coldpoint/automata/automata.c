@@ -5,6 +5,7 @@
 #include <coldpoint/automata/math_inst.h>
 #include <coldpoint/automata/conv_inst.h>
 #include <coldpoint/automata/comp_inst.h>
+#include <coldpoint/automata/ctrl_inst.h>
 cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_nop,opcode_aconst_null,opcode_iconst_m1,opcode_iconst_0,//0x00~0x03
     opcode_iconst_1,opcode_iconst_2,opcode_iconst_3,opcode_iconst_4,//0x04~0x07
@@ -47,7 +48,9 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_cmpg,opcode_ifeq,opcode_ifne,opcode_iflt,//0x98~0x9b
     opcode_ifge,opcode_ifgt,opcode_ifle,opcode_ificmpeq,//0x9c~0x9f
     opcode_ificmpne,opcode_ificmplt,opcode_ificmpge,opcode_ificmpgt,//0xa0~0xa3
-    opcode_ificmple,opcode_ifacmpeq,opcode_ifacmpne
+    opcode_ificmple,opcode_ifacmpeq,opcode_ifacmpne,opcode_goto,//0xa4~0xa7,
+    nullptr,nullptr,opcode_tableswitch,opcode_lookupswitch,//0xa8~0xab
+
 };
 void except(thread* t,char* msg)
 {

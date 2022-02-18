@@ -25,6 +25,7 @@ typedef struct {
 typedef struct {
     process* p;
     U64 tid;
+    U8 is_wide;
     CodeAttribute* code;
     U64 pc;
     U64 rsp;
