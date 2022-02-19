@@ -3,7 +3,7 @@
 #include <types.h>
 #include <coldpoint/threading/process.h>
 #include <coldpoint/common/class.h>
-#define JVM_MAX_STACK_SIZE 1048576
+#define JVM_MAX_STACK_SIZE 16384
 typedef enum {
     STACK_TYPE_CODE_POINTER=0,
     STACK_TYPE_PC,
@@ -22,10 +22,17 @@ typedef struct {
     StackVarType type;
     U64 data;
 } StackVar;
+typedef enum {
+    THREAD_RUNNING=0,
+    THREAD_READY  =1,
+    THREAD_BLOCKED=2,
+    THREAD_TERMINATED=4
+} ThreadStatus;
 typedef struct {
-    process* p;
+    process* process;
     U64 tid;
     U8 is_wide;
+    U8 status;
     CodeAttribute* code;
     U64 pc;
     U64 rsp;
@@ -53,5 +60,8 @@ typedef struct {
     StackVar return_rbp;
     StackVar variables[0];
 } stack_frame;
+process* create_process(void);
+void destroy_process(process* p);
 void thread_test(const class* c);
+void destroy_thread(thread* t);
 #endif

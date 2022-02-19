@@ -276,7 +276,7 @@ int init_classloader(void)
 {
     file file;
     int ret;
-    ret = generic_open("/Init.class",&file);
+    ret = generic_open("/A.class",&file);
     if(ret !=FzOS_SUCCESS) {
         printk(" Open Init fail: %d!\n",ret);
         return FzOS_ERROR;

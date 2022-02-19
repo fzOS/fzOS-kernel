@@ -1,10 +1,11 @@
 #include <coldpoint/automata/math_inst.h>
+#include <stddef.h>
 #define is_type_2(x) ((x.type==STACK_TYPE_LONG)||(x.type==STACK_TYPE_DOUBLE))
 #pragma GCC diagnostic ignored "-Wreturn-type"
 #pragma GCC diagnostic ignored "-Wswitch"
 cpstatus opcode_add(thread* t)
 {
-    print_opcode("i/l/f/d/add\n");
+    print_opcode("i/l/f/d/add(%d,%d)\n",t->rsp,t->rsp-1);
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
     switch(v1.type) {
@@ -22,6 +23,7 @@ cpstatus opcode_add(thread* t)
             long val1=(long)v1.data;
             long val2=(long)v2.data;
             v1.data = val1+val2;
+            print_opcode("%d+%d=%d\n",val1,val2,v1.data);
             if(v1.type==STACK_TYPE_INT) {
                 v1.data = (int)v1.data;
             }
@@ -254,7 +256,7 @@ cpstatus opcode_xor(thread* t)
 cpstatus opcode_inc(thread* t)
 {
     print_opcode("i/l/inc\n");
-    StackVar* const_val_entry = &t->stack[t->rbp+4];
+    StackVar* const_val_entry = &t->stack[t->rbp+offsetof(stack_frame,variables)];
     U32 index;
     I32 val;
     if(t->is_wide&0x01) {
@@ -269,7 +271,9 @@ cpstatus opcode_inc(thread* t)
         val = (I8)t->code->code[t->pc+1];
         t->pc+=2;
     }
+    print_opcode("inc:%d->%d",index,const_val_entry[index].data);
     const_val_entry[index].data += val;
+    print_opcode("inc:%d<-%d",index,val);
     if(const_val_entry[index].type==STACK_TYPE_INT) {
         const_val_entry[index].data = (int)const_val_entry[index].data;
     }

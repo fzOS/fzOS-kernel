@@ -133,6 +133,7 @@ cpstatus opcode_ifge(thread* t)
 }
 cpstatus opcode_ificmpeq(thread* t)
 {
+    print_opcode("ificmpeq\n");
     StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
     t->rsp -= 2;
     int val1 = (int)(v1->data),val2 = (int)(v2->data);
@@ -143,6 +144,7 @@ cpstatus opcode_ificmpeq(thread* t)
 }
 cpstatus opcode_ificmpne(thread* t)
 {
+    print_opcode("ificmpne\n");
     StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
     t->rsp -= 2;
     int val1 = (int)(v1->data),val2 = (int)(v2->data);
@@ -153,6 +155,7 @@ cpstatus opcode_ificmpne(thread* t)
 }
 cpstatus opcode_ificmplt(thread* t)
 {
+    print_opcode("ificmplt\n");
     StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
     t->rsp -= 2;
     int val1 = (int)(v1->data),val2 = (int)(v2->data);
@@ -163,6 +166,7 @@ cpstatus opcode_ificmplt(thread* t)
 }
 cpstatus opcode_ificmple(thread* t)
 {
+    print_opcode("ificmple\n");
     StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
     t->rsp -= 2;
     int val1 = (int)(v1->data),val2 = (int)(v2->data);
@@ -174,15 +178,25 @@ cpstatus opcode_ificmple(thread* t)
 cpstatus opcode_ificmpgt(thread* t)
 {
     StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
+    print_opcode("%d\n",t->rsp);
     t->rsp -= 2;
+    print_opcode("%d\n",t->rsp);
     int val1 = (int)(v1->data),val2 = (int)(v2->data);
+    print_opcode("ificmpgt %d>%d?\n",val1,val2);
     if(val1>val2) {
         relative_jump(t);
     }
+    else {
+        t->pc+=2;
+    }
+    static int val=0;
+    while(val);
+    val++;
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_ificmpge(thread* t)
 {
+    print_opcode("ificmpge\n");
     StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
     t->rsp -= 2;
     int val1 = (int)(v1->data),val2 = (int)(v2->data);
@@ -193,6 +207,7 @@ cpstatus opcode_ificmpge(thread* t)
 }
 cpstatus opcode_ifacmpeq(thread* t)
 {
+    print_opcode("ifacmpeq\n");
     StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
     t->rsp -= 2;
     if(v1->data==v2->data) {
@@ -202,6 +217,7 @@ cpstatus opcode_ifacmpeq(thread* t)
 }
 cpstatus opcode_ifacmpne(thread* t)
 {
+    print_opcode("ifacmpne\n");
     StackVar *v2=&t->stack[t->rsp],*v1=&t->stack[t->rsp-1];
     t->rsp -= 2;
     if(v1->data!=v2->data) {

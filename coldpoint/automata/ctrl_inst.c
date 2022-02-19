@@ -5,7 +5,7 @@ cpstatus opcode_goto(thread* t)
     U8 offset1=t->code->code[t->pc];
     U8 offset2=t->code->code[t->pc+1];
     short offset = (offset1<<8)|offset2;
-    t->pc += offset;
+    t->pc += offset-1;
     print_opcode("goto\n");
     return COLD_POINT_SUCCESS;
 }
@@ -108,6 +108,6 @@ cpstatus opcode_goto_w(thread* t)
                 |((t->code->code[t->pc+1])<<16)
                 |((t->code->code[t->pc+2])<<8)
                 |((t->code->code[t->pc+3])));
-    t->pc += offset;
+    t->pc += offset-1;
     return COLD_POINT_SUCCESS;
 }

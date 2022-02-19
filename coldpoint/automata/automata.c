@@ -56,3 +56,10 @@ void except(thread* t,char* msg)
 {
     printk(" Exception caught at %x :%s.\n",t->pc,msg);
 }
+void automata_main_loop(thread* t)
+{
+    while(t->status!=THREAD_TERMINATED) { //TODO:Multi-threading.
+        print_opcode("%d\n",t->rsp);
+        g_automata_opcode[t->code->code[t->pc++]](t);
+    }
+}

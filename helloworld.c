@@ -61,8 +61,8 @@ void kernel_main_real() {
     show_banner();
     play_startup_audio();
     //启动jvm！
-    //init_classloader();
-    print_device_tree();
+    init_classloader();
+    //print_device_tree();
 }
 void kernel_main(KernelInfo info) {
     //手动换栈。

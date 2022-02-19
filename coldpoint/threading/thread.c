@@ -1,19 +1,46 @@
 #include <coldpoint/threading/thread.h>
 #include <memory/memory.h>
 #include <common/printk.h>
+#include <stddef.h>
 #include <coldpoint/common/class.h>
+#include <coldpoint/automata/automata.h>
+static U64 g_current_pid=0;
+process* create_process(void)
+{
+    process* p = memalloc(sizeof(process));
+    memset(p,0x00,sizeof(process));
+    p->pid = g_current_pid++;
+    return p;
+}
+void destroy_process(process* p)
+{
+    memfree(p);;
+}
+void destroy_thread(thread* t)
+{
+    memfree(t);
+}
+thread* create_thread(process* p,CodeAttribute* c)
+{
+    thread* t = memalloc(sizeof(thread));
+    memset(t,0x00,offsetof(thread,stack));
+    t->code = c;
+    t->process = p;
+    t->rsp = sizeof(stack_frame)+t->code->max_locals+1;
+    return t;
+}
 void thread_test(const class* c)
 {
+    process* p = create_process();
     U64 code_name_index = class_get_utf8_string_index(c,(U8*)"Code");
-    thread* main_thread = memalloc(sizeof(thread));
     MethodInfoEntry* main = class_get_method_by_name_and_desc(c, class_get_utf8_string_index(c,(U8*)"main"), class_get_utf8_string_index(c,(U8*)"([Ljava/lang/String;)V"));
     if(main==nullptr) {
         printk("Cannot load public static void main(String[] args).");
     }
-    main_thread->pc = 0;
-    main_thread->code = (CodeAttribute*)&c->buffer[class_get_method_attribute_by_name(c,main,code_name_index)->info_offset];
-    main_thread->rbp=0;
-    main_thread->rsp = sizeof(stack_frame)+main_thread->code->max_locals;
+    CodeAttribute* code = (CodeAttribute*)&c->buffer[class_get_method_attribute_by_name(c,main,code_name_index)->info_offset];
+    thread* t = create_thread(p,code);
+    automata_main_loop(t);
+/*
     printk("Now executing %b.\n",main_thread->code->code[main_thread->pc]);
     //压入一个测试变量。
     main_thread->stack[main_thread->rsp].data=0x1234567876543210L;
@@ -55,5 +82,5 @@ void thread_test(const class* c)
     main_thread->rbp  = main_thread->stack[main_thread->rbp+3].data;
     printk("Now executing %b.\n",main_thread->code->code[main_thread->pc]);
     printk("Test Var is :%x\n",main_thread->stack[main_thread->rsp].data);
-    memfree(main_thread);
+*/
 }
