@@ -7,6 +7,7 @@ typedef struct {
     U64 padding;
 } __attribute__((packed)) ConstantEntry;
 typedef struct {
+    const U8* class_name;
     //由于JVM的奇怪的特性，只能用静态结构+索引的方式进行数据存储了……
     U64 constant_entry_offset;
     U64 method_pool_entry_offset;
