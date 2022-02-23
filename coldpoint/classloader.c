@@ -5,9 +5,20 @@
 #include <common/printk.h>
 #include <memory/memory.h>
 #include <coldpoint/threading/thread.h>
+#include <common/kstring.h>
 static InlineLinkedList g_loaded_class_linked_list = {
     .tail = &g_loaded_class_linked_list.head
 };
+class* getclass(const U8* class_name)
+{
+    ClassLinkedListNode* node = (ClassLinkedListNode*)g_loaded_class_linked_list.tail;
+    while(node!=(ClassLinkedListNode*)&g_loaded_class_linked_list.head) {
+        if(!strcomp((char*)node->c.class_name,(char*)class_name)) {
+            return &(node->c);
+        }
+    }
+    return nullptr;
+}
 class* loadclass(void* class_file)
 {
     ClassLinkedListNode* node = memalloc(PAGE_SIZE-sizeof(U64));
@@ -282,7 +293,7 @@ int init_classloader(void)
 
     file file;
     int ret;
-    ret = generic_open("/A.class",&file);
+    ret = generic_open("/TestClass.class",&file);
     if(ret !=FzOS_SUCCESS) {
         printk(" Open Init fail: %d!\n",ret);
         return FzOS_ERROR;
@@ -296,9 +307,9 @@ int init_classloader(void)
     }
     class* c = loadclass(buf);
     memfree(buf);
-     print_class_info(c);
-     print_class_constants(c);
-     print_field_and_method_info(c);
-     thread_test(c);
+    print_class_info(c);
+    print_class_constants(c);
+    print_field_and_method_info(c);
+     //thread_test(c);
     return FzOS_SUCCESS;
 }

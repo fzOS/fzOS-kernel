@@ -7,8 +7,9 @@
 
 #include <drivers/sata_ahci.h>
 #include <common/random.h>
-
+#include <common/crc32.h>
 #pragma message "Someday I shall clean this mess...."
+
 U64 fhhfs_get_node_from_dir(char* filename,void* buffer,U64 length) {
 
     void* p = buffer;
@@ -121,6 +122,8 @@ int fhhfs_mount(GPTPartition* partition,const char* destination)
         }
         //挂载时写入“文件系统脏”标记。
         head->dirty_mark=1;
+        I32* crc = (I32*)(buf+sizeof(FhhfsMagicHead));
+        *crc = crc32(FHHFS_CRC_MAGIC_NUMBER,buf,sizeof(FhhfsMagicHead));
         partition->header.writeblock(&partition->header,0,buf,PAGE_SIZE,1);
         FhhfsTreeNode* new_node = allocate_page((sizeof(FhhfsTreeNode)/PAGE_SIZE)+1);
         new_node->fs.generic.open = fhhfs_open;
@@ -153,6 +156,8 @@ int fhhfs_unmount(FzOSFileSystem* fs)
     fhhfs_readnode(fsl,0,buf,1);
     FhhfsMagicHead* head = (FhhfsMagicHead*) buf;
     head->dirty_mark = 0;
+    I32* crc = (I32*)(buf+sizeof(FhhfsMagicHead));
+    *crc = crc32(FHHFS_CRC_MAGIC_NUMBER,buf,sizeof(FhhfsMagicHead));
     fhhfs_writenode(fsl,0,buf,1);
     free_page(buf,1);
     return FzOS_SUCCESS;

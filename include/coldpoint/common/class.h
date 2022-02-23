@@ -26,7 +26,7 @@ typedef struct {
 typedef enum {
     CONSTANT_NULL=0,
     CONSTANT_UTF8=1,
-    CONSTANT_INT=2,
+    CONSTANT_INT=3,
     CONSTANT_FLOAT=4,
     CONSTANT_LONG=5,
     CONSTANT_DOUBLE=6,

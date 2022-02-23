@@ -8,4 +8,5 @@ typedef struct {
 } ClassLinkedListNode;
 int init_classloader(void);
 class* loadclass(void* class_file);
+class* getclass(const U8* class_name);
 #endif
