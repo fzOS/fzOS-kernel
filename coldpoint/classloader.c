@@ -6,13 +6,20 @@
 #include <memory/memory.h>
 #include <coldpoint/threading/thread.h>
 #include <common/kstring.h>
+#include <common/iterator.h>
+#include <coldpoint/heap/heap.h>
 static InlineLinkedList g_loaded_class_linked_list = {
     .tail = &g_loaded_class_linked_list.head
 };
 class* getclass(const U8* class_name)
 {
-    ClassLinkedListNode* node = (ClassLinkedListNode*)g_loaded_class_linked_list.tail;
-    while(node!=(ClassLinkedListNode*)&g_loaded_class_linked_list.head) {
+    if(class_name==nullptr) {
+        return nullptr;
+    }
+    Iterator(InlineLinkedList) iter;
+    init_iterator(InlineLinkedList,&iter,&g_loaded_class_linked_list);
+    while(iter.next(&iter)) {
+        ClassLinkedListNode* node = (ClassLinkedListNode*)(iter.current);
         if(!strcomp((char*)node->c.class_name,(char*)class_name)) {
             return &(node->c);
         }
@@ -293,9 +300,10 @@ int init_classloader(void)
 
     file file;
     int ret;
-    ret = generic_open("/TestClass.class",&file);
+    //load java.lang.Object
+    ret = generic_open("/Object.class",&file);
     if(ret !=FzOS_SUCCESS) {
-        printk(" Open Init fail: %d!\n",ret);
+        printk(" Open java.lang.Object fail: %d!\n",ret);
         return FzOS_ERROR;
     }
     void* buf = memalloc(file.size);
@@ -307,9 +315,31 @@ int init_classloader(void)
     }
     class* c = loadclass(buf);
     memfree(buf);
+
+
+    ret = generic_open("/TestClass.class",&file);
+    if(ret !=FzOS_SUCCESS) {
+        printk(" Open Init fail: %d!\n",ret);
+        return FzOS_ERROR;
+    }
+    buf = memalloc(file.size);
+    ret = file.filesystem->read(&file,buf,file.size);
+    if(ret==0) {
+        memfree(buf);
+        printk(" Read Init fail: %d!\n",ret);
+        return FzOS_ERROR;
+    }
+    c = loadclass(buf);
+    memfree(buf);
     print_class_info(c);
     print_class_constants(c);
     print_field_and_method_info(c);
+
+    object* obj = new_object(c);
+    for(int i=0;i<obj->var_count;i++) {
+        printk("#%d:%s.%s->%s\n",i,obj->var[i].class,obj->var[i].signature,obj->var[i].typename);
+    }
+    (void)obj;
      //thread_test(c);
     return FzOS_SUCCESS;
 }
