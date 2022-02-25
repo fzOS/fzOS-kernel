@@ -335,11 +335,6 @@ int init_classloader(void)
     print_class_constants(c);
     print_field_and_method_info(c);
 
-    object* obj = new_object(c);
-    for(int i=0;i<obj->var_count;i++) {
-        printk("#%d:%s.%s->%s\n",i,obj->var[i].class,obj->var[i].signature,obj->var[i].typename);
-    }
-    (void)obj;
-     //thread_test(c);
+    thread_test(c);
     return FzOS_SUCCESS;
 }

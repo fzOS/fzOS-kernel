@@ -20,16 +20,17 @@ void destroy_thread(thread* t)
 {
     memfree(t);
 }
-thread* create_thread(process* p,CodeAttribute* c)
+thread* create_thread(process* p,CodeAttribute* c,class* class)
 {
     thread* t = memalloc(sizeof(thread));
     memset(t,0x00,offsetof(thread,stack));
+    t->class = class;
     t->code = c;
     t->process = p;
     t->rsp = sizeof(stack_frame)+t->code->max_locals+1;
     return t;
 }
-void thread_test(const class* c)
+void thread_test(class* c)
 {
     process* p = create_process();
     U64 code_name_index = class_get_utf8_string_index(c,(U8*)"Code");
@@ -38,7 +39,7 @@ void thread_test(const class* c)
         printk("Cannot load public static void main(String[] args).");
     }
     CodeAttribute* code = (CodeAttribute*)&c->buffer[class_get_method_attribute_by_name(c,main,code_name_index)->info_offset];
-    thread* t = create_thread(p,code);
+    thread* t = create_thread(p,code,c);
     automata_main_loop(t);
 /*
     printk("Now executing %b.\n",main_thread->code->code[main_thread->pc]);

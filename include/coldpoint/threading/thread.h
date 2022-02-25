@@ -33,6 +33,7 @@ typedef struct {
     U64 tid;
     U8 is_wide;
     U8 status;
+    class* class;
     CodeAttribute* code;
     U64 pc;
     U64 rsp;
@@ -42,6 +43,7 @@ typedef struct {
 /*
     我们的JVM栈结构：
     (RBP位置)
+    |-return class*(U64)
     |-return code*(U64)
     |-return pc(U64)
     |-return rsp(U64)
@@ -54,6 +56,7 @@ typedef struct {
          浮点类型-> double;
 */
 typedef struct {
+    StackVar return_class;
     StackVar return_code;//code_attribute*
     StackVar pc;
     StackVar return_rsp;
@@ -62,6 +65,6 @@ typedef struct {
 } stack_frame;
 process* create_process(void);
 void destroy_process(process* p);
-void thread_test(const class* c);
+void thread_test(class* c);
 void destroy_thread(thread* t);
 #endif

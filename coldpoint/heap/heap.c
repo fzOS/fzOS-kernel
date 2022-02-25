@@ -16,6 +16,10 @@ object* new_object(class* c)
         U64 code_name_index = class_get_utf8_string_index(c,(U8*)"Code");
         FieldInfoEntry *field_entry = (FieldInfoEntry *)&(current->buffer[current->fields_pool_entry_offset]);
         for(int i=0;i<current->fields_pool_entry_count;i++) {
+            //Skip static.
+            if(field_entry[i].access_flags&ACCESS_STATIC) {
+                continue;
+            }
             if(object_size+sizeof(object)>allocated_size) {
                 o = memrealloc(o,allocated_size+OBJECT_CHUNK_SIZE);
                 allocated_size += OBJECT_CHUNK_SIZE;
@@ -38,10 +42,6 @@ object* new_object(class* c)
                     if(code_name_index!=0&&attribute_entry->attribute_name_index==code_name_index) {
                         CodeAttribute* attr = (CodeAttribute*)&c->buffer[attribute_entry->info_offset];
                         o->var[current_index].value = (U64)attr;
-                                printk("Code,max stack:%d,max local var:%d,length:%d\n",\
-                                bswap16(attr->max_stack),\
-                                bswap16(attr->max_locals),\
-                                bswap32(attr->code_length));
                     }
                 }
             }

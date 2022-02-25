@@ -6,13 +6,14 @@
 #include <coldpoint/automata/conv_inst.h>
 #include <coldpoint/automata/comp_inst.h>
 #include <coldpoint/automata/ctrl_inst.h>
+#include <coldpoint/automata/obj_inst.h>
 cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_nop,opcode_aconst_null,opcode_iconst_m1,opcode_iconst_0,//0x00~0x03
     opcode_iconst_1,opcode_iconst_2,opcode_iconst_3,opcode_iconst_4,//0x04~0x07
     opcode_iconst_5,opcode_lconst_0,opcode_lconst_1,opcode_fconst_0,//0x08~0x0b
     opcode_fconst_1,opcode_fconst_2,opcode_dconst_0,opcode_dconst_1,//0x0c~0x0f
-    opcode_bipush,opcode_sipush,nullptr,nullptr,//0x10~0x13
-    nullptr,opcode_load,opcode_load,opcode_load,//0x14~0x17
+    opcode_bipush,opcode_sipush,opcode_ldc,opcode_ldc,//0x10~0x13
+    opcode_ldc2_w,opcode_load,opcode_load,opcode_load,//0x14~0x17
     opcode_load,opcode_load,opcode_load0,opcode_load1,//0x18~0x1b
     opcode_load2,opcode_load3,opcode_load0,opcode_load1,//0x1c~0x1f
     opcode_load2,opcode_load3,opcode_load0,opcode_load1,//0x20~0x23
@@ -50,7 +51,27 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_ificmpne,opcode_ificmplt,opcode_ificmpge,opcode_ificmpgt,//0xa0~0xa3
     opcode_ificmple,opcode_ifacmpeq,opcode_ifacmpne,opcode_goto,//0xa4~0xa7,
     nullptr,nullptr,opcode_tableswitch,opcode_lookupswitch,//0xa8~0xab
-
+    nullptr,nullptr,nullptr,nullptr,//0xac~0xaf
+    nullptr,nullptr,opcode_getstatic,opcode_putstatic,//0xb0~0xb3
+    nullptr,nullptr,nullptr,opcode_invokespecial,//0xb4~0xb7
+    nullptr,nullptr,nullptr,opcode_new,//0xb8~0xbb
+    nullptr,nullptr,nullptr,nullptr,//0xbc~0xbf
+    nullptr,nullptr,nullptr,nullptr,//0xc0~0xc3
+    nullptr,nullptr,nullptr,nullptr,//0xc4~0xc7
+    nullptr,nullptr,nullptr,nullptr,//0xc8~0xcb
+    nullptr,nullptr,nullptr,nullptr,//0xcc~0xcf
+    nullptr,nullptr,nullptr,nullptr,//0xd0~0xd3
+    nullptr,nullptr,nullptr,nullptr,//0xd4~0xd7
+    nullptr,nullptr,nullptr,nullptr,//0xd8~0xdb
+    nullptr,nullptr,nullptr,nullptr,//0xdc~0xdf
+    nullptr,nullptr,nullptr,nullptr,//0xe0~0xe3
+    nullptr,nullptr,nullptr,nullptr,//0xe4~0xe7
+    nullptr,nullptr,nullptr,nullptr,//0xe8~0xeb
+    nullptr,nullptr,nullptr,nullptr,//0xec~0xef
+    nullptr,nullptr,nullptr,nullptr,//0xf0~0xf3
+    nullptr,nullptr,nullptr,nullptr,//0xf4~0xf7
+    nullptr,nullptr,nullptr,nullptr,//0xf8~0xfb
+    nullptr,nullptr,nullptr,nullptr,//0xfc~0xff
 };
 void except(thread* t,char* msg)
 {
