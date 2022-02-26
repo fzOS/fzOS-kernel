@@ -141,6 +141,7 @@ typedef struct {
     U16 descriptor_index;
     U16 attribute_count;
     U64 attribute_info_entry_offset;
+    U64 val;
 } FieldInfoEntry,MethodInfoEntry;
 typedef struct {
     U16 attribute_name_index;

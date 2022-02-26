@@ -2,6 +2,30 @@
 #include <coldpoint/automata/automata.h>
 #include <coldpoint/heap/heap.h>
 #include <coldpoint/classloader.h>
+#include <common/kstring.h>
+#include <coldpoint/automata/automata.h>
+static inline ConstantEntry* get_const_entry_by_index(class* c,int no)
+{
+    return ((ConstantEntry*)(c->buffer+c->constant_entry_offset))+no;
+}
+static inline class* get_class_by_index(class* c,int no)
+{
+    const U8* target_class_name = class_get_utf8_string(c,((ClassInfoConstant*)get_const_entry_by_index(c,no))->name_index);
+    return getclass(target_class_name);
+}
+static inline FieldInfoEntry* get_field_by_name_and_type_index(class* c,const U8* name,const U8* type)
+{
+    FieldInfoEntry* field_entry = (FieldInfoEntry*)&(c->buffer[c->fields_pool_entry_offset]);
+    if(c->fields_pool_entry_count) {
+        for(int i=0;i<c->fields_pool_entry_count;i++) {
+            if(!strcomp((char*)name,(char*)class_get_utf8_string(c,field_entry[i].name_index))
+             &&!strcomp((char*)type,(char*)class_get_utf8_string(c,field_entry[i].descriptor_index))) {
+                return field_entry;
+            }
+        }
+    }
+    return nullptr;
+}
 cpstatus opcode_ldc2_w(thread* t)
 {
     t->is_wide |= 0x1;
@@ -85,12 +109,80 @@ cpstatus opcode_getstatic(thread* t)
 {
     U32 no;
     no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+    t->pc +=2;
+    print_opcode("getstatic #%d ",no);
     StackVar v1;
-    (void)no;
-    (void)v1;
+    FieldRefConstant* field = (FieldRefConstant*)get_const_entry_by_index(t->class,no);
+    class* target_class = get_class_by_index(t->class,field->class_index);
+    NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,field->name_and_type_index));
+    const U8* target_name = class_get_utf8_string(target_class,name_type_info->name_index);
+    const U8* target_desc = class_get_utf8_string(target_class,name_type_info->descriptor_index);
+    FieldInfoEntry* field_info = get_field_by_name_and_type_index(target_class,target_name,target_desc);
+    if(field_info==nullptr) {
+        except(t,"No field found.");
+        return COLD_POINT_EXEC_FAILURE;
+    }
+    if(!(field_info->access_flags&ACCESS_STATIC)) {
+        except(t,"Not a static value.");
+        return COLD_POINT_EXEC_FAILURE;
+    }
+    v1.data = field_info->val;
+    switch(target_desc[0]) {
+        case 'Z':case 'B':case 'C':case 'S':case 'I': {
+            v1.type = STACK_TYPE_INT;
+            break;
+        }
+        case 'F': {
+            v1.type = STACK_TYPE_FLOAT;
+            break;
+        }
+        case 'D': {
+            v1.type = STACK_TYPE_DOUBLE;
+            break;
+        }
+        case 'J': {
+            v1.type = STACK_TYPE_LONG;
+            break;
+        }
+        case 'L':case '[': {
+            v1.type = STACK_TYPE_REFERENCE;
+            break;
+        }
+        default: {
+            except(t,"Unknown type.");
+            return COLD_POINT_EXEC_FAILURE;
+        }
+    }
+    t->stack[++(t->rsp)]=v1;
+    print_opcode("%s->%s ==> %d\n",target_name,target_desc,field_info->val);
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_putstatic(thread* t)
 {
+    U32 no;
+    no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+    t->pc +=2;
+    print_opcode("putstatic #%d ",no);
+    StackVar v1 = t->stack[(t->rsp)--];
+    FieldRefConstant* field = (FieldRefConstant*)get_const_entry_by_index(t->class,no);
+    class* target_class = get_class_by_index(t->class,field->class_index);
+    NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,field->name_and_type_index));
+    const U8* target_name = class_get_utf8_string(target_class,name_type_info->name_index);
+    const U8* target_desc = class_get_utf8_string(target_class,name_type_info->descriptor_index);
+    FieldInfoEntry* field_info = get_field_by_name_and_type_index(target_class,target_name,target_desc);
+    if(field_info==nullptr) {
+        except(t,"No field found.");
+        return COLD_POINT_EXEC_FAILURE;
+    }
+    if(!(field_info->access_flags&ACCESS_STATIC)) {
+        except(t,"Not a static value.");
+        return COLD_POINT_EXEC_FAILURE;
+    }
+    if((field_info->access_flags&ACCESS_FINAL)) {
+        except(t,"Final values should not be assigned during method.");
+        return COLD_POINT_EXEC_FAILURE;
+    }
+    field_info->val = v1.data;
+    print_opcode("%s->%s <== %d\n",target_name,target_desc,v1.data);
     return COLD_POINT_SUCCESS;
 }

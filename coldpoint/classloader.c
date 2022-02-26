@@ -180,6 +180,7 @@ class* loadclass(void* class_file)
                 field_entry->descriptor_index =  bswap16(*((U16*)(p+4)));
                 field_entry->attribute_count = bswap16(*((U16*)(p+6)));
                 field_entry->attribute_info_entry_offset = node->c.buffer_size;
+                field_entry->val = 0;
                 p+=sizeof(U16)*4;
                 if(field_entry->attribute_count) {
                     node->c.buffer_size+=sizeof(AttributeInfoEntry)*field_entry->attribute_count;
@@ -230,6 +231,7 @@ class* loadclass(void* class_file)
                 method_entry->descriptor_index =  bswap16(*((U16*)(p+4)));
                 method_entry->attribute_count = bswap16(*((U16*)(p+6)));
                 method_entry->attribute_info_entry_offset = node->c.buffer_size;
+                method_entry->val = 0;
                 p+=sizeof(U16)*4;
                 if(method_entry->attribute_count) {
                     node->c.buffer_size+=sizeof(AttributeInfoEntry)*method_entry->attribute_count;

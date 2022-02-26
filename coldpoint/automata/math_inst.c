@@ -101,6 +101,7 @@ cpstatus opcode_div(thread* t)
             double *p1 = (double*)(&(v1.data)),*p2 = (double*)(&(v2.data));
             if(*p2==0.0) {
                 except(t,"Div by 0");
+                return COLD_POINT_EXEC_FAILURE;
             }
             *p1 /= *p2;
             if(v1.type==STACK_TYPE_FLOAT) {
@@ -114,6 +115,7 @@ cpstatus opcode_div(thread* t)
             long val2=(long)v2.data;
             if(val2==0) {
                 except(t,"Div by 0");
+                return COLD_POINT_EXEC_FAILURE;
             }
             v1.data = val1/val2;
             if(v1.type==STACK_TYPE_INT) {
