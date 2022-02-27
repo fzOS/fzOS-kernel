@@ -57,5 +57,6 @@ object* new_object(class* c)
         }
     }
     o->var_count = current_index;
+    o->parent_class = c;
     return o;
 }

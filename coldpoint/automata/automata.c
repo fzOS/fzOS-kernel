@@ -53,10 +53,10 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     nullptr,nullptr,opcode_tableswitch,opcode_lookupswitch,//0xa8~0xab
     nullptr,nullptr,nullptr,nullptr,//0xac~0xaf
     nullptr,nullptr,opcode_getstatic,opcode_putstatic,//0xb0~0xb3
-    nullptr,nullptr,nullptr,opcode_invokespecial,//0xb4~0xb7
+    opcode_getfield,opcode_putfield,nullptr,opcode_invokespecial,//0xb4~0xb7
     nullptr,nullptr,nullptr,opcode_new,//0xb8~0xbb
     nullptr,nullptr,nullptr,nullptr,//0xbc~0xbf
-    nullptr,nullptr,nullptr,nullptr,//0xc0~0xc3
+    opcode_checkcast,opcode_instanceof,nullptr,nullptr,//0xc0~0xc3
     nullptr,nullptr,nullptr,nullptr,//0xc4~0xc7
     nullptr,nullptr,nullptr,nullptr,//0xc8~0xcb
     nullptr,nullptr,nullptr,nullptr,//0xcc~0xcf
@@ -80,7 +80,7 @@ void except(thread* t,char* msg)
 void automata_main_loop(thread* t)
 {
     while(t->status!=THREAD_TERMINATED) { //TODO:Multi-threading.
-        print_opcode("%d ",t->rsp);
+        print_opcode("%d %d ",t->pc,t->rsp);
         g_automata_opcode[t->code->code[t->pc++]](t);
     }
 }

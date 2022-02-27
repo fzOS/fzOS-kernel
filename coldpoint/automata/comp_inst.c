@@ -74,6 +74,9 @@ cpstatus opcode_ifeq(thread* t)
     if(val==0) {
         relative_jump(t);
     }
+    else {
+        t->pc+=2;
+    }
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_ifne(thread* t)

@@ -186,3 +186,153 @@ cpstatus opcode_putstatic(thread* t)
     print_opcode("%s->%s <== %d\n",target_name,target_desc,v1.data);
     return COLD_POINT_SUCCESS;
 }
+cpstatus opcode_putfield(thread* t)
+{
+    U32 no;
+    no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+    t->pc +=2;
+    print_opcode("putfield #%d ",no);
+    StackVar v2 = t->stack[t->rsp],v1 = t->stack[t->rsp-1];
+    t->rsp -=2;
+    object* obj = (object*)v1.data;
+    class* c = t->class;
+    FieldRefConstant* field = (FieldRefConstant*)get_const_entry_by_index(t->class,no);
+    const U8* target_class_name = class_get_utf8_string(c,((ClassInfoConstant*)get_const_entry_by_index(c,field->class_index))->name_index);
+    NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,field->name_and_type_index));
+    const U8* target_name = class_get_utf8_string(c,name_type_info->name_index);
+    const U8* target_desc = class_get_utf8_string(c,name_type_info->descriptor_index);
+    ObjectVar* vars = obj->var;
+    int found=0;
+    for(int i=0;i<obj->var_count;i++) {
+        if(!strcomp(vars[i].class,(char*)target_class_name)
+         &&!strcomp(vars[i].signature,(char*)target_name)
+         &&!strcomp(vars[i].typename,(char*)target_desc)) {
+            vars[i].value = v2.data;
+            found = 1;
+            break;
+
+        }
+    }
+    if(!found) {
+        except(t,"Field not found.");
+        return COLD_POINT_EXEC_FAILURE;
+    }
+    print_opcode("%s@%s->%s <== %d\n",target_name,target_class_name,target_desc,v2.data);
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_getfield(thread* t)
+{
+    U32 no;
+    no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+    t->pc +=2;
+    print_opcode("getfield #%d ",no);
+    StackVar v1 = t->stack[t->rsp];
+    object* obj = (object*)v1.data;
+    class* c = t->class;
+    FieldRefConstant* field = (FieldRefConstant*)get_const_entry_by_index(t->class,no);
+    const U8* target_class_name = class_get_utf8_string(c,((ClassInfoConstant*)get_const_entry_by_index(c,field->class_index))->name_index);
+    NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,field->name_and_type_index));
+    const U8* target_name = class_get_utf8_string(c,name_type_info->name_index);
+    const U8* target_desc = class_get_utf8_string(c,name_type_info->descriptor_index);
+    ObjectVar* vars = obj->var;
+    int found=0;
+    for(int i=0;i<obj->var_count;i++) {
+        if(!strcomp(vars[i].class,(char*)target_class_name)
+         &&!strcomp(vars[i].signature,(char*)target_name)
+         &&!strcomp(vars[i].typename,(char*)target_desc)) {
+            v1.data = vars[i].value;
+            found = 1;
+            break;
+
+        }
+    }
+    if(!found) {
+        except(t,"Field not found.");
+        return COLD_POINT_EXEC_FAILURE;
+    }
+    switch(target_desc[0]) {
+        case 'Z':case 'B':case 'C':case 'S':case 'I': {
+            v1.type = STACK_TYPE_INT;
+            break;
+        }
+        case 'F': {
+            v1.type = STACK_TYPE_FLOAT;
+            break;
+        }
+        case 'D': {
+            v1.type = STACK_TYPE_DOUBLE;
+            break;
+        }
+        case 'J': {
+            v1.type = STACK_TYPE_LONG;
+            break;
+        }
+        case 'L':case '[': {
+            v1.type = STACK_TYPE_REFERENCE;
+            break;
+        }
+        default: {
+            except(t,"Unknown type.");
+            return COLD_POINT_EXEC_FAILURE;
+        }
+    }
+    t->stack[t->rsp]=v1;
+    print_opcode("%s@%s->%s ==> %d\n",target_name,target_class_name,target_desc,v1.data);
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_checkcast(thread* t)
+{
+    U32 no;
+    no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+    t->pc +=2;
+    print_opcode("checkcast #%d \n",no);
+    const U8* target_class_name = class_get_utf8_string(t->class,((ClassInfoConstant*)get_const_entry_by_index(t->class,no))->name_index);
+    StackVar v1 = t->stack[t->rsp];
+    object* obj = (object*)v1.data;
+    if(obj!=nullptr) {
+        class* current = obj->parent_class;
+        U8 found=0;
+        while(1) {
+            if(!strcomp((char*)current->class_name,(char*)target_class_name)) {
+                found=1;
+                break;
+            }
+            current = getclass(class_get_utf8_string(current,class_get_class_name_index(current,current->super_class)));
+            if(current == nullptr) {
+                break;
+            }
+        }
+        if(!found) {
+            except(t,"Invalid cast.");
+            return COLD_POINT_EXEC_FAILURE;
+        }
+    }
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_instanceof(thread* t)
+{
+    U32 no;
+    no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+    t->pc +=2;
+    const U8* target_class_name = class_get_utf8_string(t->class,((ClassInfoConstant*)get_const_entry_by_index(t->class,no))->name_index);
+    StackVar v1 = t->stack[t->rsp];
+    v1.type = STACK_TYPE_INT;
+    object* obj = (object*)v1.data;
+    v1.data = 0;
+    if(obj!=nullptr) {
+        class* current = obj->parent_class;
+        while(1) {
+            if(!strcomp((char*)current->class_name,(char*)target_class_name)) {
+                v1.data = 1;
+                break;
+            }
+            current = getclass(class_get_utf8_string(current,class_get_class_name_index(current,current->super_class)));
+            if(current == nullptr) {
+                break;
+            }
+        }
+    }
+    t->stack[t->rsp] = v1;
+    print_opcode("instanceof #%d :%d\n",no,v1.data);
+    return COLD_POINT_SUCCESS;
+}
