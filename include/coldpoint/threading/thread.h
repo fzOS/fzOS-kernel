@@ -16,7 +16,8 @@ typedef enum {
     STACK_TYPE_FLOAT,
     STACK_TYPE_DOUBLE,
     STACK_TYPE_CHAR,
-    STACK_TYPE_REFERENCE
+    STACK_TYPE_REFERENCE,
+    STACK_TYPE_CLASS_REF
 } StackVarType;
 typedef struct {
     StackVarType type;
@@ -50,7 +51,7 @@ typedef struct {
     |-return rbp(U64)
     |-local variables(U64*n)
     |-method stack(U64*m) <---(RSP位于0～m之间)
-    (RBP+(4+n+m))
+    (RBP+(5+n+m))
     由于定长栈设计，将会发生类型提升。
     i.e. 整数类型-> U64;
          浮点类型-> double;

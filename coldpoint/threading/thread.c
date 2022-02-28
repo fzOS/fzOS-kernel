@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <coldpoint/common/class.h>
 #include <coldpoint/automata/automata.h>
+#include <common/bswap.h>
 static U64 g_current_pid=0;
 process* create_process(void)
 {
@@ -27,7 +28,7 @@ thread* create_thread(process* p,CodeAttribute* c,class* class)
     t->class = class;
     t->code = c;
     t->process = p;
-    t->rsp = sizeof(stack_frame)+t->code->max_locals+1;
+    t->rsp = sizeof(stack_frame)+bswap16(t->code->max_locals)+1;
     return t;
 }
 void thread_test(class* c)
@@ -40,6 +41,7 @@ void thread_test(class* c)
     }
     CodeAttribute* code = (CodeAttribute*)&c->buffer[class_get_method_attribute_by_name(c,main,code_name_index)->info_offset];
     thread* t = create_thread(p,code,c);
+    (void)t;
     automata_main_loop(t);
 /*
     printk("Now executing %b.\n",main_thread->code->code[main_thread->pc]);

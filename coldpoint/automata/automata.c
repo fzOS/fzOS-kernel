@@ -7,6 +7,7 @@
 #include <coldpoint/automata/comp_inst.h>
 #include <coldpoint/automata/ctrl_inst.h>
 #include <coldpoint/automata/obj_inst.h>
+#include <coldpoint/automata/invoke_inst.h>
 cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_nop,opcode_aconst_null,opcode_iconst_m1,opcode_iconst_0,//0x00~0x03
     opcode_iconst_1,opcode_iconst_2,opcode_iconst_3,opcode_iconst_4,//0x04~0x07

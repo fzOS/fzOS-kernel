@@ -95,16 +95,6 @@ cpstatus opcode_new(thread* t)
     print_opcode("%s:0x%x\n",class_name,v2.data);
     return COLD_POINT_SUCCESS;
 }
-cpstatus opcode_invokespecial(thread* t)
-{
-    U32 no;
-    no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
-    t->pc+=2;
-    print_opcode("invokespecial #%d\n",no);
-
-
-    return COLD_POINT_SUCCESS;
-}
 cpstatus opcode_getstatic(thread* t)
 {
     U32 no;
