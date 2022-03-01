@@ -4,28 +4,7 @@
 #include <coldpoint/classloader.h>
 #include <common/kstring.h>
 #include <coldpoint/automata/automata.h>
-static inline ConstantEntry* get_const_entry_by_index(class* c,int no)
-{
-    return ((ConstantEntry*)(c->buffer+c->constant_entry_offset))+no;
-}
-static inline class* get_class_by_index(class* c,int no)
-{
-    const U8* target_class_name = class_get_utf8_string(c,((ClassInfoConstant*)get_const_entry_by_index(c,no))->name_index);
-    return getclass(target_class_name);
-}
-static inline FieldInfoEntry* get_field_by_name_and_type_index(class* c,const U8* name,const U8* type)
-{
-    FieldInfoEntry* field_entry = (FieldInfoEntry*)&(c->buffer[c->fields_pool_entry_offset]);
-    if(c->fields_pool_entry_count) {
-        for(int i=0;i<c->fields_pool_entry_count;i++) {
-            if(!strcomp((char*)name,(char*)class_get_utf8_string(c,field_entry[i].name_index))
-             &&!strcomp((char*)type,(char*)class_get_utf8_string(c,field_entry[i].descriptor_index))) {
-                return field_entry;
-            }
-        }
-    }
-    return nullptr;
-}
+
 cpstatus opcode_ldc2_w(thread* t)
 {
     t->is_wide |= 0x1;
@@ -100,14 +79,14 @@ cpstatus opcode_getstatic(thread* t)
     U32 no;
     no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
     t->pc +=2;
-    print_opcode("getstatic #%d ",no);
     StackVar v1;
     FieldRefConstant* field = (FieldRefConstant*)get_const_entry_by_index(t->class,no);
     class* target_class = get_class_by_index(t->class,field->class_index);
     NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,field->name_and_type_index));
-    const U8* target_name = class_get_utf8_string(target_class,name_type_info->name_index);
-    const U8* target_desc = class_get_utf8_string(target_class,name_type_info->descriptor_index);
-    FieldInfoEntry* field_info = get_field_by_name_and_type_index(target_class,target_name,target_desc);
+    const U8* target_name = class_get_utf8_string(t->class,name_type_info->name_index);
+    const U8* target_desc = class_get_utf8_string(t->class,name_type_info->descriptor_index);
+    print_opcode("getstatic %s -> %s ",target_name,target_desc);
+    FieldInfoEntry* field_info = get_field_by_name_and_type(target_class,target_name,target_desc);
     if(field_info==nullptr) {
         except(t,"No field found.");
         return COLD_POINT_EXEC_FAILURE;
@@ -152,14 +131,14 @@ cpstatus opcode_putstatic(thread* t)
     U32 no;
     no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
     t->pc +=2;
-    print_opcode("putstatic #%d ",no);
     StackVar v1 = t->stack[(t->rsp)--];
     FieldRefConstant* field = (FieldRefConstant*)get_const_entry_by_index(t->class,no);
     class* target_class = get_class_by_index(t->class,field->class_index);
     NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,field->name_and_type_index));
-    const U8* target_name = class_get_utf8_string(target_class,name_type_info->name_index);
-    const U8* target_desc = class_get_utf8_string(target_class,name_type_info->descriptor_index);
-    FieldInfoEntry* field_info = get_field_by_name_and_type_index(target_class,target_name,target_desc);
+    const U8* target_name = class_get_utf8_string(t->class,name_type_info->name_index);
+    const U8* target_desc = class_get_utf8_string(t->class,name_type_info->descriptor_index);
+    print_opcode("putstatic %s -> %s ",target_name,target_desc);
+    FieldInfoEntry* field_info = get_field_by_name_and_type(target_class,target_name,target_desc);
     if(field_info==nullptr) {
         except(t,"No field found.");
         return COLD_POINT_EXEC_FAILURE;
@@ -181,7 +160,6 @@ cpstatus opcode_putfield(thread* t)
     U32 no;
     no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
     t->pc +=2;
-    print_opcode("putfield #%d ",no);
     StackVar v2 = t->stack[t->rsp],v1 = t->stack[t->rsp-1];
     t->rsp -=2;
     object* obj = (object*)v1.data;
@@ -191,6 +169,7 @@ cpstatus opcode_putfield(thread* t)
     NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,field->name_and_type_index));
     const U8* target_name = class_get_utf8_string(c,name_type_info->name_index);
     const U8* target_desc = class_get_utf8_string(c,name_type_info->descriptor_index);
+    print_opcode("putfield %s -> %s ",target_name,target_desc);
     ObjectVar* vars = obj->var;
     int found=0;
     for(int i=0;i<obj->var_count;i++) {
@@ -215,7 +194,6 @@ cpstatus opcode_getfield(thread* t)
     U32 no;
     no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
     t->pc +=2;
-    print_opcode("getfield #%d ",no);
     StackVar v1 = t->stack[t->rsp];
     object* obj = (object*)v1.data;
     class* c = t->class;
@@ -224,6 +202,7 @@ cpstatus opcode_getfield(thread* t)
     NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,field->name_and_type_index));
     const U8* target_name = class_get_utf8_string(c,name_type_info->name_index);
     const U8* target_desc = class_get_utf8_string(c,name_type_info->descriptor_index);
+    print_opcode("getfield %s -> %s ",target_name,target_desc);
     ObjectVar* vars = obj->var;
     int found=0;
     for(int i=0;i<obj->var_count;i++) {

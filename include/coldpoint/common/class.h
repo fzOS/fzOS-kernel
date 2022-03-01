@@ -164,4 +164,9 @@ AttributeInfoEntry* class_get_method_attribute_by_name(const class* c,const Meth
 U16 class_get_utf8_string_index(const class* c,const U8* name);
 MethodInfoEntry* class_get_method_by_name_and_desc(const class* c,U16 name_index,U16 desc_index);
 void print_field_and_method_info(const class* c);
+ConstantEntry* get_const_entry_by_index(class* c,int no);
+class* get_class_by_index(class* c,int no);
+FieldInfoEntry* get_field_by_name_and_type(class* c,const U8* name,const U8* type);
+FieldInfoEntry* get_method_by_name_and_type(class* c,const U8* name,const U8* type);
+void print_method_info(const class* c,const MethodInfoEntry* method_entry);
 #endif

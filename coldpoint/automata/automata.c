@@ -53,9 +53,9 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_ificmple,opcode_ifacmpeq,opcode_ifacmpne,opcode_goto,//0xa4~0xa7,
     nullptr,nullptr,opcode_tableswitch,opcode_lookupswitch,//0xa8~0xab
     nullptr,nullptr,nullptr,nullptr,//0xac~0xaf
-    nullptr,nullptr,opcode_getstatic,opcode_putstatic,//0xb0~0xb3
-    opcode_getfield,opcode_putfield,nullptr,opcode_invokespecial,//0xb4~0xb7
-    nullptr,nullptr,nullptr,opcode_new,//0xb8~0xbb
+    nullptr,opcode_return,opcode_getstatic,opcode_putstatic,//0xb0~0xb3
+    opcode_getfield,opcode_putfield,opcode_invokevirtual,opcode_invokespecial,//0xb4~0xb7
+    opcode_invokestatic,opcode_invokeinterface,nullptr,opcode_new,//0xb8~0xbb
     nullptr,nullptr,nullptr,nullptr,//0xbc~0xbf
     opcode_checkcast,opcode_instanceof,nullptr,nullptr,//0xc0~0xc3
     nullptr,nullptr,nullptr,nullptr,//0xc4~0xc7
@@ -76,12 +76,16 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
 };
 void except(thread* t,char* msg)
 {
-    printk(" Exception caught at %x :%s.\n",t->pc,msg);
+    printk("\n Exception caught at %x :%s.\n",t->pc,msg);
+    t->status = THREAD_TERMINATED;
 }
 void automata_main_loop(thread* t)
 {
     while(t->status!=THREAD_TERMINATED) { //TODO:Multi-threading.
-        print_opcode("%d %d ",t->pc,t->rsp);
+        print_opcode(" %d %d ",t->pc,t->rsp);
+        if(t->code->code[t->pc]==0x00) {
+            while(1);
+        }
         g_automata_opcode[t->code->code[t->pc++]](t);
     }
 }
