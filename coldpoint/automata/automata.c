@@ -56,7 +56,7 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     nullptr,opcode_return,opcode_getstatic,opcode_putstatic,//0xb0~0xb3
     opcode_getfield,opcode_putfield,opcode_invokevirtual,opcode_invokespecial,//0xb4~0xb7
     opcode_invokestatic,opcode_invokeinterface,nullptr,opcode_new,//0xb8~0xbb
-    nullptr,nullptr,nullptr,nullptr,//0xbc~0xbf
+    opcode_newarray,opcode_anewarray,nullptr,nullptr,//0xbc~0xbf
     opcode_checkcast,opcode_instanceof,nullptr,nullptr,//0xc0~0xc3
     nullptr,nullptr,nullptr,nullptr,//0xc4~0xc7
     nullptr,nullptr,nullptr,nullptr,//0xc8~0xcb

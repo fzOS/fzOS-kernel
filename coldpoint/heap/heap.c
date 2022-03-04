@@ -5,9 +5,14 @@
 #include <memory/memory.h>
 #include <common/bswap.h>
 #define OBJECT_CHUNK_SIZE 512
+void* allocate_heap(U64 size)
+{
+    //TODO:Mark for memory recycle.
+    return memalloc(size);
+}
 object* new_object(class* c)
 {
-    object* o = memalloc(OBJECT_CHUNK_SIZE);
+    object* o = allocate_heap(OBJECT_CHUNK_SIZE);
     U64 object_size = sizeof(object);
     U64 allocated_size = OBJECT_CHUNK_SIZE;
     U64 current_index=0;

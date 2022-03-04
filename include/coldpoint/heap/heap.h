@@ -13,4 +13,5 @@ typedef struct {
     ObjectVar var[0];
 } object;
 object* new_object(class* c);
+void* allocate_heap(U64 size);
 #endif

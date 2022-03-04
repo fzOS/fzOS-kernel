@@ -4,7 +4,7 @@
 #include <coldpoint/classloader.h>
 #include <common/kstring.h>
 #include <coldpoint/automata/automata.h>
-
+#include <memory/memory.h>
 cpstatus opcode_ldc2_w(thread* t)
 {
     t->is_wide |= 0x1;
@@ -72,6 +72,87 @@ cpstatus opcode_new(thread* t)
     v2.data = (U64)new_object(getclass(class_name));
     t->stack[++(t->rsp)] = v2;
     print_opcode("%s:0x%x\n",class_name,v2.data);
+    return COLD_POINT_SUCCESS;
+}
+U64 newarray_real(thread* t,U64 length,const U8* type)
+{
+    Array* a = allocate_heap(sizeof(Array)+length*sizeof(U64));
+    memset(a,0x00,sizeof(Array)+length*sizeof(U64));
+    a->type = type;
+    a->length = length;
+    return (U64)a;
+}
+cpstatus opcode_newarray(thread* t)
+{
+    ArrayType type = t->code->code[t->pc];
+    t->pc++;
+    StackVar v1 = t->stack[t->rsp];
+    U32 length = v1.data;
+    const char* type_name = "";
+    if(length>0) {
+        switch(type) {
+            case T_BOOLEAN: {
+                type_name = "[Z";
+                length = (length-1) / (sizeof(U64)/sizeof(byte))+1;
+                break;
+            }
+            case T_CHAR: {
+                //in Java,char is 16 BITS!!!!
+                type_name = "[C";
+                length = (length-1) / (sizeof(U64)/sizeof(short))+1;
+                break;
+            }
+            case T_BYTE: {
+                type_name = "[B";
+                length = (length-1) / (sizeof(U64)/sizeof(byte))+1;
+                break;
+            }
+            case T_SHORT: {
+                type_name = "[S";
+                length = (length-1) / (sizeof(U64)/sizeof(short))+1;
+                break;
+            }
+            case T_INT:  {
+                type_name = "[I";
+                length = (length-1) / (sizeof(U64)/sizeof(int))+1;
+                break;
+            }
+            case T_FLOAT: {
+                type_name = "[F";
+                length = (length-1) / (sizeof(U64)/sizeof(float))+1;
+                break;
+            }
+            case T_LONG: {
+                type_name = "[J";
+                break;
+            }
+            case T_DOUBLE: {
+                type_name = "[D";
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+    U64 addr = newarray_real(t,length,(const U8*)type_name);
+    v1.type = STACK_TYPE_REFERENCE;
+    v1.data = addr;
+    t->stack[t->rsp] = v1;
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_anewarray(thread* t)
+{
+    U32 no;
+    no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+    t->pc+=2;
+    StackVar v1 = t->stack[t->rsp];
+    U64 length = v1.data;
+    const U8* class_name = class_get_utf8_string(t->class,class_get_class_name_index(t->class,no));
+    U64 address = newarray_real(t,length,class_name);
+    v1.data = address;
+    v1.type = STACK_TYPE_REFERENCE;
+    t->stack[t->rsp] = v1;
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_getstatic(thread* t)
