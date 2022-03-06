@@ -20,9 +20,9 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_load2,opcode_load3,opcode_load0,opcode_load1,//0x20~0x23
     opcode_load2,opcode_load3,opcode_load0,opcode_load1,//0x24~0x27
     opcode_load2,opcode_load3,opcode_load0,opcode_load1,//0x28~0x2b
-    opcode_load2,opcode_load3,nullptr,nullptr,//0x2c~0x2f
-    nullptr,nullptr,nullptr,nullptr,//0x30~0x33
-    nullptr,nullptr,opcode_store,opcode_store,//0x34~0x37
+    opcode_load2,opcode_load3,opcode_iaload,opcode_laload,//0x2c~0x2f
+    opcode_faload,opcode_daload,opcode_aaload,opcode_baload,//0x30~0x33
+    opcode_caload,opcode_saload,opcode_store,opcode_store,//0x34~0x37
     opcode_store,opcode_store,opcode_store,opcode_store0,//0x38~0x3b,
     opcode_store1,opcode_store2,opcode_store3,opcode_store0,//0x3c~0x3f
     opcode_store1,opcode_store2,opcode_store3,opcode_store0,//0x40~0x43

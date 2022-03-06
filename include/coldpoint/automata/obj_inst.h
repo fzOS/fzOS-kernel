@@ -28,4 +28,12 @@ cpstatus opcode_getfield(thread* t);
 cpstatus opcode_putfield(thread* t);
 cpstatus opcode_instanceof(thread* t);
 cpstatus opcode_checkcast(thread* t);
+cpstatus opcode_iaload(thread* t);
+cpstatus opcode_laload(thread* t);
+cpstatus opcode_faload(thread* t);
+cpstatus opcode_daload(thread* t);
+cpstatus opcode_aaload(thread* t);
+cpstatus opcode_baload(thread* t);
+cpstatus opcode_caload(thread* t);
+cpstatus opcode_saload(thread* t);
 #endif

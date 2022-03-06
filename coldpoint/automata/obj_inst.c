@@ -386,3 +386,88 @@ cpstatus opcode_instanceof(thread* t)
     print_opcode("instanceof #%d :%d\n",no,v1.data);
     return COLD_POINT_SUCCESS;
 }
+cpstatus aload_internal(thread* t,U64 data_width)
+{
+    U64 index = t->stack[t->rsp].data;
+    StackVar ref = t->stack[t->rsp-1];
+    t->rsp -= 1;
+    Array* arr = (Array*) ref.data;
+    if(arr==nullptr) {
+        except(t,"Null array address");
+        return COLD_POINT_EXEC_FAILURE;
+    }
+    //Check index.
+    if(index/(sizeof(U64)/data_width)>arr->length) {
+        except(t,"Index overflow");
+    }
+    U64 group_data = arr->value[index/(sizeof(U64)/data_width)];
+    U64 result = index % (sizeof(U64)/data_width);
+    switch(data_width) {
+        case 1: {
+            result = (group_data>>(result*8))&0xFF;
+            break;
+        }
+        case 2: {
+            result = (group_data>>(result*16))&0xFFFF;
+            break;
+        }
+        case 4: {
+            result = (group_data>>(result*32))&0xFFFFFFFF;
+            break;
+        }
+        case 8: {
+            break;
+        }
+    }
+    ref.data = result;
+    t->stack[t->rsp] = ref;
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_iaload(thread* t) {
+    U64 result = aload_internal(t,sizeof(int));
+    if(result==COLD_POINT_SUCCESS)
+        t->stack[t->rsp].type = STACK_TYPE_INT;
+    return result;
+}
+cpstatus opcode_laload(thread* t) {
+    U64 result = aload_internal(t,sizeof(long long));
+    if(result==COLD_POINT_SUCCESS)
+        t->stack[t->rsp].type = STACK_TYPE_LONG;
+    return result;
+}
+cpstatus opcode_faload(thread* t) {
+    U64 result = aload_internal(t,sizeof(float));
+    if(result==COLD_POINT_SUCCESS)
+        t->stack[t->rsp].type = STACK_TYPE_FLOAT;
+    return result;
+}
+cpstatus opcode_daload(thread* t) {
+    U64 result = aload_internal(t,sizeof(double));
+    if(result==COLD_POINT_SUCCESS)
+        t->stack[t->rsp].type = STACK_TYPE_DOUBLE;
+    return result;
+}
+cpstatus opcode_aaload(thread* t) {
+    U64 result = aload_internal(t,sizeof(U64));
+    if(result==COLD_POINT_SUCCESS)
+        t->stack[t->rsp].type = STACK_TYPE_REFERENCE;
+    return result;
+}
+cpstatus opcode_baload(thread* t) {
+    U64 result = aload_internal(t,sizeof(char));
+    if(result==COLD_POINT_SUCCESS)
+        t->stack[t->rsp].type = STACK_TYPE_BYTE;
+    return result;
+}
+cpstatus opcode_caload(thread* t) {
+    U64 result = aload_internal(t,sizeof(short));
+    if(result==COLD_POINT_SUCCESS)
+        t->stack[t->rsp].type = STACK_TYPE_CHAR;
+    return result;
+}
+cpstatus opcode_saload(thread* t) {
+    U64 result = aload_internal(t,sizeof(short));
+    if(result==COLD_POINT_SUCCESS)
+        t->stack[t->rsp].type = STACK_TYPE_SHORT;
+    return result;
+}
