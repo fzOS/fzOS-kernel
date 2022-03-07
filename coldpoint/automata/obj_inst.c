@@ -399,6 +399,7 @@ cpstatus aload_internal(thread* t,U64 data_width)
     //Check index.
     if(index/(sizeof(U64)/data_width)>arr->length) {
         except(t,"Index overflow");
+        return COLD_POINT_EXEC_FAILURE;
     }
     U64 group_data = arr->value[index/(sizeof(U64)/data_width)];
     U64 result = index % (sizeof(U64)/data_width);
@@ -416,6 +417,7 @@ cpstatus aload_internal(thread* t,U64 data_width)
             break;
         }
         case 8: {
+            result = group_data;
             break;
         }
     }
@@ -423,51 +425,143 @@ cpstatus aload_internal(thread* t,U64 data_width)
     t->stack[t->rsp] = ref;
     return COLD_POINT_SUCCESS;
 }
-cpstatus opcode_iaload(thread* t) {
+cpstatus opcode_iaload(thread* t)
+{
     U64 result = aload_internal(t,sizeof(int));
     if(result==COLD_POINT_SUCCESS)
         t->stack[t->rsp].type = STACK_TYPE_INT;
     return result;
 }
-cpstatus opcode_laload(thread* t) {
+cpstatus opcode_laload(thread* t)
+{
     U64 result = aload_internal(t,sizeof(long long));
     if(result==COLD_POINT_SUCCESS)
         t->stack[t->rsp].type = STACK_TYPE_LONG;
     return result;
 }
-cpstatus opcode_faload(thread* t) {
+cpstatus opcode_faload(thread* t)
+{
     U64 result = aload_internal(t,sizeof(float));
     if(result==COLD_POINT_SUCCESS)
         t->stack[t->rsp].type = STACK_TYPE_FLOAT;
     return result;
 }
-cpstatus opcode_daload(thread* t) {
+cpstatus opcode_daload(thread* t)
+{
     U64 result = aload_internal(t,sizeof(double));
     if(result==COLD_POINT_SUCCESS)
         t->stack[t->rsp].type = STACK_TYPE_DOUBLE;
     return result;
 }
-cpstatus opcode_aaload(thread* t) {
+cpstatus opcode_aaload(thread* t)
+{
     U64 result = aload_internal(t,sizeof(U64));
     if(result==COLD_POINT_SUCCESS)
         t->stack[t->rsp].type = STACK_TYPE_REFERENCE;
     return result;
 }
-cpstatus opcode_baload(thread* t) {
+cpstatus opcode_baload(thread* t)
+{
     U64 result = aload_internal(t,sizeof(char));
     if(result==COLD_POINT_SUCCESS)
         t->stack[t->rsp].type = STACK_TYPE_BYTE;
     return result;
 }
-cpstatus opcode_caload(thread* t) {
+cpstatus opcode_caload(thread* t)
+{
     U64 result = aload_internal(t,sizeof(short));
     if(result==COLD_POINT_SUCCESS)
         t->stack[t->rsp].type = STACK_TYPE_CHAR;
     return result;
 }
-cpstatus opcode_saload(thread* t) {
+cpstatus opcode_saload(thread* t)
+{
     U64 result = aload_internal(t,sizeof(short));
     if(result==COLD_POINT_SUCCESS)
         t->stack[t->rsp].type = STACK_TYPE_SHORT;
     return result;
+}
+cpstatus astore_internal(thread* t,U64 data_width)
+{
+    StackVar value=t->stack[t->rsp],index=t->stack[t->rsp-1],ref=t->stack[t->rsp-2];
+    t->rsp -= 3;
+    Array* arr = (Array*) ref.data;
+    if(arr==nullptr) {
+        except(t,"Null array address");
+        return COLD_POINT_EXEC_FAILURE;
+    }
+    //Check index.
+    if(index.data/(sizeof(U64)/data_width)>arr->length) {
+        except(t,"Index overflow");
+        return COLD_POINT_EXEC_FAILURE;
+    }
+    U64 group_data = arr->value[index.data/(sizeof(U64)/data_width)];
+    U64 result = index.data % (sizeof(U64)/data_width);
+    switch(data_width) {
+        case 1: {
+            group_data |= (value.data&0xFF)<<(result*8);
+            break;
+        }
+        case 2: {
+            group_data |= (value.data&0xFFFF)<<(result*16);
+            break;
+        }
+        case 4: {
+            group_data |= (value.data&0xFFFFFFFF)<<(result*32);
+            break;
+        }
+        case 8: {
+            group_data = value.data;
+            break;
+        }
+    }
+    arr->value[index.data/(sizeof(U64)/data_width)] = group_data;
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_iastore(thread* t)
+{
+    return astore_internal(t,sizeof(int));
+}
+cpstatus opcode_lastore(thread* t)
+{
+    return astore_internal(t,sizeof(long long));
+}
+cpstatus opcode_fastore(thread* t)
+{
+    return astore_internal(t,sizeof(float));
+}
+cpstatus opcode_dastore(thread* t)
+{
+    return astore_internal(t,sizeof(double));
+}
+cpstatus opcode_aastore(thread* t)
+{
+    return astore_internal(t,sizeof(U64));
+}
+cpstatus opcode_bastore(thread* t)
+{
+    return astore_internal(t,sizeof(char));
+}
+cpstatus opcode_castore(thread* t)
+{
+    return astore_internal(t,sizeof(short));
+}
+cpstatus opcode_sastore(thread* t)
+{
+    return astore_internal(t,sizeof(short));
+}
+cpstatus opcode_arraylength(thread* t)
+{
+    StackVar ref = t->stack[t->rsp];
+    Array* arr = (Array*) ref.data;
+    if(arr==nullptr) {
+        except(t,"Null array address");
+        t->rsp -= 1;
+        return COLD_POINT_EXEC_FAILURE;
+    }
+#pragma message "Array length is not correct!"
+    ref.data = arr->length;
+    ref.type = STACK_TYPE_INT;
+    t->stack[t->rsp] = ref;
+    return COLD_POINT_SUCCESS;
 }

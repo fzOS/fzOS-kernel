@@ -36,4 +36,13 @@ cpstatus opcode_aaload(thread* t);
 cpstatus opcode_baload(thread* t);
 cpstatus opcode_caload(thread* t);
 cpstatus opcode_saload(thread* t);
+cpstatus opcode_iastore(thread* t);
+cpstatus opcode_lastore(thread* t);
+cpstatus opcode_fastore(thread* t);
+cpstatus opcode_dastore(thread* t);
+cpstatus opcode_aastore(thread* t);
+cpstatus opcode_bastore(thread* t);
+cpstatus opcode_castore(thread* t);
+cpstatus opcode_sastore(thread* t);
+cpstatus opcode_arraylength(thread* t);
 #endif

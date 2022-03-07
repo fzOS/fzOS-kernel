@@ -28,9 +28,9 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_store1,opcode_store2,opcode_store3,opcode_store0,//0x40~0x43
     opcode_store1,opcode_store2,opcode_store3,opcode_store0,//0x44~0x47
     opcode_store1,opcode_store2,opcode_store3,opcode_store0,//0x48~0x4b
-    opcode_store1,opcode_store2,opcode_store3,nullptr,//0x4c~0x4f
-    nullptr,nullptr,nullptr,nullptr,//0x50~0x53
-    nullptr,nullptr,nullptr,opcode_pop,//0x54~0x57
+    opcode_store1,opcode_store2,opcode_store3,opcode_iastore,//0x4c~0x4f
+    opcode_lastore,opcode_fastore,opcode_dastore,opcode_aastore,//0x50~0x53
+    opcode_bastore,opcode_castore,opcode_sastore,opcode_pop,//0x54~0x57
     opcode_pop2,opcode_dup,opcode_dup_x1,opcode_dup_x2,//0x58~0x5b
     opcode_dup2,opcode_dup2_x1,opcode_dup2_x2,opcode_swap,//0x5c~0x5f
     opcode_add,opcode_add,opcode_add,opcode_add,//0x60~0x63
@@ -56,7 +56,7 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     nullptr,opcode_return,opcode_getstatic,opcode_putstatic,//0xb0~0xb3
     opcode_getfield,opcode_putfield,opcode_invokevirtual,opcode_invokespecial,//0xb4~0xb7
     opcode_invokestatic,opcode_invokeinterface,nullptr,opcode_new,//0xb8~0xbb
-    opcode_newarray,opcode_anewarray,nullptr,nullptr,//0xbc~0xbf
+    opcode_newarray,opcode_anewarray,opcode_arraylength,nullptr,//0xbc~0xbf
     opcode_checkcast,opcode_instanceof,nullptr,nullptr,//0xc0~0xc3
     nullptr,nullptr,nullptr,nullptr,//0xc4~0xc7
     nullptr,nullptr,nullptr,nullptr,//0xc8~0xcb
