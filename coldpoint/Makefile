@@ -1,6 +1,6 @@
 SRCS := $(wildcard *.c) $(wildcard *.s)
 OBJS := $(patsubst %c,%c.o,$(SRCS)) $(patsubst %s,%s.o,$(SRCS))
-SUBDIRS=common threading automata heap
+SUBDIRS=common threading automata heap native
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
         ( cd $$subdir && $(MAKE) all -f Makefile -e CC="${CC}" -e BASE_DIR=${BASE_DIR} -e CFLAGS='${CFLAGS}') || exit 1; \

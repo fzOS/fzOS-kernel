@@ -294,6 +294,7 @@ class* loadclass(void* class_file)
     }
     node->c.class_name = class_get_utf8_string(&node->c,class_get_class_name_index(&node->c,node->c.this_class));
     insert_existing_inline_node(&g_loaded_class_linked_list,&node->node,-1);
+    node->c.source = CLASS_USERSPACE;
     return &node->c;
 }
 
