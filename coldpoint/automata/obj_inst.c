@@ -74,13 +74,13 @@ cpstatus opcode_new(thread* t)
     print_opcode("%s:0x%x\n",class_name,v2.data);
     return COLD_POINT_SUCCESS;
 }
-U64 newarray_real(thread* t,U64 length,const U8* type)
+Array* newarray_real(thread* t,U64 length,const U8* type)
 {
     Array* a = allocate_heap(sizeof(Array)+length*sizeof(U64));
     memset(a,0x00,sizeof(Array)+length*sizeof(U64));
     a->type = type;
     a->length = length;
-    return (U64)a;
+    return a;
 }
 cpstatus opcode_newarray(thread* t)
 {
@@ -135,10 +135,12 @@ cpstatus opcode_newarray(thread* t)
             }
         }
     }
-    U64 addr = newarray_real(t,length,(const U8*)type_name);
+    Array* addr = newarray_real(t,length,(const U8*)type_name);
+    addr->length = v1.data;
     v1.type = STACK_TYPE_REFERENCE;
-    v1.data = addr;
+    v1.data = (U64)addr;
     t->stack[t->rsp] = v1;
+    print_opcode("newarray %s:%x\n",type_name,addr);
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_anewarray(thread* t)
@@ -149,10 +151,11 @@ cpstatus opcode_anewarray(thread* t)
     StackVar v1 = t->stack[t->rsp];
     U64 length = v1.data;
     const U8* class_name = class_get_utf8_string(t->class,class_get_class_name_index(t->class,no));
-    U64 address = newarray_real(t,length,class_name);
-    v1.data = address;
+    Array* address = newarray_real(t,length,class_name);
+    v1.data = (U64)address;
     v1.type = STACK_TYPE_REFERENCE;
     t->stack[t->rsp] = v1;
+    print_opcode("anewarray %s:%x\n",class_name,address);
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_getstatic(thread* t)
@@ -397,7 +400,7 @@ cpstatus aload_internal(thread* t,U64 data_width)
         return COLD_POINT_EXEC_FAILURE;
     }
     //Check index.
-    if(index/(sizeof(U64)/data_width)>arr->length) {
+    if(index>arr->length) {
         except(t,"Index overflow");
         return COLD_POINT_EXEC_FAILURE;
     }
@@ -423,6 +426,7 @@ cpstatus aload_internal(thread* t,U64 data_width)
     }
     ref.data = result;
     t->stack[t->rsp] = ref;
+    print_opcode("i/l/f/d/a/b/c/s aload:%d <== %d\n",result,index);
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_iaload(thread* t)
@@ -491,7 +495,7 @@ cpstatus astore_internal(thread* t,U64 data_width)
         return COLD_POINT_EXEC_FAILURE;
     }
     //Check index.
-    if(index.data/(sizeof(U64)/data_width)>arr->length) {
+    if(index.data>arr->length) {
         except(t,"Index overflow");
         return COLD_POINT_EXEC_FAILURE;
     }
@@ -516,6 +520,7 @@ cpstatus astore_internal(thread* t,U64 data_width)
         }
     }
     arr->value[index.data/(sizeof(U64)/data_width)] = group_data;
+    print_opcode("i/l/f/d/a/b/c/s astore:%d ==> %d\n",index.data,value.data);
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_iastore(thread* t)
@@ -559,9 +564,9 @@ cpstatus opcode_arraylength(thread* t)
         t->rsp -= 1;
         return COLD_POINT_EXEC_FAILURE;
     }
-#pragma message "Array length is not correct!"
     ref.data = arr->length;
     ref.type = STACK_TYPE_INT;
     t->stack[t->rsp] = ref;
+    print_opcode("Array length:%d\n",ref.data);
     return COLD_POINT_SUCCESS;
 }

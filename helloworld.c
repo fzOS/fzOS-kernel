@@ -31,7 +31,8 @@ void print_motd(void);
 void show_banner(void);
 void play_startup_audio(void);
 void print_boot_arg(void);
-void kernel_main_real() {
+void kernel_main_real()
+{
     __asm__("cli");
     graphics_init(g_bss_info.gop);
     graphics_clear_screen(0x001e1e1e);
@@ -64,7 +65,8 @@ void kernel_main_real() {
     init_classloader();
     //print_device_tree();
 }
-void kernel_main(KernelInfo info) {
+void kernel_main(KernelInfo info)
+{
     //手动换栈。
     g_bss_info = info;
     g_bss_info.new_empty_stack+=PAGE_SIZE*KERNEL_STACK_PAGES; //栈反向生长。

@@ -319,7 +319,7 @@ int init_classloader(void)
     memfree(buf);
 
 
-    ret = generic_open("/TestClass.class",&file);
+    ret = generic_open("/TestArray.class",&file);
     if(ret !=FzOS_SUCCESS) {
         printk(" Open Init fail: %d!\n",ret);
         return FzOS_ERROR;

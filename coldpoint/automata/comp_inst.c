@@ -88,6 +88,9 @@ cpstatus opcode_ifne(thread* t)
     if(val!=0) {
         relative_jump(t);
     }
+    else {
+        t->pc+=2;
+    }
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_iflt(thread* t)
@@ -98,6 +101,9 @@ cpstatus opcode_iflt(thread* t)
     int val = (int)(v1->data);
     if(val<0) {
         relative_jump(t);
+    }
+    else {
+        t->pc+=2;
     }
     return COLD_POINT_SUCCESS;
 }
@@ -110,6 +116,9 @@ cpstatus opcode_ifle(thread* t)
     if(val<=0) {
         relative_jump(t);
     }
+    else {
+        t->pc+=2;
+    }
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_ifgt(thread* t)
@@ -120,6 +129,9 @@ cpstatus opcode_ifgt(thread* t)
     int val = (int)(v1->data);
     if(val>0) {
         relative_jump(t);
+    }
+    else {
+        t->pc+=2;
     }
     return COLD_POINT_SUCCESS;
 }
@@ -132,6 +144,9 @@ cpstatus opcode_ifge(thread* t)
     if(val>=0) {
         relative_jump(t);
     }
+    else {
+        t->pc+=2;
+    }
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_ificmpeq(thread* t)
@@ -142,6 +157,9 @@ cpstatus opcode_ificmpeq(thread* t)
     int val1 = (int)(v1->data),val2 = (int)(v2->data);
     if(val1==val2) {
         relative_jump(t);
+    }
+    else {
+        t->pc+=2;
     }
     return COLD_POINT_SUCCESS;
 }
@@ -154,6 +172,9 @@ cpstatus opcode_ificmpne(thread* t)
     if(val1!=val2) {
         relative_jump(t);
     }
+    else {
+        t->pc+=2;
+    }
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_ificmplt(thread* t)
@@ -165,6 +186,9 @@ cpstatus opcode_ificmplt(thread* t)
     if(val1<val2) {
         relative_jump(t);
     }
+    else {
+        t->pc+=2;
+    }
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_ificmple(thread* t)
@@ -175,6 +199,9 @@ cpstatus opcode_ificmple(thread* t)
     int val1 = (int)(v1->data),val2 = (int)(v2->data);
     if(val1<=val2) {
         relative_jump(t);
+    }
+    else {
+        t->pc+=2;
     }
     return COLD_POINT_SUCCESS;
 }
@@ -201,6 +228,9 @@ cpstatus opcode_ificmpge(thread* t)
     if(val1>=val2) {
         relative_jump(t);
     }
+    else {
+        t->pc+=2;
+    }
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_ifacmpeq(thread* t)
@@ -211,6 +241,9 @@ cpstatus opcode_ifacmpeq(thread* t)
     if(v1->data==v2->data) {
         relative_jump(t);
     }
+    else {
+        t->pc+=2;
+    }
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_ifacmpne(thread* t)
@@ -220,6 +253,9 @@ cpstatus opcode_ifacmpne(thread* t)
     t->rsp -= 2;
     if(v1->data!=v2->data) {
         relative_jump(t);
+    }
+    else {
+        t->pc+=2;
     }
     return COLD_POINT_SUCCESS;
 }
