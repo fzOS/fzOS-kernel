@@ -567,6 +567,6 @@ cpstatus opcode_arraylength(thread* t)
     ref.data = arr->length;
     ref.type = STACK_TYPE_INT;
     t->stack[t->rsp] = ref;
-    print_opcode("Array length:%d\n",ref.data);
+    print_opcode("arraylength:%d\n",ref.data);
     return COLD_POINT_SUCCESS;
 }

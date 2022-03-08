@@ -8,6 +8,11 @@
 #include <coldpoint/automata/ctrl_inst.h>
 #include <coldpoint/automata/obj_inst.h>
 #include <coldpoint/automata/invoke_inst.h>
+cpstatus invalid_opcode(thread* t)
+{
+    except(t,"invalid opcode");
+    return COLD_POINT_EXEC_FAILURE;
+}
 cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_nop,opcode_aconst_null,opcode_iconst_m1,opcode_iconst_0,//0x00~0x03
     opcode_iconst_1,opcode_iconst_2,opcode_iconst_3,opcode_iconst_4,//0x04~0x07
@@ -51,28 +56,28 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_ifge,opcode_ifgt,opcode_ifle,opcode_ificmpeq,//0x9c~0x9f
     opcode_ificmpne,opcode_ificmplt,opcode_ificmpge,opcode_ificmpgt,//0xa0~0xa3
     opcode_ificmple,opcode_ifacmpeq,opcode_ifacmpne,opcode_goto,//0xa4~0xa7,
-    nullptr,nullptr,opcode_tableswitch,opcode_lookupswitch,//0xa8~0xab
-    nullptr,nullptr,nullptr,nullptr,//0xac~0xaf
-    nullptr,opcode_return,opcode_getstatic,opcode_putstatic,//0xb0~0xb3
+    invalid_opcode,invalid_opcode,opcode_tableswitch,opcode_lookupswitch,//0xa8~0xab
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xac~0xaf
+    invalid_opcode,opcode_return,opcode_getstatic,opcode_putstatic,//0xb0~0xb3
     opcode_getfield,opcode_putfield,opcode_invokevirtual,opcode_invokespecial,//0xb4~0xb7
-    opcode_invokestatic,opcode_invokeinterface,nullptr,opcode_new,//0xb8~0xbb
-    opcode_newarray,opcode_anewarray,opcode_arraylength,nullptr,//0xbc~0xbf
-    opcode_checkcast,opcode_instanceof,nullptr,nullptr,//0xc0~0xc3
-    nullptr,nullptr,nullptr,nullptr,//0xc4~0xc7
-    nullptr,nullptr,nullptr,nullptr,//0xc8~0xcb
-    nullptr,nullptr,nullptr,nullptr,//0xcc~0xcf
-    nullptr,nullptr,nullptr,nullptr,//0xd0~0xd3
-    nullptr,nullptr,nullptr,nullptr,//0xd4~0xd7
-    nullptr,nullptr,nullptr,nullptr,//0xd8~0xdb
-    nullptr,nullptr,nullptr,nullptr,//0xdc~0xdf
-    nullptr,nullptr,nullptr,nullptr,//0xe0~0xe3
-    nullptr,nullptr,nullptr,nullptr,//0xe4~0xe7
-    nullptr,nullptr,nullptr,nullptr,//0xe8~0xeb
-    nullptr,nullptr,nullptr,nullptr,//0xec~0xef
-    nullptr,nullptr,nullptr,nullptr,//0xf0~0xf3
-    nullptr,nullptr,nullptr,nullptr,//0xf4~0xf7
-    nullptr,nullptr,nullptr,nullptr,//0xf8~0xfb
-    nullptr,nullptr,nullptr,nullptr,//0xfc~0xff
+    opcode_invokestatic,opcode_invokeinterface,invalid_opcode,opcode_new,//0xb8~0xbb
+    opcode_newarray,opcode_anewarray,opcode_arraylength,invalid_opcode,//0xbc~0xbf
+    opcode_checkcast,opcode_instanceof,invalid_opcode,invalid_opcode,//0xc0~0xc3
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xc4~0xc7
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xc8~0xcb
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xcc~0xcf
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xd0~0xd3
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xd4~0xd7
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xd8~0xdb
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xdc~0xdf
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xe0~0xe3
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xe4~0xe7
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xe8~0xeb
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xec~0xef
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xf0~0xf3
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xf4~0xf7
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xf8~0xfb
+    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xfc~0xff
 };
 void except(thread* t,char* msg)
 {
