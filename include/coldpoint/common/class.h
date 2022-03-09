@@ -9,10 +9,10 @@ typedef struct {
 typedef enum {
     CLASS_USERSPACE,
     CLASS_KERNEL_API
-} ClassSource;
+} ClassType;
 typedef struct {
     const U8* class_name;
-    ClassSource source;
+    ClassType type;
     //由于JVM的奇怪的特性，只能用静态结构+索引的方式进行数据存储了……
     U64 constant_entry_offset;
     U64 method_pool_entry_offset;

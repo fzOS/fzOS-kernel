@@ -4,6 +4,7 @@
 #include <coldpoint/automata/automata.h>
 #include <coldpoint/heap/heap.h>
 #include <common/kstring.h>
+#include <coldpoint/native/nativehandler.h>
 static U64 get_param_count(const U8* in)
 {
     in += 1;
@@ -96,6 +97,10 @@ cpstatus opcode_invokespecial(thread* t)
     const U8* target_name = class_get_utf8_string(t->class,name_type_info->name_index);
     const U8* target_desc = class_get_utf8_string(t->class,name_type_info->descriptor_index);
     print_opcode("invokespecial %s->%s \n",target_name,target_desc);
+    if(target_class->type==CLASS_KERNEL_API) {
+        NativeClass* native_class = (NativeClass*) target_class;
+        return native_class->entry(t,target_name,target_desc,NATIVE_INVOKE);
+    }
     MethodInfoEntry* method_info = get_method_by_name_and_type(target_class,target_name,target_desc);
     if(method_info==nullptr) {
         except(t,"Target method not found");
@@ -119,6 +124,10 @@ cpstatus opcode_invokestatic(thread* t)
     const U8* target_name = class_get_utf8_string(t->class,name_type_info->name_index);
     const U8* target_desc = class_get_utf8_string(t->class,name_type_info->descriptor_index);
     print_opcode("invokestatic %s->%s \n",target_name,target_desc);
+        if(target_class->type==CLASS_KERNEL_API) {
+        NativeClass* native_class = (NativeClass*) target_class;
+        return native_class->entry(t,target_name,target_desc,NATIVE_INVOKE);
+    }
     MethodInfoEntry* method_info = get_method_by_name_and_type(target_class,target_name,target_desc);
     if(method_info==nullptr) {
         except(t,"Target method not found");
@@ -141,6 +150,10 @@ cpstatus opcode_invokevirtual(thread* t)
     const U8* target_name = class_get_utf8_string(t->class,name_type_info->name_index);
     const U8* target_desc = class_get_utf8_string(t->class,name_type_info->descriptor_index);
     print_opcode("invokevirtual %s->%s \n",target_name,target_desc);
+    if(target_class->type==CLASS_KERNEL_API) {
+        NativeClass* native_class = (NativeClass*) target_class;
+        return native_class->entry(t,target_name,target_desc,NATIVE_INVOKE);
+    }
     //Dynamically linking.
     U64 param_count = get_param_count(target_desc);
     object* o = (object*) t->stack[t->rsp-param_count].data;
