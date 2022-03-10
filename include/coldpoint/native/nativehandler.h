@@ -8,7 +8,8 @@ typedef enum {
     NATIVE_PUTSTATIC,
     NATIVE_GETFIELD,
     NATIVE_PUTFIELD,
-    NATIVE_INVOKE
+    NATIVE_INVOKE,
+    NATIVE_NEW
 }NativeClassOperations;
 typedef cpstatus (NativeClassEntry)(thread* t,const U8* name,const U8* type,NativeClassOperations operations);
 typedef cpstatus (NativeClassRegister)(InlineLinkedList* loaded_class_list);

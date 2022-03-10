@@ -19,8 +19,11 @@ cpstatus iostream_class_entry(thread* t,const U8* name,const U8* type,NativeClas
 
             break;
         }
-        case NATIVE_INVOKE : {
+        case NATIVE_INVOKE: {
 
+            break;
+        }
+        case NATIVE_NEW: {
             break;
         }
     }
