@@ -15,7 +15,7 @@ process* create_process(void)
 }
 void destroy_process(process* p)
 {
-    memfree(p);;
+    memfree(p);
 }
 void destroy_thread(thread* t)
 {
@@ -28,8 +28,14 @@ thread* create_thread(process* p,CodeAttribute* c,class* class)
     t->class = class;
     t->code = c;
     t->process = p;
-    t->rsp = sizeof(stack_frame)+bswap16(t->code->max_locals)+1;
+    t->rsp = sizeof(stack_frame)/sizeof(StackVar)+bswap16(t->code->max_locals)+1;
     return t;
+}
+FzOSResult terminate_thread(thread* t,ThreadExitStatus status)
+{
+    t->status = THREAD_TERMINATED;
+    //TODO:Destroy status.
+    return FzOS_SUCCESS;
 }
 void thread_test(class* c)
 {

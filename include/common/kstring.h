@@ -9,4 +9,5 @@ int sprintk(char* buf,const char* format,...);
 int strmid(char* buffer,int buflen,char* last_position,char delim);
 U64 shrink_lstring_to_string(U16* lstring,U64 len,char* string);
 U64 expand_string_to_lstring(char* string,U64 len,U16* lstring);
+int strlen(const char* in);
 #endif

@@ -88,9 +88,6 @@ void automata_main_loop(thread* t)
 {
     while(t->status!=THREAD_TERMINATED) { //TODO:Multi-threading.
         print_opcode(" %d %d ",t->pc,t->rsp);
-        if(t->code->code[t->pc]==0x00) {
-            while(1);
-        }
         g_automata_opcode[t->code->code[t->pc++]](t);
     }
 }

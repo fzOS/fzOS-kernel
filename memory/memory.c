@@ -109,7 +109,7 @@ void free_page(void* page_address,int count)
         }
     }
 }
-int memcpy(void* dest,void* src,U64 n)
+int memcpy(void* dest,const void* src,U64 n)
 {
     for(int i=0;i<n;i++)
     {

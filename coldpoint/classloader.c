@@ -7,6 +7,7 @@
 #include <coldpoint/threading/thread.h>
 #include <common/kstring.h>
 #include <common/iterator.h>
+#include <coldpoint/native/nativehandler.h>
 #include <coldpoint/heap/heap.h>
 static InlineLinkedList g_loaded_class_linked_list = {
     .tail = &g_loaded_class_linked_list.head
@@ -313,14 +314,28 @@ int init_classloader(void)
     ret = file.filesystem->read(&file,buf,file.size);
     if(ret==0) {
         memfree(buf);
-        printk(" Read Init fail: %d!\n",ret);
+        printk(" Read Object fail: %d!\n",ret);
         return FzOS_ERROR;
     }
     class* c = loadclass(buf);
     memfree(buf);
-
-
-    ret = generic_open("/TestArray.class",&file);
+    //load java.lang.String
+    ret = generic_open("/String.class",&file);
+    if(ret !=FzOS_SUCCESS) {
+        printk(" Open java.lang.String fail: %d!\n",ret);
+        return FzOS_ERROR;
+    }
+    buf = memalloc(file.size);
+    ret = file.filesystem->read(&file,buf,file.size);
+    if(ret==0) {
+        memfree(buf);
+        printk(" Read String fail: %d!\n",ret);
+        return FzOS_ERROR;
+    }
+    c = loadclass(buf);
+    memfree(buf);
+    register_native_classes(&g_loaded_class_linked_list);
+    ret = generic_open("/PrintfTest.class",&file);
     if(ret !=FzOS_SUCCESS) {
         printk(" Open Init fail: %d!\n",ret);
         return FzOS_ERROR;

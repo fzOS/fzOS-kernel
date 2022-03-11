@@ -74,6 +74,10 @@ static void invoke_method(thread* t,class* target_class,CodeAttribute* code_attr
 }
 static void return_from_method(thread* t,int has_return_val)
 {
+    if(!t->rbp) {
+        terminate_thread(t,EXIT_SUCCESS);
+        return;
+    }
     StackVar var = t->stack[t->rsp];
     U64 base = t->rbp;
     t->class = (class*)t->stack[base].data;

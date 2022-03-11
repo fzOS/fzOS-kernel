@@ -29,6 +29,11 @@ typedef enum {
     THREAD_BLOCKED=2,
     THREAD_TERMINATED=4
 } ThreadStatus;
+typedef enum {
+    EXIT_SUCCESS,
+    EXIT_KILLED,
+    EXIT_EXCEPT
+} ThreadExitStatus;
 typedef struct {
     process* process;
     U64 tid;
@@ -68,4 +73,5 @@ process* create_process(void);
 void destroy_process(process* p);
 void thread_test(class* c);
 void destroy_thread(thread* t);
+FzOSResult terminate_thread(thread* t,ThreadExitStatus status);
 #endif
