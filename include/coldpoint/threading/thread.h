@@ -3,6 +3,7 @@
 #include <types.h>
 #include <coldpoint/threading/process.h>
 #include <coldpoint/common/class.h>
+#include <drivers/console.h>
 #define JVM_MAX_STACK_SIZE 16384
 typedef enum {
     STACK_TYPE_CODE_POINTER=0,
@@ -39,6 +40,7 @@ typedef struct {
     U64 tid;
     U8 is_wide;
     U8 status;
+    Console* console;
     class* class;
     CodeAttribute* code;
     U64 pc;

@@ -21,10 +21,11 @@ void destroy_thread(thread* t)
 {
     memfree(t);
 }
-thread* create_thread(process* p,CodeAttribute* c,class* class)
+thread* create_thread(process* p,CodeAttribute* c,class* class,Console* con)
 {
     thread* t = memalloc(sizeof(thread));
     memset(t,0x00,offsetof(thread,stack));
+    t->console = con;
     t->class = class;
     t->code = c;
     t->process = p;
@@ -46,7 +47,7 @@ void thread_test(class* c)
         printk("Cannot load public static void main(String[] args).");
     }
     CodeAttribute* code = (CodeAttribute*)&c->buffer[class_get_method_attribute_by_name(c,main,code_name_index)->info_offset];
-    thread* t = create_thread(p,code,c);
+    thread* t = create_thread(p,code,c,g_default_console);
     (void)t;
     automata_main_loop(t);
 }
