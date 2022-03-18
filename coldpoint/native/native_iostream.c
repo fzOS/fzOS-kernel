@@ -12,6 +12,8 @@ cpstatus native_iostream_putchar(thread* t);
 cpstatus native_iostream_getchar(thread* t);
 cpstatus native_iostream_getnbytes(thread* t);
 
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 static void native_putU64hex(U64 data,Console* c)
 {
     U8 tempint;
@@ -130,6 +132,7 @@ static int native_println(const char* format,Console* c)
 }
 static int native_printf(const char* format,Array* a,Console* c)
 {
+#if 0
     int count=0;
     const char* pointer = format;
     int arg_count;
@@ -174,7 +177,8 @@ static int native_printf(const char* format,Array* a,Console* c)
        c->common.flush(&c->common);
     }
     return count;
-
+#endif
+    return 0;
 }
 
 
@@ -253,8 +257,8 @@ cpstatus native_iostream_println(thread* t)
 cpstatus native_iostream_putchar(thread* t)
 {
     print_opcode("Got native call putchar().\n");
-    //TODO:Get as c.
-    char c='@';
+    char c = (U8)t->stack[t->rsp].data;
+    t->rsp--;
     t->console->common.putchar(&t->console->common,c);
     return COLD_POINT_SUCCESS;
 }
@@ -262,7 +266,8 @@ cpstatus native_iostream_getchar(thread* t)
 {
     print_opcode("Got native call getchar().\n");
     char c = t->console->common.getchar(&t->console->common);
-    //TODO:Wrap as a body.
+    t->stack[++t->rsp].data = c;
+    t->stack[t->rsp].type   = STACK_TYPE_CHAR;
     return COLD_POINT_SUCCESS;
 }
 static NativeClassInlineLinkedListNode g_iostream_class_linked_node = {

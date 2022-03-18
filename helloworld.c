@@ -47,8 +47,10 @@ void kernel_main_real()
     print_boot_arg();
     fbcon_add_to_device_tree();
     init_keyboard();
+    init_hpet();
     init_random();
     __asm__("sti");
+#if 0
     init_syscall();
     //然后是PCI设备。
     init_pci();
@@ -63,6 +65,7 @@ void kernel_main_real()
     play_startup_audio();
     //启动jvm！
     init_classloader();
+#endif
     //print_device_tree();
 }
 void kernel_main(KernelInfo info)

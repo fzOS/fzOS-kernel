@@ -7,7 +7,7 @@
 #include <common/io.h>
 #include <common/power_control.h>
 //总共需要识别的表。
-char* g_acpi_table_names[]={"FACP","APIC","SSDT","BGRT","DSDT"};
+char* g_acpi_table_names[]={"FACP","APIC","SSDT","BGRT","DSDT","HPET"};
 U8*   g_acpi_table_entries[sizeof(g_acpi_table_names)/8];
 U8 g_table_count = sizeof(g_acpi_table_names)/sizeof(char*);
 //解析RSDT的地址。
