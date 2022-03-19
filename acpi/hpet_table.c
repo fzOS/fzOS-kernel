@@ -8,6 +8,6 @@ int parse_hpet(void* in)
         return -1;
     }
     HPETHeader* header = (HPETHeader*)in;
-    g_hpet_base_address = (HPETResgister*)header->BaseAddress;
+    g_hpet_base_address = (HPETResgister*)(header->BaseAddress | KERNEL_ADDR_OFFSET);
     return 0;
 }
