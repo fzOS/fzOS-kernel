@@ -9,6 +9,7 @@
 #include <common/iterator.h>
 #include <coldpoint/native/nativehandler.h>
 #include <coldpoint/heap/heap.h>
+#include <drivers/hpet.h>
 static InlineLinkedList g_loaded_class_linked_list = {
     .tail = &g_loaded_class_linked_list.head
 };
@@ -349,6 +350,7 @@ int init_classloader(void)
     }
     c = loadclass(buf);
     memfree(buf);
+    start_hpet();
     thread_test(c);
     return FzOS_SUCCESS;
 }

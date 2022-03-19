@@ -1,4 +1,5 @@
 #include <acpi/hpet_table.h>
+#include <drivers/hpet.h>
 #include <common/printk.h>
 int parse_hpet(void* in)
 {
@@ -7,6 +8,6 @@ int parse_hpet(void* in)
         return -1;
     }
     HPETHeader* header = (HPETHeader*)in;
-    printk("APIC Address:0x%x,Clock period:%d cycles.\n",header->BaseAddress,header->CountTick);
+    g_hpet_base_address = (HPETResgister*)header->BaseAddress;
     return 0;
 }
