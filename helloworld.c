@@ -20,6 +20,7 @@
 #include <coldpoint/classloader.h>
 #include <common/wav.h>
 #include <drivers/hda.h>
+#include <drivers/hpet.h>
 #include <filesystem/efivarfs.h>
 #ifndef VERSION
 #define VERSION "0.1"

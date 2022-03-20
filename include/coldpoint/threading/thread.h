@@ -75,5 +75,6 @@ process* create_process(void);
 void destroy_process(process* p);
 void thread_test(class* c);
 void destroy_thread(thread* t);
+thread* get_next_thread(void);
 FzOSResult terminate_thread(thread* t,ThreadExitStatus status);
 #endif

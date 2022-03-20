@@ -5,7 +5,47 @@
 #include <coldpoint/common/class.h>
 #include <coldpoint/automata/automata.h>
 #include <common/bswap.h>
+#include <common/linkedlist.h>
+#include <common/iterator.h>
+typedef struct {
+    InlineLinkedListNode node;
+    thread t;
+} ThreadInlineLinkedListNode;
+static InlineLinkedList g_thread_list = {
+    .tail = &g_thread_list.head
+};
+static ThreadInlineLinkedListNode* g_current_thread = nullptr;
+thread* get_next_thread(void)
+{
+    if(g_current_thread == nullptr) {
+        g_current_thread = (ThreadInlineLinkedListNode*)g_thread_list.head.next;
+        return &g_current_thread->t;
+    }
+    ThreadInlineLinkedListNode* prev = g_current_thread;
+    g_current_thread = (ThreadInlineLinkedListNode*)g_current_thread->node.next;
+    if(g_current_thread==nullptr) {
+        g_current_thread = (ThreadInlineLinkedListNode*)g_thread_list.head.next;
+    }
+    while (g_current_thread->t.status!=THREAD_READY) {
+        if((ThreadInlineLinkedListNode*)g_current_thread==prev) {
+            //looping!
+            if(g_current_thread->t.status==THREAD_READY) {
+                return &g_current_thread->t;
+            }
+            else {
+                return nullptr;
+            }
+        }
+        g_current_thread = (ThreadInlineLinkedListNode*)g_current_thread->node.next;
+        if(g_current_thread==nullptr) {
+            g_current_thread = (ThreadInlineLinkedListNode*)g_thread_list.head.next;
+        }
+    }
+    return &g_current_thread->t;
+
+}
 static U64 g_current_pid=0;
+static U64 g_current_tid=0;
 process* create_process(void)
 {
     process* p = memalloc(sizeof(process));
@@ -23,13 +63,17 @@ void destroy_thread(thread* t)
 }
 thread* create_thread(process* p,CodeAttribute* c,class* class,Console* con)
 {
-    thread* t = memalloc(sizeof(thread));
+    ThreadInlineLinkedListNode* thread_node = memalloc(sizeof(ThreadInlineLinkedListNode));
+    thread* t = &thread_node->t;
     memset(t,0x00,offsetof(thread,stack));
     t->console = con;
     t->class = class;
     t->code = c;
     t->process = p;
     t->rsp = sizeof(stack_frame)/sizeof(StackVar)+bswap16(t->code->max_locals)+1;
+    t->status = THREAD_READY;
+    t->tid = g_current_tid++;
+    insert_existing_inline_node(&g_thread_list,&thread_node->node,-1);
     return t;
 }
 FzOSResult terminate_thread(thread* t,ThreadExitStatus status)
@@ -48,6 +92,7 @@ void thread_test(class* c)
     }
     CodeAttribute* code = (CodeAttribute*)&c->buffer[class_get_method_attribute_by_name(c,main,code_name_index)->info_offset];
     thread* t = create_thread(p,code,c,g_default_console);
+    t = create_thread(p,code,c,g_default_console);
     (void)t;
-    automata_main_loop(t);
+    automata_main_loop();
 }

@@ -8,6 +8,8 @@
 #include <coldpoint/automata/ctrl_inst.h>
 #include <coldpoint/automata/obj_inst.h>
 #include <coldpoint/automata/invoke_inst.h>
+#include <common/halt.h>
+volatile U8 g_thread_time_expired = 0;
 cpstatus invalid_opcode(thread* t)
 {
     except(t,"invalid opcode");
@@ -84,10 +86,32 @@ void except(thread* t,char* msg)
     printk("\n Exception caught at %x :%s.\n",t->pc,msg);
     t->status = THREAD_TERMINATED;
 }
-void automata_main_loop(thread* t)
+void automata_main_loop()
 {
-    while(t->status!=THREAD_TERMINATED) { //TODO:Multi-threading.
-        print_opcode(" %d %d ",t->pc,t->rsp);
-        g_automata_opcode[t->code->code[t->pc++]](t);
+    thread* t = get_next_thread();
+    g_thread_time_expired = 0;
+    print_opcode(" thread %d:\n",t->tid);
+    while(1) {
+        if(g_thread_time_expired) {
+            if((t!=nullptr)&&(t->status==THREAD_RUNNING)) {
+                t->status = THREAD_READY;
+            }
+            g_thread_time_expired = 0;
+            while((t=get_next_thread())==nullptr) {
+                halt();
+            }
+            t->status = THREAD_RUNNING;
+            print_opcode(" thread %d:\n",t->tid);
+        }
+        else {
+
+        }
+        if(t->status == THREAD_RUNNING) {
+            print_opcode(" %d %d ",t->pc,t->rsp);
+            g_automata_opcode[t->code->code[t->pc++]](t);
+        }
+        else {
+            halt();
+        }
     }
 }

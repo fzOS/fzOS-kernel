@@ -38,7 +38,7 @@ kernel:
 	@echo -e "\e[37;1m[NM]\e[0m	" symbols
 	@nm -n build/kernel > build/symbols
 	@echo -e "\e[35;1m[STRIP]\e[0m	" kernel
-	@strip build/kernel
+	#@strip build/kernel
 clean:
 	rm -rf build/*
 install:
