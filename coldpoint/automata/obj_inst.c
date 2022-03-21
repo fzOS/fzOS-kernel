@@ -5,6 +5,7 @@
 #include <common/kstring.h>
 #include <coldpoint/automata/automata.h>
 #include <memory/memory.h>
+#include <coldpoint/native/native_typewrapper.h>
 Array* newarray_real(thread* t,U64 length,const U8* type);
 cpstatus opcode_ldc2_w(thread* t)
 {
@@ -54,17 +55,7 @@ cpstatus opcode_ldc(thread* t)
         }
         case CONSTANT_STRING: {
             const U8* val = class_get_utf8_string(t->class,((StringInfoConstant*)const_entry)->string_index);
-            U64 len = strlen((char*)val)+1;
-            Array* intern = newarray_real(t,len,(U8*)"[B");
-            memcpy(intern->value,val,len);
-            class* string_class = getclass((U8*)"java/lang/String");
-            object* string_obj = new_object(string_class);
-            ObjectVar* v = string_obj->var;
-            for(U64 i=0;i<string_obj->var_count;i++) {
-                if(!strcomp(v[i].typename,"[B") && !strcomp(v[i].signature,"internBytes")) {
-                    v[i].value = (U64)intern;
-                }
-            }
+            NativeTypeWrapperObject* string_obj = constant_to_string(val);
             v2.data = (U64)string_obj;
             v2.type = STACK_TYPE_REFERENCE;
             print_opcode("type=string\n");

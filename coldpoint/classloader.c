@@ -320,22 +320,6 @@ int init_classloader(void)
     }
     class* c = loadclass(buf);
     memfree(buf);
-    //load java.lang.String
-    ret = generic_open("/String.class",&file);
-    if(ret !=FzOS_SUCCESS) {
-        printk(" Open java.lang.String fail: %d!\n",ret);
-        return FzOS_ERROR;
-    }
-    buf = memalloc(file.size);
-    ret = file.filesystem->read(&file,buf,file.size);
-    if(ret==0) {
-        memfree(buf);
-        printk(" Read String fail: %d!\n",ret);
-        return FzOS_ERROR;
-    }
-    c = loadclass(buf);
-    memfree(buf);
-    register_native_classes(&g_loaded_class_linked_list);
     ret = generic_open("/PrintfTest.class",&file);
     if(ret !=FzOS_SUCCESS) {
         printk(" Open Init fail: %d!\n",ret);

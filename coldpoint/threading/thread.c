@@ -91,8 +91,6 @@ void thread_test(class* c)
         printk("Cannot load public static void main(String[] args).");
     }
     CodeAttribute* code = (CodeAttribute*)&c->buffer[class_get_method_attribute_by_name(c,main,code_name_index)->info_offset];
-    thread* t = create_thread(p,code,c,g_default_console);
-    t = create_thread(p,code,c,g_default_console);
-    (void)t;
+    create_thread(p,code,c,g_default_console);
     automata_main_loop();
 }

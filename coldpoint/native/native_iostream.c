@@ -2,6 +2,7 @@
 #include <coldpoint/common/class.h>
 #include <coldpoint/heap/heap.h>
 #include <coldpoint/automata/obj_inst.h>
+#include <coldpoint/native/native_typewrapper.h>
 #include <drivers/console.h>
 #include <memory/memory.h>
 #include <common/kstring.h>
@@ -213,15 +214,9 @@ cpstatus native_iostream_printf(thread* t)
     //(Ljava/lang/String;[Ljava/lang/Object;)V
     //Get String.
     Array* a = (Array*)t->stack[t->rsp].data;
-    object* o = (object*)t->stack[t->rsp-1].data;
+    NativeTypeWrapperObject* o = (NativeTypeWrapperObject*)t->stack[t->rsp-1].data;
     t->rsp-=2;
-    ObjectVar* var = o->var;
-    const char* val = nullptr;
-    for(U64 i=0;i<o->var_count;i++) {
-        if(!strcomp(var[i].typename,"[B") && !strcomp(var[i].signature,"internBytes")) {
-            val = (char*)((Array*)(var[i].value))->value;
-        }
-    }
+    const char* val = (const char*)get_constant_from_string(o);
     if(val!=nullptr) {
         native_printf(val,a,t->console);
     }
@@ -236,15 +231,9 @@ cpstatus native_iostream_println(thread* t)
     print_opcode("Got native call println().\n");
     //(Ljava/lang/String;[Ljava/lang/Object;)V
     //Get String.
-    object* o = (object*)t->stack[t->rsp-1].data;
+    NativeTypeWrapperObject* o = (NativeTypeWrapperObject*)t->stack[t->rsp-1].data;
     t->rsp-=2;
-    ObjectVar* var = o->var;
-    const char* val = nullptr;
-    for(U64 i=0;i<o->var_count;i++) {
-        if(!strcomp(var[i].typename,"[B") && !strcomp(var[i].signature,"internBytes")) {
-            val = (char*)((Array*)(var[i].value))->value;
-        }
-    }
+    const char* val = (const char*)get_constant_from_string(o);
     if(val!=nullptr) {
         native_println(val,t->console);
     }

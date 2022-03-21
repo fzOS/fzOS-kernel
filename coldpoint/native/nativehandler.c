@@ -1,8 +1,10 @@
 #include <coldpoint/native/nativehandler.h>
 #include <common/kstring.h>
 #include <coldpoint/native/native_iostream.h>
+#include <coldpoint/native/native_typewrapper.h>
 NativeClassRegister* const g_native_class_register_handlers[] = {
-    iostream_class_register
+    iostream_class_register,
+    typewrapper_class_register
 };
 const I64 g_native_class_count = sizeof(g_native_class_register_handlers)/sizeof(NativeClassRegister*);
 cpstatus register_native_classes(InlineLinkedList* loaded_class_list)
