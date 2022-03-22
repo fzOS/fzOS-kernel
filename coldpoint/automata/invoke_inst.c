@@ -97,10 +97,14 @@ cpstatus opcode_invokespecial(thread* t)
     t->pc+=2;
     MethodRefConstant* ref = ((MethodRefConstant*)(t->class->buffer+t->class->constant_entry_offset)+no);
     class* target_class = get_class_by_index(t->class,ref->class_index);
+    if(target_class==nullptr) {
+        except(t," Target class not found");
+        return COLD_POINT_EXEC_FAILURE;
+    }
     NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,ref->name_and_type_index));
     const U8* target_name = class_get_utf8_string(t->class,name_type_info->name_index);
     const U8* target_desc = class_get_utf8_string(t->class,name_type_info->descriptor_index);
-    print_opcode("invokespecial %s->%s \n",target_name,target_desc);
+    print_opcode("invokespecial %s->%s(%s)\n",target_name,target_desc,target_class->type==CLASS_KERNEL_API?"Kernel API":"Java API");
     if(target_class->type==CLASS_KERNEL_API) {
         NativeClass* native_class = (NativeClass*) target_class;
         return native_class->entry(t,target_name,target_desc,NATIVE_INVOKE);
@@ -124,10 +128,14 @@ cpstatus opcode_invokestatic(thread* t)
     t->pc+=2;
     MethodRefConstant* ref = ((MethodRefConstant*)(t->class->buffer+t->class->constant_entry_offset)+no);
     class* target_class = get_class_by_index(t->class,ref->class_index);
+    if(target_class==nullptr) {
+        except(t," Target class not found");
+        return COLD_POINT_EXEC_FAILURE;
+    }
     NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,ref->name_and_type_index));
     const U8* target_name = class_get_utf8_string(t->class,name_type_info->name_index);
     const U8* target_desc = class_get_utf8_string(t->class,name_type_info->descriptor_index);
-    print_opcode("invokestatic %s->%s \n",target_name,target_desc);
+    print_opcode("invokestatic %s->%s(%s)\n",target_name,target_desc,target_class->type==CLASS_KERNEL_API?"Kernel API":"Java API");
         if(target_class->type==CLASS_KERNEL_API) {
         NativeClass* native_class = (NativeClass*) target_class;
         return native_class->entry(t,target_name,target_desc,NATIVE_INVOKE);
@@ -150,10 +158,14 @@ cpstatus opcode_invokevirtual(thread* t)
     t->pc+=2;
     MethodRefConstant* ref = ((MethodRefConstant*)(t->class->buffer+t->class->constant_entry_offset)+no);
     class* target_class = get_class_by_index(t->class,ref->class_index);
+    if(target_class==nullptr) {
+        except(t," Target class not found");
+        return COLD_POINT_EXEC_FAILURE;
+    }
     NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,ref->name_and_type_index));
     const U8* target_name = class_get_utf8_string(t->class,name_type_info->name_index);
     const U8* target_desc = class_get_utf8_string(t->class,name_type_info->descriptor_index);
-    print_opcode("invokevirtual %s->%s \n",target_name,target_desc);
+    print_opcode("invokevirtual %s->%s(%s)\n",target_name,target_desc,target_class->type==CLASS_KERNEL_API?"Kernel API":"Java API");
     if(target_class->type==CLASS_KERNEL_API) {
         NativeClass* native_class = (NativeClass*) target_class;
         return native_class->entry(t,target_name,target_desc,NATIVE_INVOKE);

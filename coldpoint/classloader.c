@@ -305,6 +305,7 @@ int init_classloader(void)
 
     file file;
     int ret;
+    register_native_classes(&g_loaded_class_linked_list);
     //load java.lang.Object
     ret = generic_open("/Object.class",&file);
     if(ret !=FzOS_SUCCESS) {

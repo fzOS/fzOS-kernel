@@ -13,7 +13,6 @@ cpstatus native_iostream_putchar(thread* t);
 cpstatus native_iostream_getchar(thread* t);
 cpstatus native_iostream_getnbytes(thread* t);
 
-#pragma GCC diagnostic ignored "-Wunused-function"
 
 static void native_putU64hex(U64 data,Console* c)
 {
@@ -87,14 +86,6 @@ static void native_putU8hex(U8 data,Console* c)
     }
 }
 
-
-
-static void native_putstring(char *str,Console* c)
-{
-    //为什么不递归呢？？？？
-    printk(str);
-}
-
 static void native_putnum(U64 num,Console* c)
 {
     U8 tempint;
@@ -103,25 +94,6 @@ static void native_putnum(U64 num,Console* c)
         native_putnum((num/10),c);
     }
     c->common.putchar(&c->common,(char) tempint);
-}
-
-static void native_putguid(GUID guid,Console* c)
-{
-    //12345678-8765-4321-2333-666666666666
-    native_putU16hex((guid.first&0xFFFF0000)>>16,c);
-    native_putU16hex(guid.first&0xFFFF,c);
-    c->common.putchar(&c->common,'-');
-    native_putU16hex(guid.second,c);
-    c->common.putchar(&c->common,'-');
-    native_putU16hex(guid.third,c);
-    c->common.putchar(&c->common,'-');
-    for(int i=0;i<2;i++) {
-        native_putU8hex(guid.fourth[i],c);
-    }
-    c->common.putchar(&c->common,'-');
-    for(int i=0;i<6;i++) {
-        native_putU8hex(guid.fifth[i],c);
-    }
 }
 static int native_println(const char* format,Console* c)
 {
@@ -133,10 +105,9 @@ static int native_println(const char* format,Console* c)
 }
 static int native_printf(const char* format,Array* a,Console* c)
 {
-#if 0
     int count=0;
     const char* pointer = format;
-    int arg_count;
+    int arg_count = 0;
     while(*pointer!='\0')
     {
         if(*pointer=='%')
@@ -145,13 +116,12 @@ static int native_printf(const char* format,Array* a,Console* c)
             pointer++;
             switch(*pointer)
             {
-//                 case 'c':{c->common.putchar(&c->common,a->value);break;}
-//                 case 'd':{putnum(va_arg(arg,U64));break;}
-//                 case 'x':{putU64hex(va_arg(arg,U64));break;}
-//                 case 'b':{putU8hex(va_arg(arg,int));break;}
-//                 case 'w':{putU16hex(va_arg(arg,int));break;}
-//                 case 's':{putstring(va_arg(arg,char*));break;}
-//                 case 'g':{putguid(va_arg(arg,GUID));break;}
+                case 'c':{c->common.putchar(&c->common,((NativeTypeWrapperObject*)a[arg_count++].value)->val);break;}
+                case 'd':{native_putnum(((NativeTypeWrapperObject*)a[arg_count++].value)->val,c);break;}
+                case 'x':{native_putU64hex(((NativeTypeWrapperObject*)a[arg_count++].value)->val,c);break;}
+                case 'b':{native_putU8hex(((NativeTypeWrapperObject*)a[arg_count++].value)->val,c);break;}
+                case 'w':{native_putU16hex(((NativeTypeWrapperObject*)a[arg_count++].value)->val,c);break;}
+                case 's':{printk((const char*)get_constant_from_string(((NativeTypeWrapperObject*)a[arg_count++].value)));break;}
                 //我们支持全彩色了！
                 //支持的颜色设置格式：
                 //%#RRGGBB
@@ -178,8 +148,6 @@ static int native_printf(const char* format,Array* a,Console* c)
        c->common.flush(&c->common);
     }
     return count;
-#endif
-    return 0;
 }
 
 
