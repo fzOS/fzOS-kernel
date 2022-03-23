@@ -21,6 +21,7 @@
 #include <common/wav.h>
 #include <drivers/hda.h>
 #include <drivers/hpet.h>
+#include <drivers/mouse.h>
 #include <filesystem/efivarfs.h>
 #ifndef VERSION
 #define VERSION "0.1"
@@ -48,6 +49,7 @@ void kernel_main_real()
     print_boot_arg();
     fbcon_add_to_device_tree();
     init_keyboard();
+    init_mouse();
     init_hpet();
     init_random();
     __asm__("sti");
