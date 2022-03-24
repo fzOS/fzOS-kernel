@@ -19,7 +19,6 @@ typedef struct {
     DeviceTreeNode node;
     FBCon con;
 }FbconDeviceTreeNode;
-
 void fbcon_putchar(CharDev* dev, U8 c);
 void fbcon_init(void);
 void fbcon_set_color(U32 color);

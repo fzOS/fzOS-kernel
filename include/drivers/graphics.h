@@ -8,6 +8,7 @@ typedef struct {
   U32 *frame_buffer_base;
   U32 pixels_per_line;
   U32 default_background_color;
+  U32 pixels_vertical;
 } GraphicsData; 
 
 extern GraphicsData g_graphics_data;

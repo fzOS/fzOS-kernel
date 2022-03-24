@@ -6,6 +6,7 @@ void graphics_init(EFI_GRAPHICS_OUTPUT_PROTOCOL *gop) {
   g_graphics_data.gop = gop;
   g_graphics_data.frame_buffer_base = (U32*)(gop->Mode->FrameBufferBase+KERNEL_ADDR_OFFSET);
   g_graphics_data.pixels_per_line = gop->Mode->Info->PixelsPerScanLine;
+  g_graphics_data.pixels_vertical = gop->Mode->Info->VerticalResolution;
   g_graphics_data.default_background_color = 0x001e1e1e;
   //("graphics");
 }
