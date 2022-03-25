@@ -52,6 +52,7 @@ void keyboard_getkey(int no)
             else {
                 pressed_char = SCAN_CODE_MAPPING[scancode];
             }
+            printk("%c\n",pressed_char);
             queue_in_single(&g_default_console->input_buffer.queue,pressed_char);
             release_semaphore(&g_default_console->input_sem);
         }
