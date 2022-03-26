@@ -24,9 +24,6 @@ typedef enum {
    SVGA_REG_FB_OFFSET = 14,
    SVGA_REG_VRAM_SIZE = 15,
    SVGA_REG_FB_SIZE = 16,
-
-   /* ID 0 implementation only had the above registers, then the palette */
-
    SVGA_REG_CAPABILITIES = 17,
    SVGA_REG_MEM_START = 18,           /* (Deprecated) */
    SVGA_REG_MEM_SIZE = 19,
@@ -44,8 +41,6 @@ typedef enum {
    SVGA_REG_NUM_DISPLAYS = 31,        /* (Deprecated) */
    SVGA_REG_PITCHLOCK = 32,           /* Fixed pitch for all modes */
    SVGA_REG_IRQMASK = 33,             /* Interrupt mask */
-
-   /* Legacy multi-monitor support */
    SVGA_REG_NUM_GUEST_DISPLAYS = 34,/* Number of guest displays in X/Y direction */
    SVGA_REG_DISPLAY_ID = 35,        /* Display ID for the following display attributes */
    SVGA_REG_DISPLAY_IS_PRIMARY = 36,/* Whether this is a primary display */
@@ -53,19 +48,14 @@ typedef enum {
    SVGA_REG_DISPLAY_POSITION_Y = 38,/* The display position y */
    SVGA_REG_DISPLAY_WIDTH = 39,     /* The display's width */
    SVGA_REG_DISPLAY_HEIGHT = 40,    /* The display's height */
-
-   /* See "Guest memory regions" below. */
    SVGA_REG_GMR_ID = 41,
    SVGA_REG_GMR_DESCRIPTOR = 42,
    SVGA_REG_GMR_MAX_IDS = 43,
    SVGA_REG_GMR_MAX_DESCRIPTOR_LENGTH = 44,
-
    SVGA_REG_TRACES = 45,            /* Enable trace-based updates even when FIFO is on */
    SVGA_REG_TOP = 46,               /* Must be 1 more than the last register */
 
    SVGA_PALETTE_BASE = 1024,        /* Base of SVGA color map */
-   /* Next 768 (== 256*3) registers exist for colormap */
-
    SVGA_SCRATCH_BASE = SVGA_PALETTE_BASE + SVGA_NUM_PALETTE_REGS
                                     /* Base of scratch registers */
    /* Next reg[SVGA_REG_SCRATCH_SIZE] registers exist for scratch usage:
@@ -124,6 +114,25 @@ typedef enum {
     SVGA_FIFO_CAP_RESERVE         = (1<<6),
     SVGA_FIFO_CAP_SCREEN_OBJECT   = (1<<7)
 } VMSVGAFIFOCaps;
+typedef enum {
+   SVGA_CMD_INVALID_CMD           = 0,
+   SVGA_CMD_UPDATE                = 1,
+   SVGA_CMD_RECT_COPY             = 3,
+   SVGA_CMD_DEFINE_CURSOR         = 19,
+   SVGA_CMD_DEFINE_ALPHA_CURSOR   = 22,
+   SVGA_CMD_UPDATE_VERBOSE        = 25,
+   SVGA_CMD_FRONT_ROP_FILL        = 29,
+   SVGA_CMD_FENCE                 = 30,
+   SVGA_CMD_ESCAPE                = 33,
+   SVGA_CMD_DEFINE_SCREEN         = 34,
+   SVGA_CMD_DESTROY_SCREEN        = 35,
+   SVGA_CMD_DEFINE_GMRFB          = 36,
+   SVGA_CMD_BLIT_GMRFB_TO_SCREEN  = 37,
+   SVGA_CMD_BLIT_SCREEN_TO_GMRFB  = 38,
+   SVGA_CMD_ANNOTATION_FILL       = 39,
+   SVGA_CMD_ANNOTATION_COPY       = 40,
+   SVGA_CMD_MAX
+} SVGAFifoCmdId;
 typedef struct {
    U32 srcX;
    U32 srcY;
@@ -133,13 +142,16 @@ typedef struct {
    U32 height;
 } __attribute__((packed)) SVGAFifoCmdRectCopy;
 typedef struct {
-   U32 id;             // Reserved, must be zero.
-   U32 hotspotX;
-   U32 hotspotY;
-   U32 width;
-   U32 height;
+    U32 command;
+    U32 id;             // Reserved, must be zero.
+    U32 hotspotX;
+    U32 hotspotY;
+    U32 width;
+    U32 height;
 } __attribute__((packed)) SVGAFifoCmdDefineAlphaCursor;
 #define SVGA_INDEX_PORT         0x0
 #define SVGA_VALUE_PORT         0x1
 void vmsvga_register(U8 bus,U8 slot,U8 func);
+void vmsvga_create_cursor(void);
+void vmsvga_set_cursor_pos(U32 x,U32 y);
 #endif
