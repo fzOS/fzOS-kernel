@@ -1,6 +1,6 @@
 
-#ifndef _WINDOW_MANAGER_H
-#define _WINDOW_MANAGER_H
+#ifndef _GUI_WINDOW_MANAGER_H
+#define _GUI_WINDOW_MANAGER_H
 #include <types.h>
 #include <drivers/graphics.h>
 #include <drivers/fbcon.h>
@@ -51,7 +51,7 @@ typedef struct{
     WindowLayerConfig *layer_index;
 } WindowManageConfig;
 
-U8 gui_init_window_manager();
+U8 gui_init_window_manager(int gui_aero_enable);
 U8 gui_window_manager_offline();
 U8 gui_loading_screen_request(WindowData *info_receiver);
 U8 gui_trigger_loading_screen_status(U8 status);
@@ -61,6 +61,6 @@ U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, WindowData *info_rec
 // if want later allow the c program/or change this to system call
 U8 gui_window_manager_get_window_info(U16 PID, U16 window_index, WindowData *info_receiver);
 U8 gui_window_manager_focus_change(U16 window_index);
-U8 gui_window_manager_destory_window(U16 PID, U16 window_index);
+U8 gui_window_manager_destroy_window(U16 PID, U16 window_index);
 void gui_log_print_hand_over(CharDev* dev, U8 c);
 void gui_log_flush_hand_over(CharDev* dev);

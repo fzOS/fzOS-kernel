@@ -20,7 +20,7 @@ void gui_log_flush_hand_over(CharDev* dev)
 
 }
 
-U8 gui_init_window_manager()
+U8 gui_init_window_manager(int gui_aero_enable)
 {
     // setup the memory block for the window list
     g_screen_resolution.horizontal = g_graphics_data.gop->Mode->Info->HorizontalResolution;
@@ -45,8 +45,8 @@ U8 gui_init_window_manager()
     graphics_clear_screen(0xFFFFFFFF);
     // overide the fbcon default kernel print
     // window 0 is defaultly for loading screen
-    g_fbcon_node.con.max_x = ;
-    g_fbcon_node.con.max_y = ;
+    //g_fbcon_node.con.max_x = ;
+    //g_fbcon_node.con.max_y = ;
     g_fbcon_node.con.current_y = 0;
     g_fbcon_node.con.current_x = 0;
     g_fbcon_node.con.con.common.putchar = gui_log_print_hand_over;
@@ -199,12 +199,12 @@ U8 gui_window_manager_get_window_info(U16 PID, U16 window_index, WindowData *inf
     }
     else
     {
-        info_receiver = g_window_list[temp_window_index];
+        info_receiver = g_window_list[window_index];
         return 1;
     }
 }
 
-U8 gui_window_manager_destory_window(U16 PID, U16 window_index)
+U8 gui_window_manager_destroy_window(U16 PID, U16 window_index)
 {
     if (PID != g_window_list[window_index].PID)
     {

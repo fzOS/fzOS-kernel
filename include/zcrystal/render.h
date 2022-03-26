@@ -1,0 +1,2 @@
+#ifndef _GUI_SCREEN_RENDER_API_
+#define _GUI_SCREEN_RENDER_API_
