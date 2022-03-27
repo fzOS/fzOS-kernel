@@ -1,5 +1,6 @@
 #include <zcrystal/window_manager.h>
 #include <drivers/graphics.h>
+#include <drivers/fbcon.h>
 #include <memory/memory.h>
 #include <types.h>
 
@@ -45,7 +46,7 @@ U8 gui_init_window_manager(int gui_aero_enable)
 
     // initialize the first window(background)
     WindowData loading_screen_info_receiver;
-    g_gui_loading_window_uid = gui_window_manager_create_window(0, 2, &loading_screen_info_receiver);
+    g_gui_loading_window_uid = gui_window_manager_create_window(0, 2, 0, 0, 0, 0, &loading_screen_info_receiver);
     // Clear debug info, make screen ready for desktop
     graphics_clear_screen(0xFFFFFFFF);
     // overide the fbcon default kernel print
@@ -88,7 +89,7 @@ U8 gui_window_manager_offline()
     g_fbcon_node.con.con.common.flush = fbcon_flush;
 }
 
-U32 gui_window_manager_create_window(U16 PID, U8 focus_mode, WindowData *info_receiver)
+U32 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_v, U16 size_h, U16 size_v, WindowData *info_receiver)
 {
     WindowManageData* temp_pointer;
     // depends on if it is the initial process
@@ -131,14 +132,19 @@ U32 gui_window_manager_create_window(U16 PID, U8 focus_mode, WindowData *info_re
     else
     {
         //normal procedure
-        *temp_pointer->start_point_h = 0.2 * g_screen_resolution.horizontal;
-        *temp_pointer->start_point_v = 0.2 * g_screen_resolution.vertical;
-        *temp_pointer->base_info.vertical = 0.6 * g_screen_resolution.horizontal;
-        *temp_pointer->base_info.horizontal = 0.6 * g_screen_resolution.vertical;
+        *temp_pointer->start_point_h = pos_h;
+        *temp_pointer->start_point_v = pos_v;
+        *temp_pointer->base_info.vertical = size_v;
+        *temp_pointer->base_info.horizontal = size_h;
     }
     *temp_pointer->base_info.frame_buffer_base = memalloc(sizeof(U32)* (*temp_pointer->base_info.vertical) * (*temp_pointer->base_info.horizontal));
+    *temp_pointer->base_info.frame_buffer_base_User = *temp_pointer->base_info.frame_buffer_base + 30 * (*temp_pointer->base_info.horizontal);
     *info_receiver = *temp_pointer->base_info;
-    return ; 
+    // if it is the normal window
+    *info_receiver->horizontal = *temp_pointer->base_info.horizontal;
+    *info_receiver->vertical = *temp_pointer->base_info.vertical - 30;
+    *info_receiver->frame_buffer_base = *temp_pointer->base_info.frame_buffer_base_User;
+    return 1; 
 }
 
 WindowManageData* gui_window_manager_get_window_pointer(U32 unique_id)
@@ -182,13 +188,47 @@ U8 gui_window_manager_focus_change(U32 unique_id)
     }
 }
 
-U8 gui_window_manager_get_window_info(U16 PID, U32 unique_id, WindowData *info_receiver)
+U8 gui_window_manager_get_window_info(U16 PID, U32 unique_id, WindowDataExport *info_receiver)
 {
     WindowManageData* temp_pointer = NULL;
     temp_pointer = gui_window_manager_get_window_pointer(unique_id);
     if (temp_pointer != NULL && *temp_pointer->PID == PID)
     {
         *info_receiver = *temp_pointer->base_info;
+        if (unique_id > 0)
+        {
+            // if it is the normal window
+            *info_receiver->horizontal = *temp_pointer->base_info.horizontal;
+            // the top 30 are default for head bar
+            *info_receiver->vertical = *temp_pointer->base_info.vertical - 30;
+            *info_receiver->frame_buffer_base = *temp_pointer->base_info.frame_buffer_base_User;
+        }
+        
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+U8 gui_loading_screen_request(WindowDataExport *info_receiver)
+{
+    WindowManageData* temp_pointer = NULL;
+    U32 unique_id = 0;
+    temp_pointer = gui_window_manager_get_window_pointer(unique_id);
+    if (temp_pointer != NULL && *temp_pointer->PID == PID)
+    {
+        *info_receiver = *temp_pointer->base_info;
+        if (unique_id > 0)
+        {
+            // if it is the normal window
+            *info_receiver->horizontal = *temp_pointer->base_info.horizontal;
+            // the top 30 are default for head bar
+            *info_receiver->vertical = *temp_pointer->base_info.vertical;
+            *info_receiver->frame_buffer_base = *temp_pointer->base_info.frame_buffer_base;
+        }
+        
         return 1;
     }
     else

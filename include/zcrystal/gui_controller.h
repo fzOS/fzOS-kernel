@@ -7,15 +7,9 @@ typedef struct {
     U16 vertical;
     // 0: release; 1: pressed; XD no scroll now
     U8 status;    
-} MousePosition; 
+} MousePosition;
 
-typedef struct {
-    /* data */
-    U16 horizontal_size;
-    U16 vertical_size;
-    // also use as mouse click interface
-    U16 *window_render_index; 
-} ScreenControlIndex;
+extern U8 aero_enable;
 
 // set up layer index for mouse click & render
 U8 gui_init_main_controller(int gui_aero_enable);
