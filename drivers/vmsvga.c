@@ -4,7 +4,7 @@
 #include <zcrystal/cursor.h>
 #include <memory/memory.h>
 static U64 g_io_port_base;
-static volatile U32* g_fifo_address;
+static U32* g_fifo_address;
 static U64 g_fifo_length;
 static const U32 g_fifo_begin_offset = SVGA_FIFO_NUM_REGS*sizeof(U32);
 void vmsvga_write_register(U32 index,U32 value)
@@ -19,18 +19,18 @@ U32 vmsvga_read_register(U32 index)
 }
 U32 vmsvga_inqueue(const U32* data,U32 length)
 {
-    U64 orig_pos = g_fifo_address[SVGA_FIFO_NEXT_CMD];
+    printk("%d\n",data[0]);
+    U64 orig_pos = g_fifo_address[SVGA_FIFO_STOP];
     U64 new_pos = (orig_pos+length-g_fifo_begin_offset)%g_fifo_length+g_fifo_begin_offset;
     I64 exceed_size = (orig_pos+length-g_fifo_begin_offset)-g_fifo_length;
     if(exceed_size<0) {
         exceed_size = 0;
     }
-    g_fifo_address[SVGA_FIFO_RESERVED] = length;
     printk("Orig pos:%d,new pos:%d,length:%d,exceed %d\n",orig_pos,new_pos,length,exceed_size);
-    memcpy((void*)(g_fifo_address+orig_pos),data,(length-exceed_size)*sizeof(U32));
-    memcpy((void*)(g_fifo_address+g_fifo_begin_offset),data+(length-exceed_size)*sizeof(U32),exceed_size*sizeof(U32));
+    memcpy((void*)((void*)g_fifo_address+orig_pos),data,(length-exceed_size));
+    memcpy((void*)((void*)g_fifo_address+g_fifo_begin_offset),data+(length-exceed_size),exceed_size);
+    printk("%d:%d(%d)\n",g_fifo_address[SVGA_FIFO_STOP],g_fifo_address[g_fifo_address[SVGA_FIFO_STOP]/sizeof(U32)],g_fifo_address[orig_pos]);
     g_fifo_address[SVGA_FIFO_NEXT_CMD] = new_pos;
-    g_fifo_address[SVGA_FIFO_RESERVED] = 0;
     return new_pos;
 }
 void vmsvga_register(U8 bus,U8 slot,U8 func)
@@ -73,7 +73,7 @@ void vmsvga_register(U8 bus,U8 slot,U8 func)
 }
 void vmsvga_create_cursor(void)
 {
-    vmsvga_inqueue((const U32*)&g_cursor_image,sizeof(g_cursor_image)/sizeof(U32));
+    vmsvga_inqueue((const U32*)&g_cursor_image,sizeof(g_cursor_image));
 }
 void vmsvga_set_cursor_pos(U32 x,U32 y)
 {
@@ -81,5 +81,4 @@ void vmsvga_set_cursor_pos(U32 x,U32 y)
     g_fifo_address[SVGA_FIFO_CURSOR_X]  = x;
     g_fifo_address[SVGA_FIFO_CURSOR_Y]  = y;
     g_fifo_address[SVGA_FIFO_CURSOR_COUNT]++;
-    printk("(%x,%x)\n",x,y);
 }
