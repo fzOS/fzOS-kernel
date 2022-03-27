@@ -4,10 +4,13 @@
 #include <types.h>
 
 ScreenDefinition g_screen_resolution;
-// window list
-WindowManageData *g_window_list;
-// in use and available
-WindowManageConfig g_window_config;
+// 双向链表
+WindowManageData *g_window_list_top;
+WindowManageData *g_window_list_bottom;
+
+U32 g_gui_loading_window_uid;
+U32 g_gui_current_max_uid = 0;
+
 U8 g_gui_in_loading_screen = 1;
 
 void gui_log_print_hand_over(CharDev* dev, U8 c)
@@ -22,25 +25,27 @@ void gui_log_flush_hand_over(CharDev* dev)
 
 U8 gui_init_window_manager(int gui_aero_enable)
 {
+    g_gui_current_max_uid = 0;
     // setup the memory block for the window list
     g_screen_resolution.horizontal = g_graphics_data.gop->Mode->Info->HorizontalResolution;
     g_screen_resolution.vertical = g_graphics_data.gop->Mode->Info->VerticalResolution;
-    g_window_config.layer_index = memalloc(sizeof(U16) * g_window_config.window_available);
-    g_window_config.window_available = 10;
-    g_window_list = memalloc(sizeof(WindowLayerConfig) * g_window_config.window_available);
-    g_window_config.window_in_use = 0;
-    g_window_config.max_window_layer_in_use = g_window_config.window_in_use;
-    g_window_config.window_focus_index = 0;
-    for (U16 i = 0; i < g_window_config.window_available; i++)
-    {
-        // initialize the config
-        g_window_list[i].in_use = 0;
-        g_window_list[i].is_hide = 0;
-        g_window_config.layer_index[i].window_in_use = 0;
-    }
-    // setup loading screen
+    // set up loading screen (also use as desktop bg)
+    g_window_list_bottom = memalloc(sizeof(WindowManageData));
+    // link top window to the bottom too
+    g_window_list_top = g_window_list_bottom;
+    // initial the doubly linked list
+    *g_window_list_bottom->next = NULL;
+    *g_window_list_bottom->prev = NULL;
+    // setup window info
+    *g_window_list_bottom->start_point_h = 0;
+    *g_window_list_bottom->start_point_w = 0;
+    *g_window_list_bottom->is_hide = 0;
+    // use pid 0 to get the window
+    *g_window_list_bottom->PID = 0;
+
+    // initialize the first window(background)
     WindowData loading_screen_info_receiver;
-    gui_window_manager_create_window(2, 0, &loading_screen_info_receiver);
+    g_gui_loading_window_uid = gui_window_manager_create_window(0, 2, &loading_screen_info_receiver);
     // Clear debug info, make screen ready for desktop
     graphics_clear_screen(0xFFFFFFFF);
     // overide the fbcon default kernel print
@@ -51,6 +56,7 @@ U8 gui_init_window_manager(int gui_aero_enable)
     g_fbcon_node.con.current_x = 0;
     g_fbcon_node.con.con.common.putchar = gui_log_print_hand_over;
     g_fbcon_node.con.con.common.flush = gui_log_flush_hand_over;
+    return 1
 }
 
 U8 gui_trigger_loading_screen_status(U8 status)
@@ -63,18 +69,14 @@ U8 gui_trigger_loading_screen_status(U8 status)
 
 U8 gui_window_manager_offline()
 {
-    // clear window draw buffer
-    for (U16 i = 0; i < g_window_config.window_available; i++)
+    // clear window draw buffer and the window manager itself
+    WindowManageData* temp_pointer, temp_pointer_next;
+    temp_pointer = g_window_list_top;
+    while (*temp_pointer->next != NULL)
     {
-        /* code */
-        if (g_window_list[i].in_use)
-        {
-            memfree(g_window_list[i].base_info.frame_buffer_base);
-        }
+        temp_pointer_next = *temp_pointer->next;
+        gui_window_manager_destroy_window(*temp_pointer->PID, *temp_pointer->UID);
     }
-    // clear window manager buffer
-    memfree(g_window_list);
-    memfree(g_window_config.layer_index);
     // clear screen
     graphics_clear_screen(0xFFFFFFFF);
     //reset fbcon to the default kernel print
@@ -86,144 +88,153 @@ U8 gui_window_manager_offline()
     g_fbcon_node.con.con.common.flush = fbcon_flush;
 }
 
-U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, WindowData *info_receiver)
+U32 gui_window_manager_create_window(U16 PID, U8 focus_mode, WindowData *info_receiver)
 {
-    // memory space still available
-    U16 temp_window_index;
-    g_window_config.window_in_use += 1;
-    g_window_config.max_window_layer_in_use += 1;
-    // can be improved later for performance enhancement
-    for (U16 i = 0; i < g_window_config.window_available; i++)
+    WindowManageData* temp_pointer;
+    // depends on if it is the initial process
+    if (focus_mode != 2)
     {
-        // search for the first available window slot for this program
-        if (g_window_list[i].in_use == 0)
-        {
-            break;
-            temp_window_index = i;
-        }
+        // not initial, create new space for window
+        temp_pointer = memalloc(sizeof(WindowManageData));
     }
-    if (g_window_config.window_in_use == g_window_config.window_available)
+    else
     {
-        // no enough space, realloc
-        memrealloc(g_window_list, sizeof(WindowManageData) * (g_window_config.window_available + 10));
-        memrealloc(g_window_config.layer_index, sizeof(WindowLayerConfig) * (g_window_config.window_available + 10));
-        g_window_config.window_available += 10;
+        temp_pointer = g_window_list_top;
     }
-    for (U16 i = g_window_config.window_in_use; i < g_window_config.window_available; i++)
+
+    if (focus_mode == 1 || g_window_list_top->next == NULL)
     {
-        // initialize the new config data
-        g_window_list[i].in_use = 0;
-        g_window_list[i].is_hide = 0;
-        g_window_config.layer_index[i].window_in_use = 0;
+        *temp_pointer->prev = NULL;
+        *temp_pointer->next = g_window_list_top;
+        *g_window_list_top->prev = temp_pointer;
+        g_window_list_top = temp_pointer;
     }
-    g_window_list[temp_window_index].in_use = 1;
-    g_window_list[temp_window_index].PID = PID;
-    if (temp_window_index == 0 && PID == 2)
+    else
+    {
+        // add current window below the top layer
+        *temp_pointer->prev = g_window_list_top;
+        *temp_pointer->next = *g_window_list_top->next;
+        *g_window_list_top->next = temp_pointer;
+    }
+
+    *temp_pointer->UID = g_gui_current_max_uid;
+    g_gui_current_max_uid += 1;
+    *temp_pointer->PID = PID;
+    if (focus_mode == 2 && PID == 0)
     {
         //loading screen
-        g_window_list[temp_window_index].start_point_h = 0;
-        g_window_list[temp_window_index].start_point_v = 0;
-        g_window_list[temp_window_index].base_info.vertical = g_screen_resolution.horizontal;
-        g_window_list[temp_window_index].base_info.horizontal = g_screen_resolution.vertical;
-        // the loading/desktop screen is always at bottom, only triggered once
-        g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_index = temp_window_index;
-        g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_in_use = 1;
+        *temp_pointer->start_point_h = 0;
+        *temp_pointer->start_point_v = 0;
+        *temp_pointer->base_info.vertical = g_screen_resolution.horizontal;
+        *temp_pointer->base_info.horizontal = g_screen_resolution.vertical;
     }
     else
     {
         //normal procedure
-        g_window_list[temp_window_index].start_point_h = 0.2 * g_screen_resolution.horizontal;
-        g_window_list[temp_window_index].start_point_v = 0.2 * g_screen_resolution.vertical;
-        g_window_list[temp_window_index].base_info.vertical = 0.6 * g_screen_resolution.horizontal;
-        g_window_list[temp_window_index].base_info.horizontal = 0.6 * g_screen_resolution.vertical;
-        if (focus_mode == 1)
+        *temp_pointer->start_point_h = 0.2 * g_screen_resolution.horizontal;
+        *temp_pointer->start_point_v = 0.2 * g_screen_resolution.vertical;
+        *temp_pointer->base_info.vertical = 0.6 * g_screen_resolution.horizontal;
+        *temp_pointer->base_info.horizontal = 0.6 * g_screen_resolution.vertical;
+    }
+    *temp_pointer->base_info.frame_buffer_base = memalloc(sizeof(U32)* (*temp_pointer->base_info.vertical) * (*temp_pointer->base_info.horizontal));
+    *info_receiver = *temp_pointer->base_info;
+    return ; 
+}
+
+WindowManageData* gui_window_manager_get_window_pointer(U32 unique_id)
+{
+    WindowManageData* temp_pointer;
+    temp_pointer = g_window_list_top;
+    while (*temp_pointer->next != NULL)
+    {
+        if (*temp_pointer->UID == unique_id)
         {
-            g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_index = temp_window_index;
-            g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_in_use = 1;
+            return temp_pointer;
+            break;
         }
         else
         {
-            g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_index = g_window_config.layer_index[g_window_config.max_window_layer_in_use-2].window_index;
-            g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_in_use = 1;
-            g_window_config.layer_index[g_window_config.max_window_layer_in_use-2].window_index = temp_window_index;
+            temp_pointer = *temp_pointer->next;
         }
     }
-    g_window_list[temp_window_index].base_info.frame_buffer_base = memalloc(sizeof(U32)*g_window_list[temp_window_index].base_info.vertical*g_window_list[temp_window_index].base_info.horizontal);
-    info_receiver = g_window_list[temp_window_index];
-    return 1; 
+    return NULL;
 }
 
-// this function will make check on the empty layer
-U8 gui_window_manager_focus_change(U16 window_index)
+U8 gui_window_manager_focus_change(U32 unique_id)
 {
-    // change the focus here and reset the layer of all windows
-    // avoid the empty layer when increase the new one
-    if (g_window_list[window_index].in_use == 0 && window_index != 0)
+    WindowManageData* temp_pointer = NULL;
+    WindowManageData* temp_pointer2 = NULL;
+    temp_pointer = gui_window_manager_get_window_pointer(unique_id);
+    if (temp_pointer == NULL)
     {
-        // set focus failure, trigger error
         return 0;
     }
     else
+    {   
+        temp_pointer2 = *temp_pointer->prev;
+        *temp_pointer2->next = *temp_pointer->next;
+        temp_pointer2 = *temp_pointer->next;
+        *temp_pointer2->prev = *temp_pointer->prev;
+        *temp_pointer->prev = NULL;
+        *temp_pointer->next = g_window_list_top;
+        *g_window_list_top->prev = temp_pointer;
+        return 1;
+    }
+}
+
+U8 gui_window_manager_get_window_info(U16 PID, U32 unique_id, WindowData *info_receiver)
+{
+    WindowManageData* temp_pointer = NULL;
+    temp_pointer = gui_window_manager_get_window_pointer(unique_id);
+    if (temp_pointer != NULL && *temp_pointer->PID == PID)
     {
-        // resort the layer here
-        U16 temp_layer_index = 0;
-        // ignore layer 0, which is loading screen
-        for (U16 i = 1; i < g_window_config.max_window_layer_in_use; i++)
+        *info_receiver = *temp_pointer->base_info;
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+U8 gui_window_manager_destroy_window(U16 PID, U32 unique_id)
+{
+    WindowManageData* temp_pointer = NULL;
+    temp_pointer = gui_window_manager_get_window_pointer(unique_id);
+    if (temp_pointer != NULL && *temp_pointer->PID == PID)
+    {
+        //start destory process
+        WindowManageData* temp_pointer2 = NULL;
+        // reconnect linked list
+        if (*temp_pointer->prev == NULL)
         {
-            if ((g_window_config.layer_index[i].window_in_use) && (g_window_config.layer_index[i].window_index == window_index))
-            {
-                temp_layer_index = i;
-                break;
-            }
+            // this is top layer
+            g_window_list_top = *temp_pointer->next;
         }
-        for (U16 i = temp_layer_index; i < (g_window_config.max_window_layer_in_use - 1); i++)
+        else
         {
-            // set the higher level to overide the current
-            g_window_config.layer_index[i].window_in_use = g_window_config.layer_index[i+1].window_in_use;
-            g_window_config.layer_index[i].window_index = g_window_config.layer_index[i+1].window_index;
+            temp_pointer2 = *temp_pointer->prev;
+            *temp_pointer2->next = *temp_pointer->next;
         }
-        g_window_config.layer_index[g_window_config.max_window_layer_in_use].window_in_use = 1;
-        g_window_config.layer_index[g_window_config.max_window_layer_in_use].window_index = window_index;
-        //set focus index to current
-        g_window_config.window_focus_index = window_index;
+        // should never reach here, unless it is killing the desktop/loading window
+        if (*temp_pointer->next == NULL)
+        {
+            // this is top layer
+            g_window_list_bottom = *temp_pointer->prev;
+        }
+        else
+        {
+            temp_pointer2 = *temp_pointer->next;
+            *temp_pointer2->prev = *temp_pointer->prev;
+        }
+        // free the window screen buffer
+        memfree(*temp_pointer->base_info.frame_buffer_base);
+        // finally clean this block of memory
+        memfree(temp_pointer);
         return 1;
-    }
-}
-
-U8 gui_window_manager_get_window_info(U16 PID, U16 window_index, WindowData *info_receiver)
-{
-    if (PID != g_window_list[window_index].PID)
-    {
-        // fail to verify, if system trigger force quit, read the PID in g_window_list
-        return 0;
     }
     else
     {
-        info_receiver = g_window_list[window_index];
-        return 1;
-    }
-}
-
-U8 gui_window_manager_destroy_window(U16 PID, U16 window_index)
-{
-    if (PID != g_window_list[window_index].PID)
-    {
-        // fail to verify, if system trigger force quit, read the PID in g_window_list
         return 0;
-    }
-    else
-    {
-        // trigger current window to top
-        gui_window_manager_focus_change(window_index);
-        // set the destoried layer to unused
-        g_window_config.max_window_layer_in_use -= 1;
-        g_window_config.layer_index[g_window_config.max_window_layer_in_use].window_in_use = 0;
-        // change screen focus to next top layer
-        g_window_config.window_focus_index = g_window_config.layer_index[g_window_config.max_window_layer_in_use-1].window_index;
-        // clear the data/memory usage of destoried layer
-        g_window_config.window_in_use -= 1;
-        memfree(g_window_list[window_index].base_info.frame_buffer_base);
-        g_window_list[window_index].in_use = 0;
-        return 1;
     }
 }
