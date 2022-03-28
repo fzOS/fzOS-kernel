@@ -5,7 +5,7 @@
 
 #include <zcrystal/window_manager.h>
 #include <zcrystal/render.h>
-
+extern FbconDeviceTreeNode g_fbcon_node;
 ScreenDefinition g_screen_resolution;
 // 双向链表
 WindowManageData *g_window_list_top;
@@ -37,17 +37,17 @@ U8 gui_init_window_manager(int gui_aero_enable)
     // link top window to the bottom too
     g_window_list_top = g_window_list_bottom;
     // initial the doubly linked list
-    *g_window_list_bottom->next = NULL;
-    *g_window_list_bottom->prev = NULL;
+    g_window_list_bottom->next = NULL;
+    g_window_list_bottom->prev = NULL;
     // setup window info
-    *g_window_list_bottom->start_point_h = 0;
-    *g_window_list_bottom->start_point_w = 0;
-    *g_window_list_bottom->is_hide = 0;
+    g_window_list_bottom->start_point_h = 0;
+    g_window_list_bottom->start_point_v = 0;
+    g_window_list_bottom->is_hide = 0;
     // use pid 0 to get the window
-    *g_window_list_bottom->PID = 0;
+    g_window_list_bottom->PID = 0;
 
     // initialize the first window(background)
-    WindowData loading_screen_info_receiver;
+    WindowDataExport loading_screen_info_receiver;
     g_gui_loading_window_uid = gui_window_manager_create_window(0, 2, 0, 0, 0, 0, &loading_screen_info_receiver);
     // Clear debug info, make screen ready for desktop
     graphics_clear_screen(0xFFFFFFFF);
@@ -59,7 +59,7 @@ U8 gui_init_window_manager(int gui_aero_enable)
     g_fbcon_node.con.current_x = 0;
     g_fbcon_node.con.con.common.putchar = gui_log_print_hand_over;
     g_fbcon_node.con.con.common.flush = gui_log_flush_hand_over;
-    return 1
+    return 1;
 }
 
 U8 gui_trigger_loading_screen_status(U8 status)
@@ -74,11 +74,12 @@ U8 gui_window_manager_offline()
 {
     // clear window draw buffer and the window manager itself
     WindowManageData* temp_pointer, temp_pointer_next;
+    (void)temp_pointer_next;
     temp_pointer = g_window_list_top;
-    while (*temp_pointer->next != NULL)
+    while (temp_pointer->next != NULL)
     {
         temp_pointer_next = *temp_pointer->next;
-        gui_window_manager_destroy_window(*temp_pointer->PID, *temp_pointer->UID);
+        gui_window_manager_destroy_window(temp_pointer->PID, temp_pointer->UID);
     }
     // clear screen
     graphics_clear_screen(0xFFFFFFFF);
@@ -89,9 +90,10 @@ U8 gui_window_manager_offline()
     g_fbcon_node.con.current_x = 0;
     g_fbcon_node.con.con.common.putchar = fbcon_putchar;
     g_fbcon_node.con.con.common.flush = fbcon_flush;
+    return 0;
 }
 
-U32 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_v, U16 size_h, U16 size_v, WindowData *info_receiver)
+U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_v, U16 size_h, U16 size_v, WindowDataExport *info_receiver)
 {
     WindowManageData* temp_pointer;
     // depends on if it is the initial process
@@ -107,48 +109,48 @@ U32 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_
 
     if (focus_mode == 1 || g_window_list_top->next == NULL)
     {
-        *temp_pointer->prev = NULL;
-        *temp_pointer->next = g_window_list_top;
-        *g_window_list_top->prev = temp_pointer;
+        temp_pointer->prev = NULL;
+        temp_pointer->next = g_window_list_top;
+        g_window_list_top->prev = temp_pointer;
         g_window_list_top = temp_pointer;
     }
     else
     {
         // add current window below the top layer
-        *temp_pointer->prev = g_window_list_top;
-        *temp_pointer->next = *g_window_list_top->next;
-        *g_window_list_top->next = temp_pointer;
+        temp_pointer->prev = g_window_list_top;
+        temp_pointer->next = g_window_list_top->next;
+        g_window_list_top->next = temp_pointer;
     }
 
-    *temp_pointer->UID = g_gui_current_max_uid;
+    temp_pointer->UID = g_gui_current_max_uid;
     g_gui_current_max_uid += 1;
-    *temp_pointer->PID = PID;
+    temp_pointer->PID = PID;
     if (focus_mode == 2 && PID == 0)
     {
         //loading screen
-        *temp_pointer->start_point_h = 0;
-        *temp_pointer->start_point_v = 0;
-        *temp_pointer->base_info.vertical = g_screen_resolution.horizontal;
-        *temp_pointer->base_info.horizontal = g_screen_resolution.vertical;
+        temp_pointer->start_point_h = 0;
+        temp_pointer->start_point_v = 0;
+        temp_pointer->base_info.vertical = g_screen_resolution.horizontal;
+        temp_pointer->base_info.horizontal = g_screen_resolution.vertical;
     }
     else
     {
         //normal procedure
-        *temp_pointer->start_point_h = pos_h;
-        *temp_pointer->start_point_v = pos_v;
-        *temp_pointer->base_info.vertical = size_v;
-        *temp_pointer->base_info.horizontal = size_h;
+        temp_pointer->start_point_h = pos_h;
+        temp_pointer->start_point_v = pos_v;
+        temp_pointer->base_info.vertical = size_v;
+        temp_pointer->base_info.horizontal = size_h;
     }
-    *temp_pointer->base_info.frame_buffer_base = memalloc(sizeof(U32)* (*temp_pointer->base_info.vertical) * (*temp_pointer->base_info.horizontal));
-    *temp_pointer->base_info.frame_buffer_base_User = *temp_pointer->base_info.frame_buffer_base + 30 * (*temp_pointer->base_info.horizontal);
+    temp_pointer->base_info.frame_buffer_base = memalloc(sizeof(U32)* (temp_pointer->base_info.vertical) * (temp_pointer->base_info.horizontal));
+    temp_pointer->base_info.frame_buffer_base_User = temp_pointer->base_info.frame_buffer_base + 30 * (temp_pointer->base_info.horizontal);
     // *info_receiver = *temp_pointer->base_info;
     // if it is the normal window, loading window will ignore this
     WindowData tempWindowData;
-    tempWindowData = *temp_pointer->base_info;
+    tempWindowData = temp_pointer->base_info;
     gui_render_preset_window(&tempWindowData);
-    *info_receiver->horizontal = *temp_pointer->base_info.horizontal;
-    *info_receiver->vertical = *temp_pointer->base_info.vertical - 30;
-    *info_receiver->frame_buffer_base = *temp_pointer->base_info.frame_buffer_base_User;
+    info_receiver->horizontal = temp_pointer->base_info.horizontal;
+    info_receiver->vertical = temp_pointer->base_info.vertical - 30;
+    info_receiver->frame_buffer_base = temp_pointer->base_info.frame_buffer_base_User;
     return 1; 
 }
 
@@ -156,16 +158,16 @@ WindowManageData* gui_window_manager_get_window_pointer(U32 unique_id)
 {
     WindowManageData* temp_pointer;
     temp_pointer = g_window_list_top;
-    while (*temp_pointer->next != NULL)
+    while (temp_pointer->next != NULL)
     {
-        if (*temp_pointer->UID == unique_id)
+        if (temp_pointer->UID == unique_id)
         {
             return temp_pointer;
             break;
         }
         else
         {
-            temp_pointer = *temp_pointer->next;
+            temp_pointer = temp_pointer->next;
         }
     }
     return NULL;
@@ -182,13 +184,13 @@ U8 gui_window_manager_focus_change(U32 unique_id)
     }
     else
     {   
-        temp_pointer2 = *temp_pointer->prev;
-        *temp_pointer2->next = *temp_pointer->next;
-        temp_pointer2 = *temp_pointer->next;
-        *temp_pointer2->prev = *temp_pointer->prev;
-        *temp_pointer->prev = NULL;
-        *temp_pointer->next = g_window_list_top;
-        *g_window_list_top->prev = temp_pointer;
+        temp_pointer2 = temp_pointer->prev;
+        temp_pointer2->next = temp_pointer->next;
+        temp_pointer2 = temp_pointer->next;
+        temp_pointer2->prev = temp_pointer->prev;
+        temp_pointer->prev = NULL;
+        temp_pointer->next = g_window_list_top;
+        g_window_list_top->prev = temp_pointer;
         return 1;
     }
 }
@@ -197,16 +199,17 @@ U8 gui_window_manager_get_window_info(U16 PID, U32 unique_id, WindowDataExport *
 {
     WindowManageData* temp_pointer = NULL;
     temp_pointer = gui_window_manager_get_window_pointer(unique_id);
-    if (temp_pointer != NULL && *temp_pointer->PID == PID)
+    if (temp_pointer != NULL && temp_pointer->PID == PID)
     {
-        *info_receiver = *temp_pointer->base_info;
+        //FIXME:What is this?
+        info_receiver = ( WindowDataExport*)&(temp_pointer->base_info);
         if (unique_id > 0)
         {
             // if it is the normal window
-            *info_receiver->horizontal = *temp_pointer->base_info.horizontal;
+            info_receiver->horizontal = temp_pointer->base_info.horizontal;
             // the top 30 are default for head bar
-            *info_receiver->vertical = *temp_pointer->base_info.vertical - 30;
-            *info_receiver->frame_buffer_base = *temp_pointer->base_info.frame_buffer_base_User;
+            info_receiver->vertical = temp_pointer->base_info.vertical - 30;
+            info_receiver->frame_buffer_base = temp_pointer->base_info.frame_buffer_base_User;
         }
         
         return 1;
@@ -221,17 +224,20 @@ U8 gui_loading_screen_request(WindowDataExport *info_receiver)
 {
     WindowManageData* temp_pointer = NULL;
     U32 unique_id = 0;
+    //FIXME:WHERE IS PID?
+    U32 PID=0;
     temp_pointer = gui_window_manager_get_window_pointer(unique_id);
-    if (temp_pointer != NULL && *temp_pointer->PID == PID)
+    if (temp_pointer != NULL && temp_pointer->PID == PID)
     {
-        *info_receiver = *temp_pointer->base_info;
+        //FIXME:WHERE IS THIS?
+        info_receiver = (WindowDataExport *)&(temp_pointer->base_info);
         if (unique_id > 0)
         {
             // if it is the normal window
-            *info_receiver->horizontal = *temp_pointer->base_info.horizontal;
+            info_receiver->horizontal = temp_pointer->base_info.horizontal;
             // the top 30 are default for head bar
-            *info_receiver->vertical = *temp_pointer->base_info.vertical;
-            *info_receiver->frame_buffer_base = *temp_pointer->base_info.frame_buffer_base;
+            info_receiver->vertical = temp_pointer->base_info.vertical;
+            info_receiver->frame_buffer_base = temp_pointer->base_info.frame_buffer_base;
         }
         
         return 1;
@@ -246,34 +252,34 @@ U8 gui_window_manager_destroy_window(U16 PID, U32 unique_id)
 {
     WindowManageData* temp_pointer = NULL;
     temp_pointer = gui_window_manager_get_window_pointer(unique_id);
-    if (temp_pointer != NULL && *temp_pointer->PID == PID)
+    if (temp_pointer != NULL && temp_pointer->PID == PID)
     {
         //start destory process
         WindowManageData* temp_pointer2 = NULL;
         // reconnect linked list
-        if (*temp_pointer->prev == NULL)
+        if (temp_pointer->prev == NULL)
         {
             // this is top layer
-            g_window_list_top = *temp_pointer->next;
+            g_window_list_top = temp_pointer->next;
         }
         else
         {
-            temp_pointer2 = *temp_pointer->prev;
-            *temp_pointer2->next = *temp_pointer->next;
+            temp_pointer2 = temp_pointer->prev;
+            temp_pointer2->next = temp_pointer->next;
         }
         // should never reach here, unless it is killing the desktop/loading window
-        if (*temp_pointer->next == NULL)
+        if (temp_pointer->next == NULL)
         {
             // this is top layer
-            g_window_list_bottom = *temp_pointer->prev;
+            g_window_list_bottom = temp_pointer->prev;
         }
         else
         {
-            temp_pointer2 = *temp_pointer->next;
+            temp_pointer2 = temp_pointer->next;
             *temp_pointer2->prev = *temp_pointer->prev;
         }
         // free the window screen buffer
-        memfree(*temp_pointer->base_info.frame_buffer_base);
+        memfree(temp_pointer->base_info.frame_buffer_base);
         // finally clean this block of memory
         memfree(temp_pointer);
         return 1;

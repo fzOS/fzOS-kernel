@@ -2,7 +2,7 @@
 #ifndef _GUI_WINDOW_MANAGER_H
 #define _GUI_WINDOW_MANAGER_H
 #include <types.h>
-
+#include <drivers/chardev.h>
 /*
 #include <uefivars.h>
 #include <types.h>
@@ -33,7 +33,7 @@ typedef struct {
     U32 *frame_buffer_base_User;
 } WindowData;
 
-typedef struct
+typedef struct WindowManageData
 {
     WindowData base_info;
     U16 PID;
@@ -66,3 +66,4 @@ void gui_log_flush_hand_over(CharDev* dev);
 extern WindowManageData *g_window_list_top;
 extern WindowManageData *g_window_list_bottom;
 extern ScreenDefinition g_screen_resolution;
+#endif
