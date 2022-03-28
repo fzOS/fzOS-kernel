@@ -3,11 +3,13 @@
 #include <interrupt/irq.h>
 #include <interrupt/interrupt.h>
 #include <common/halt.h>
+#include <drivers/vmsvga.h>
 #include <coldpoint/automata/automata.h>
 HPETResgister* g_hpet_base_address;
 void hpet_inthandler(int no)
 {
     g_thread_time_expired = 1;
+    vmsvga_refresh_whole_screen();
 }
 void init_hpet(void)
 {

@@ -2,7 +2,6 @@
 #define VMSVGA_H
 #include <drivers/pci.h>
 #define SVGA_FB_MAX_TRACEABLE_SIZE      0x1000000
-
 #define SVGA_MAX_PSEUDOCOLOR_DEPTH      8
 #define SVGA_MAX_PSEUDOCOLORS           (1 << SVGA_MAX_PSEUDOCOLOR_DEPTH)
 #define SVGA_NUM_PALETTE_REGS           (3 * SVGA_MAX_PSEUDOCOLORS)
@@ -134,12 +133,20 @@ typedef enum {
    SVGA_CMD_MAX
 } SVGAFifoCmdId;
 typedef struct {
-   U32 srcX;
-   U32 srcY;
-   U32 destX;
-   U32 destY;
-   U32 width;
-   U32 height;
+    U32 command;
+    U32 x;
+    U32 y;
+    U32 width;
+    U32 height;
+} __attribute__((packed)) SVGAFifoCmdUpdate;
+typedef struct {
+    U32 command;
+    U32 srcX;
+    U32 srcY;
+    U32 destX;
+    U32 destY;
+    U32 width;
+    U32 height;
 } __attribute__((packed)) SVGAFifoCmdRectCopy;
 typedef struct {
     U32 command;
@@ -154,4 +161,8 @@ typedef struct {
 void vmsvga_register(U8 bus,U8 slot,U8 func);
 void vmsvga_create_cursor(void);
 void vmsvga_set_cursor_pos(U32 x,U32 y);
+void vmsvga_console_move_up(int delta);
+void vmsvga_update_screen(U32 x,U32 y,U32 width,U32 height);
+void vmsvga_refresh_whole_screen(void);
+extern volatile int g_screen_dirty;
 #endif

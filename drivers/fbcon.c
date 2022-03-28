@@ -24,29 +24,22 @@ void fbcon_set_color(U32 color)
 {
     g_fbcon_node.con.color = color;
 }
-void kernel_display_move_up(){
-    int upPix,newLine;
-    upPix = (g_fbcon_node.con.current_y + 16) - g_graphics_data.gop->Mode->Info->VerticalResolution;
-    newLine = g_graphics_data.gop->Mode->Info->VerticalResolution - upPix;
-    for (int i = 0; i < g_graphics_data.gop->Mode->Info->VerticalResolution; i++){
-        for (int j = 0; j < g_graphics_data.gop->Mode->Info->HorizontalResolution; j++){
-            if (i >= newLine){
-                g_graphics_data.frame_buffer_base[i * g_graphics_data.pixels_per_line + j] = g_graphics_data.default_background_color;
-            }else{
-                g_graphics_data.frame_buffer_base[i * g_graphics_data.pixels_per_line + j] = g_graphics_data.frame_buffer_base[(i + upPix) * g_graphics_data.pixels_per_line + j];
-            }
-        }
-    }
+void kernel_display_move_up()
+{
+    int upPix = (g_fbcon_node.con.current_y + 16) - g_graphics_data.gop->Mode->Info->VerticalResolution;
+    graphics_move_up(upPix);
     g_fbcon_node.con.current_y = g_fbcon_node.con.current_y - upPix;
 }
-void kernel_log_line_break(){
+void kernel_log_line_break()
+{
     g_fbcon_node.con.current_x = 0;
     g_fbcon_node.con.current_y = g_fbcon_node.con.current_y + 16;
     if (g_fbcon_node.con.max_y < (g_fbcon_node.con.current_y + 16)){
         kernel_display_move_up();
     }
 }
-void fbcon_putchar(CharDev* dev, U8 c){
+void fbcon_putchar(CharDev* dev, U8 c)
+{
     (void) dev;
     queue_in_single(&g_fbcon_node.con.con.output_buffer.queue,c);
     release_semaphore(&g_fbcon_node.con.con.output_sem);
