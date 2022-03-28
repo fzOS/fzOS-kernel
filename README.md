@@ -41,9 +41,11 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
     + 结果是 build/kernel 这个可执行文件
 + 运行/测试
     + 去隔壁 fzBurg 找一下 efi 引导文件
-    + 直接用vso文件，
+    + 直接用vso文件，恢复一个虚拟机
     + 需要另一个linux虚拟机设置磁盘系统
-    + 然后去虚拟机
+    + 使用fhhfs-fuse设置磁盘状态（初始化）
+    + 注意将banner_color文件dump到根目录
+    + 然后启动虚拟机
 
 ## 命名规范
 #### 请尤其注意下列保留区段.jpg
