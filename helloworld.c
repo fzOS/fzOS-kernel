@@ -21,6 +21,9 @@
 #include <common/wav.h>
 #include <drivers/hda.h>
 #include <filesystem/efivarfs.h>
+#include <zcrystal/gui_controller.h>
+#include <zcrystal/window_manager.h>
+#include <zcrystal/render.h>
 #ifndef VERSION
 #define VERSION "0.1"
 #endif
@@ -31,6 +34,7 @@ void print_motd(void);
 void show_banner(void);
 void play_startup_audio(void);
 void print_boot_arg(void);
+
 void kernel_main_real() {
     __asm__("cli");
     graphics_init(g_bss_info.gop);
@@ -63,7 +67,15 @@ void kernel_main_real() {
     //启动jvm！
     //init_classloader();
     print_device_tree();
+    // 激活GUI初始化
+    gui_init_main_controller(0);
+    // 创建俩窗口实验下
+    WindowDataExport test_window_data;
+    gui_window_manager_create_window(5, 1, 30, 30, 400, 700, &test_window_data);
+    gui_window_manager_create_window(6, 1, 430, 330, 600, 300, &test_window_data);
+    gui_trigger_screen_update();
 }
+
 void kernel_main(KernelInfo info) {
     //手动换栈。
     g_bss_info = info;
@@ -81,6 +93,7 @@ you_will_never_reach_here:
     halt();
     goto you_will_never_reach_here;
 }
+
 void print_motd(void)
 {
     printk("\n Hello World! I am fzOS.\n");
@@ -97,6 +110,7 @@ void print_motd(void)
     get_processor_name(buff);
     printk("%s\n",buff);
 }
+
 void show_banner(void)
 {
     //显示Banner.
@@ -108,6 +122,7 @@ void show_banner(void)
     printk("%s\n",buf);
     free_page(buf,(banner_file.size/PAGE_SIZE+1));
 }
+
 void play_startup_audio(void)
 {
     void* buf;
@@ -131,6 +146,7 @@ void play_startup_audio(void)
 skip_playing_audio:
     free_page(buf,(music_file.size/PAGE_SIZE+1));
 }
+
 void print_boot_arg(void)
 {
     void* buf;

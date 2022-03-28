@@ -1,8 +1,10 @@
-#include <zcrystal/window_manager.h>
 #include <drivers/graphics.h>
 #include <drivers/fbcon.h>
 #include <memory/memory.h>
 #include <types.h>
+
+#include <zcrystal/window_manager.h>
+#include <zcrystal/render.h>
 
 ScreenDefinition g_screen_resolution;
 // 双向链表
@@ -139,8 +141,11 @@ U32 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_
     }
     *temp_pointer->base_info.frame_buffer_base = memalloc(sizeof(U32)* (*temp_pointer->base_info.vertical) * (*temp_pointer->base_info.horizontal));
     *temp_pointer->base_info.frame_buffer_base_User = *temp_pointer->base_info.frame_buffer_base + 30 * (*temp_pointer->base_info.horizontal);
-    *info_receiver = *temp_pointer->base_info;
-    // if it is the normal window
+    // *info_receiver = *temp_pointer->base_info;
+    // if it is the normal window, loading window will ignore this
+    WindowData tempWindowData;
+    tempWindowData = *temp_pointer->base_info;
+    gui_render_preset_window(&tempWindowData);
     *info_receiver->horizontal = *temp_pointer->base_info.horizontal;
     *info_receiver->vertical = *temp_pointer->base_info.vertical - 30;
     *info_receiver->frame_buffer_base = *temp_pointer->base_info.frame_buffer_base_User;
