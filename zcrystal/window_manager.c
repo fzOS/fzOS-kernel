@@ -49,7 +49,7 @@ U8 gui_init_window_manager(int gui_aero_enable)
 
     // initialize the first window(background)
     WindowDataExport loading_screen_info_receiver;
-    g_gui_loading_window_uid = gui_window_manager_create_window(0, 2, 0, 0, 0, 0, &loading_screen_info_receiver);
+    g_gui_loading_window_uid = gui_window_manager_create_window(0, WINDOW_STATUS_LOADING, WINDOW_MODE_BORDERLESS, 0, 0, 0, 0, &loading_screen_info_receiver);
     // Clear debug info, make screen ready for desktop
     graphics_clear_screen(0xFFFFFFFF);
     // overide the fbcon default kernel print
@@ -94,8 +94,29 @@ U8 gui_window_manager_offline()
     return 0;
 }
 
-U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_v, U16 size_h, U16 size_v, WindowDataExport *info_receiver)
+U8 gui_window_manager_create_window(U16 PID, U8 focus_status, U8 window_mode, U16 pos_h, U16 pos_v, U16 size_h, U16 size_v, WindowDataExport *info_receiver)
 {
+    // overrided: 1 for focus at top layer, 0 for trigger lower than it, 2 for initial use
+    U8 focus_mode, hidden_status;
+    hidden_status = 0;
+    focus_mode = 0;
+    switch (focus_status)
+    {
+    case WINDOW_STATUS_HIDDEN:
+        hidden_status = 1;
+    case WINDOW_STATUS_INACTIVE:
+        focus_mode = 0;
+        break;
+    case WINDOW_STATUS_NORMAL:
+        focus_mode = 1;
+        break;
+    case WINDOW_STATUS_LOADING:
+        focus_mode = 2;
+        break;
+    default:
+        break;
+    }
+
     WindowManageData* temp_pointer;
     // depends on if it is the initial process
     if (focus_mode != 2)
@@ -108,24 +129,12 @@ U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_v
         temp_pointer = g_window_list_top;
     }
 
-    if (focus_mode == 1 || (g_window_list_top->next == NULL && focus_mode != 2))
-    {
-        temp_pointer->prev = NULL;
-        temp_pointer->next = g_window_list_top;
-        g_window_list_top->prev = temp_pointer;
-        g_window_list_top = temp_pointer;
-    }
-    else if (focus_mode == 0)
-    {
-        // add current window below the top layer
-        temp_pointer->prev = g_window_list_top;
-        temp_pointer->next = g_window_list_top->next;
-        g_window_list_top->next = temp_pointer;
-    }
+    temp_pointer->window_bar_mode = window_mode;
 
     temp_pointer->UID = g_gui_current_max_uid;
     g_gui_current_max_uid += 1;
     temp_pointer->PID = PID;
+    temp_pointer->is_hide = hidden_status;
     if (focus_mode == 2 && PID == 0)
     {
         //loading screen
@@ -139,7 +148,7 @@ U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_v
         //normal procedure
         temp_pointer->start_point_h = pos_h;
         temp_pointer->start_point_v = pos_v;
-        temp_pointer->base_info.vertical = size_v;
+        temp_pointer->base_info.vertical = size_v + 30;
         temp_pointer->base_info.horizontal = size_h;
     }
     temp_pointer->base_info.frame_buffer_base = memalloc(sizeof(U32)* (temp_pointer->base_info.vertical) * (temp_pointer->base_info.horizontal));
@@ -153,7 +162,27 @@ U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_v
     {
         is_loading = 1;
     }
-    gui_render_preset_window(&tempWindowData, is_loading);
+    gui_render_preset_window(&tempWindowData, is_loading, window_mode);
+
+    if (focus_mode == 1 || (g_window_list_top->next == NULL && focus_mode != 2))
+    {
+        temp_pointer->prev = NULL;
+        temp_pointer->next = g_window_list_top;
+        tempWindowData = g_window_list_top->base_info;
+        gui_render_application_bar_status_change(&tempWindowData, 0);
+        g_window_list_top->prev = temp_pointer;
+        g_window_list_top = temp_pointer;
+    }
+    else if (focus_mode == 0)
+    {
+        // add current window below the top layer
+        temp_pointer->prev = g_window_list_top;
+        temp_pointer->next = g_window_list_top->next;
+        g_window_list_top->next = temp_pointer;
+        tempWindowData = temp_pointer->base_info;
+        gui_render_application_bar_status_change(&tempWindowData, 0);
+    }
+    
     info_receiver->horizontal = temp_pointer->base_info.horizontal;
     info_receiver->vertical = temp_pointer->base_info.vertical - 30;
     info_receiver->frame_buffer_base = temp_pointer->base_info.frame_buffer_base_User;
@@ -184,6 +213,11 @@ U8 gui_window_manager_focus_change(U32 unique_id)
     WindowManageData* temp_pointer = NULL;
     WindowManageData* temp_pointer2 = NULL;
     temp_pointer = gui_window_manager_get_window_pointer(unique_id);
+    // switch the color
+    WindowData tempWindowData = g_window_list_top->base_info;
+    gui_render_application_bar_status_change(&tempWindowData, 0);
+    tempWindowData = temp_pointer->base_info;
+    gui_render_application_bar_status_change(&tempWindowData, 1);
     if (temp_pointer == NULL)
     {
         return 0;

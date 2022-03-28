@@ -77,8 +77,8 @@ void kernel_main_real()
     gui_trigger_screen_update();
     // 创建俩窗口实验下
     WindowDataExport test_window_data;
-    gui_window_manager_create_window(5, 1, 30, 30, 400, 700, &test_window_data);
-    gui_window_manager_create_window(6, 1, 530, 330, 600, 300, &test_window_data);
+    gui_window_manager_create_window(5, WINDOW_MODE_NORMAL, WINDOW_MODE_NORMAL, 30, 30, 400, 700, &test_window_data);
+    gui_window_manager_create_window(6, WINDOW_STATUS_NORMAL, WINDOW_MODE_NORMAL, 530, 330, 600, 300, &test_window_data);
     gui_trigger_screen_update();
 }
 void kernel_main(KernelInfo info)
