@@ -1,5 +1,6 @@
 #include <drivers/graphics.h>
 #include <drivers/fbcon.h>
+#include <drivers/chardev.h>
 #include <memory/memory.h>
 #include <types.h>
 
