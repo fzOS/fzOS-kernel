@@ -9,7 +9,7 @@ U8 gui_render_draw_application_bar(WindowData* window)
     temp_frame_buffer_pt = window->frame_buffer_base;
     for (U16 i = 0; i < 30; i++)
     {
-        for (U16 j = 0; j < *window->horizontal; j++)
+        for (U16 j = 0; j < window->horizontal; j++)
         {
             *temp_frame_buffer_pt = _GUI_DEFAULT_APPLICATION_BAR_COLOR_;
             // move pointer to next
@@ -25,9 +25,9 @@ U8 gui_render_preset_window(WindowData* window)
     gui_render_draw_application_bar(window);
     U32* temp_frame_buffer_pt;
     temp_frame_buffer_pt = window->frame_buffer_base;
-    for (U16 i = 30; i < *window->vertical; i++)
+    for (U16 i = 30; i < window->vertical; i++)
     {
-        for (U16 j = 0; j < *window->horizontal; j++)
+        for (U16 j = 0; j < window->horizontal; j++)
         {
             *temp_frame_buffer_pt = _GUI_DEFAULT_BACKGOUND_COLOR_;
             // move pointer to next
@@ -86,6 +86,7 @@ U8 gui_render_window(WindowManageData layer_to_draw)
             }
         }
     }
+    (void)temp_position;
     return 1;
 }
 

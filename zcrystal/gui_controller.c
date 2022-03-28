@@ -11,7 +11,7 @@ MousePosition g_mouse_info;
 U8 gui_init_main_controller(int gui_aero_enable)
 {
     gui_init_window_manager(gui_aero_enable);
-    aero_enable = gui_aero_enable;
+    g_aero_enable = gui_aero_enable;
     // set mouse to center
     g_mouse_info.horizontal = g_screen_resolution.horizontal * 0.5;
     g_mouse_info.vertical = g_screen_resolution.vertical * 0.5;
@@ -33,10 +33,10 @@ U8 gui_trigger_screen_update()
 {
     WindowManageData* temp_pointer;
     temp_pointer = g_window_list_bottom;
-    while (*temp_pointer->prev != NULL)
+    while (temp_pointer->prev != NULL)
     {
         gui_render_window(*temp_pointer);
-        temp_pointer = *temp_pointer->prev;
+        temp_pointer = temp_pointer->prev;
     }
     gui_render_mouse(g_mouse_info.horizontal, g_mouse_info.vertical, g_mouse_info.status);
     return 1;

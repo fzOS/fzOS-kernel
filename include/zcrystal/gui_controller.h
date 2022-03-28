@@ -9,7 +9,7 @@ typedef struct {
     U8 status;    
 } MousePosition;
 
-extern U8 aero_enable;
+extern U8 g_aero_enable;
 extern U8 g_mouse_is_render;
 
 // set up layer index for mouse click & render
