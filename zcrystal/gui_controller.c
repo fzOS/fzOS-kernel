@@ -33,7 +33,7 @@ U8 gui_trigger_screen_update()
 {
     WindowManageData* temp_pointer;
     temp_pointer = g_window_list_bottom;
-    while (temp_pointer->prev != NULL)
+    while (temp_pointer != NULL)
     {
         gui_render_window(*temp_pointer);
         temp_pointer = temp_pointer->prev;

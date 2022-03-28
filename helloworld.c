@@ -72,12 +72,14 @@ void kernel_main_real()
     init_classloader();
     //print_device_tree();
       // 激活GUI初始化
-    //gui_init_main_controller(0);
+    gui_init_main_controller(0);
+    gui_trigger_cpu_mouse_render_disable(1);
+    gui_trigger_screen_update();
     // 创建俩窗口实验下
-    //WindowDataExport test_window_data;
-    //gui_window_manager_create_window(5, 1, 30, 30, 400, 700, &test_window_data);
-    //gui_window_manager_create_window(6, 1, 430, 330, 600, 300, &test_window_data);
-    //gui_trigger_screen_update();
+    WindowDataExport test_window_data;
+    gui_window_manager_create_window(5, 1, 30, 30, 400, 700, &test_window_data);
+    gui_window_manager_create_window(6, 1, 530, 330, 600, 300, &test_window_data);
+    gui_trigger_screen_update();
 }
 void kernel_main(KernelInfo info)
 {

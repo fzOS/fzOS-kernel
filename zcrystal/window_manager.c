@@ -108,14 +108,14 @@ U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_v
         temp_pointer = g_window_list_top;
     }
 
-    if (focus_mode == 1 || g_window_list_top->next == NULL)
+    if (focus_mode == 1 || (g_window_list_top->next == NULL && focus_mode != 2))
     {
         temp_pointer->prev = NULL;
         temp_pointer->next = g_window_list_top;
         g_window_list_top->prev = temp_pointer;
         g_window_list_top = temp_pointer;
     }
-    else
+    else if (focus_mode == 0)
     {
         // add current window below the top layer
         temp_pointer->prev = g_window_list_top;
@@ -131,8 +131,8 @@ U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_v
         //loading screen
         temp_pointer->start_point_h = 0;
         temp_pointer->start_point_v = 0;
-        temp_pointer->base_info.vertical = g_screen_resolution.horizontal;
-        temp_pointer->base_info.horizontal = g_screen_resolution.vertical;
+        temp_pointer->base_info.vertical = g_screen_resolution.vertical;
+        temp_pointer->base_info.horizontal = g_screen_resolution.horizontal;
     }
     else
     {
@@ -148,7 +148,12 @@ U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_v
     // if it is the normal window, loading window will ignore this
     WindowData tempWindowData;
     tempWindowData = temp_pointer->base_info;
-    gui_render_preset_window(&tempWindowData);
+    U8 is_loading = 0;
+    if (focus_mode == 2)
+    {
+        is_loading = 1;
+    }
+    gui_render_preset_window(&tempWindowData, is_loading);
     info_receiver->horizontal = temp_pointer->base_info.horizontal;
     info_receiver->vertical = temp_pointer->base_info.vertical - 30;
     info_receiver->frame_buffer_base = temp_pointer->base_info.frame_buffer_base_User;

@@ -19,20 +19,30 @@ U8 gui_render_draw_application_bar(WindowData* window)
     return 1;
 }
 
-U8 gui_render_preset_window(WindowData* window)
+U8 gui_render_preset_window(WindowData* window, U8 if_loading)
 {
     // this function is for clear the created window
-    gui_render_draw_application_bar(window);
     U32* temp_frame_buffer_pt;
     temp_frame_buffer_pt = window->frame_buffer_base;
-    for (U16 i = 30; i < window->vertical; i++)
+    for (U16 i = 0; i < window->vertical; i++)
     {
         for (U16 j = 0; j < window->horizontal; j++)
         {
-            *temp_frame_buffer_pt = _GUI_DEFAULT_BACKGOUND_COLOR_;
+            if (if_loading)
+            {
+                *temp_frame_buffer_pt = _GUI_DEFAULT_DESKTOP_BACKGOUND_COLOR_;
+            }
+            else
+            {
+                *temp_frame_buffer_pt = _GUI_DEFAULT_BACKGOUND_COLOR_;
+            }
             // move pointer to next
             temp_frame_buffer_pt += 1;
         }
+    }
+    if (!if_loading)
+    {
+        gui_render_draw_application_bar(window);
     }
     return 1;
 }
@@ -43,7 +53,7 @@ U8 gui_render_window(WindowManageData layer_to_draw)
     // these are avoid write out side gop buffer
     U16 max_horizontal;
     U16 max_vertical;
-    if (layer_to_draw.start_point_h + layer_to_draw.base_info.horizontal < g_screen_resolution.horizontal)
+    if (layer_to_draw.start_point_h + layer_to_draw.base_info.horizontal > g_screen_resolution.horizontal)
     {
         max_horizontal = g_screen_resolution.horizontal;
         if (layer_to_draw.start_point_h > g_screen_resolution.horizontal)
@@ -57,7 +67,7 @@ U8 gui_render_window(WindowManageData layer_to_draw)
         max_horizontal = layer_to_draw.start_point_h + layer_to_draw.base_info.horizontal;
     }
     
-    if (layer_to_draw.start_point_v + layer_to_draw.base_info.vertical < g_screen_resolution.vertical)
+    if (layer_to_draw.start_point_v + layer_to_draw.base_info.vertical > g_screen_resolution.vertical)
     {
         max_vertical = g_screen_resolution.vertical;
         if (layer_to_draw.start_point_v > g_screen_resolution.vertical)
@@ -74,19 +84,17 @@ U8 gui_render_window(WindowManageData layer_to_draw)
     U32* temp_frame_buffer_pt;
     temp_frame_buffer_pt = layer_to_draw.base_info.frame_buffer_base;
     // start draw this to gop buffer here
-    U32 temp_position = 0;
     if (draw_signal)
     {
         for (U16 i = layer_to_draw.start_point_v; i < max_vertical; i++)
         {
-            temp_frame_buffer_pt += layer_to_draw.base_info.horizontal;
             for (U16 j = layer_to_draw.start_point_h; j < max_horizontal; j++)
             {
                 graphics_draw_pixel(j, i, *(temp_frame_buffer_pt + j - layer_to_draw.start_point_h));
             }
+            temp_frame_buffer_pt += layer_to_draw.base_info.horizontal;
         }
     }
-    (void)temp_position;
     return 1;
 }
 
