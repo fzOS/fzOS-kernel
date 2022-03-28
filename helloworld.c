@@ -20,6 +20,8 @@
 #include <coldpoint/classloader.h>
 #include <common/wav.h>
 #include <drivers/hda.h>
+#include <drivers/hpet.h>
+#include <drivers/mouse.h>
 #include <filesystem/efivarfs.h>
 #include <zcrystal/gui_controller.h>
 #include <zcrystal/window_manager.h>
@@ -34,8 +36,8 @@ void print_motd(void);
 void show_banner(void);
 void play_startup_audio(void);
 void print_boot_arg(void);
-
-void kernel_main_real() {
+void kernel_main_real()
+{
     __asm__("cli");
     graphics_init(g_bss_info.gop);
     graphics_clear_screen(0x001e1e1e);
@@ -50,6 +52,8 @@ void kernel_main_real() {
     print_boot_arg();
     fbcon_add_to_device_tree();
     init_keyboard();
+    init_mouse();
+    init_hpet();
     init_random();
     __asm__("sti");
     init_syscall();
@@ -65,9 +69,9 @@ void kernel_main_real() {
     show_banner();
     play_startup_audio();
     //启动jvm！
-    //init_classloader();
-    print_device_tree();
-    // 激活GUI初始化
+    init_classloader();
+    //print_device_tree();
+      // 激活GUI初始化
     gui_init_main_controller(0);
     // 创建俩窗口实验下
     WindowDataExport test_window_data;
@@ -75,8 +79,8 @@ void kernel_main_real() {
     gui_window_manager_create_window(6, 1, 430, 330, 600, 300, &test_window_data);
     gui_trigger_screen_update();
 }
-
-void kernel_main(KernelInfo info) {
+void kernel_main(KernelInfo info)
+{
     //手动换栈。
     g_bss_info = info;
     g_bss_info.new_empty_stack+=PAGE_SIZE*KERNEL_STACK_PAGES; //栈反向生长。
@@ -162,5 +166,8 @@ void print_boot_arg(void)
             printk(" Boot parameters:%s\n",buf);
         }
         free_page(buf,(uefi_file.size/PAGE_SIZE+1));
-    };
+    }
+    else {
+        printk(" No boot parameter found. Using default boot procedure.\n");
+    }
 }

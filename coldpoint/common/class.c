@@ -2,6 +2,7 @@
 #include <common/printk.h>
 #include <common/bswap.h>
 #include <common/kstring.h>
+#include <coldpoint/classloader.h>
 int g_access_flags[] = {ACCESS_ABSTRACT,ACCESS_ANNOTATION,ACCESS_BRIDGE,ACCESS_ENUM,\
                       ACCESS_FINAL,ACCESS_INTERFACE,ACCESS_NATIVE,ACCESS_PRIVATE,\
                       ACCESS_PROTECTED,ACCESS_PUBLIC,ACCESS_STATIC,ACCESS_STRICT,\
@@ -158,7 +159,11 @@ void print_field_and_method_info(const class* c)
         );
 
     }
-    MethodInfoEntry* method_entry = (MethodInfoEntry*)&(c->buffer[c->method_pool_entry_offset]);
+    print_method_info(c,(MethodInfoEntry*)&(c->buffer[c->method_pool_entry_offset]));
+
+}
+void print_method_info(const class* c,const MethodInfoEntry* method_entry)
+{
     U16 code_name_index = class_get_utf8_string_index(c,(U8*)"Code");
     if(c->method_pool_entry_count) {
         printk("Methods:\n");
@@ -235,6 +240,41 @@ AttributeInfoEntry* class_get_method_attribute_by_name(const class* c,const Meth
             return a;
         }
         a++;
+    }
+    return nullptr;
+}
+inline ConstantEntry* get_const_entry_by_index(class* c,int no)
+{
+    return ((ConstantEntry*)(c->buffer+c->constant_entry_offset))+no;
+}
+inline class* get_class_by_index(class* c,int no)
+{
+    const U8* target_class_name = class_get_utf8_string(c,((ClassInfoConstant*)get_const_entry_by_index(c,no))->name_index);
+    return getclass(target_class_name);
+}
+inline FieldInfoEntry* get_field_by_name_and_type(class* c,const U8* name,const U8* type)
+{
+    FieldInfoEntry* field_entry = (FieldInfoEntry*)&(c->buffer[c->fields_pool_entry_offset]);
+    if(c->fields_pool_entry_count) {
+        for(int i=0;i<c->fields_pool_entry_count;i++) {
+            if(!strcomp((char*)name,(char*)class_get_utf8_string(c,field_entry[i].name_index))
+             &&!strcomp((char*)type,(char*)class_get_utf8_string(c,field_entry[i].descriptor_index))) {
+                return field_entry;
+            }
+        }
+    }
+    return nullptr;
+}
+inline MethodInfoEntry* get_method_by_name_and_type(class* c,const U8* name,const U8* type)
+{
+    MethodInfoEntry* method_entry = (MethodInfoEntry*)&(c->buffer[c->method_pool_entry_offset]);
+    if(c->method_pool_entry_count) {
+        for(int i=0;i<c->method_pool_entry_count;i++) {
+            if(!strcomp((char*)name,(char*)class_get_utf8_string(c,method_entry[i].name_index))
+             &&!strcomp((char*)type,(char*)class_get_utf8_string(c,method_entry[i].descriptor_index))) {
+                return method_entry;
+            }
+        }
     }
     return nullptr;
 }

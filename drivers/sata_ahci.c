@@ -1,6 +1,7 @@
 #include <drivers/sata_ahci.h>
 #include <common/popcount.h>
 #include <interrupt/irq.h>
+#include <interrupt/interrupt.h>
 #include <memory/memory.h>
 #include <drivers/devicetree.h>
 #include <common/kstring.h>
@@ -53,32 +54,18 @@ static inline void ata_parse_identify(AHCIDevice* device)
 }
 void ata_interrupt_handler(int no)
 {
-    //首先，获取到AHCI的控制器。
-    char buf[200];
-    for(int i=0;i<g_SATA_device_count;i++) {
-        sprintk(buf,"/Devices/ATAController%d/",i);
-        AHCIControllerTreeNode* node = (AHCIControllerTreeNode*)device_tree_resolve_by_path(buf,nullptr,DT_RETURN_IF_NONEXIST);
-        if(node != nullptr) {
-            if(node->controller.base.irq!=no) {
-                continue;
-            }
-            else {
-                U32 interrupts = node->controller.ahci_bar->is;
-                //遍历。
-                for(int j=0;j<node->controller.port_count;j++) {
-                    if(interrupts & (1<<j)) {
-                        HBAPort* port = &(node->controller.ahci_bar->ports[j]);
-                        if(port->is & 0x01) {
-                            //received.
-                            port->is = 0;
-                            return;
-                        }
-                    }
-                }
+    AHCIController* controller = get_hardware_by_irq(no);
+    U32 interrupts = controller->ahci_bar->is;
+    for(int j=0;j<controller->port_count;j++) {
+        if(interrupts & (1<<j)) {
+            HBAPort* port = &(controller->ahci_bar->ports[j]);
+            if(port->is & 0x01) {
+                //received.
+                port->is = 0;
+                return;
             }
         }
     }
-    printk(" SATA: Cannot determine which Controller!\n");
 }
 void sata_ahci_register(U8 bus,U8 slot,U8 func)
 {
@@ -130,7 +117,13 @@ void sata_ahci_register(U8 bus,U8 slot,U8 func)
     if(lai_pci_route_pin(&resource,0,bus,slot,func,interrupt_info.split[1])!=LAI_ERROR_NONE) {
         printk(" LAI:Cannot find interrupt for ATA controller!\n");
     }
-    irq_register(resource.base, 0xDD,0,0,ata_interrupt_handler,&controller_node->controller);
+    int int_no = get_available_interrupt();
+    if(int_no == (int)FzOS_ERROR) {
+        printk("Cannot allocate interrupt for ATA Controller #d.Stop.\n",--g_SATA_device_count);
+        free_page(controller_node,1);
+        return;
+    }
+    irq_register(resource.base,int_no,0,0,ata_interrupt_handler,&controller_node->controller);
     controller_node->controller.base.irq = resource.base;
     //为AHCI设备分配buffer空间。
     //Command List+FIS+Command Table

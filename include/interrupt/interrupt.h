@@ -5,6 +5,7 @@
 #define CALL_GATE 0xc
 #define INTERRUPT_GATE 0xe
 #define TRAP_GATE 0xf
+#define MAX_INTERRUPT_COUNT 256
 typedef struct {
     U16 target_offset_low;
     U16 target_selector;
@@ -28,5 +29,6 @@ typedef struct {
 } InterruptFrame;
 extern InterruptGateDescriptor g_IDT[256];
 void set_interrupt_handler(int index,U64 addr,U8 type);
+int get_available_interrupt(void);
 void init_interrupt(void);
 #endif

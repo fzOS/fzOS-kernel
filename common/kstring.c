@@ -1,6 +1,5 @@
 #include <common/kstring.h>
 #include <stdarg.h>
-int printk(char*,...);
 int strcopy(char* dest,char* src,int n) {
     int count=0;
     for(;count<n;count++) {
@@ -11,6 +10,14 @@ int strcopy(char* dest,char* src,int n) {
     }
     dest[count]=0;
     return ++count;
+}
+int strlen(const char* in) {
+    int n=0;
+    while(*in) {
+        n++;
+        in++;
+    }
+    return n;
 }
 int strcomp(const char* first,const char* second) {
     int result =0;

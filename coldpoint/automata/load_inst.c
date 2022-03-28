@@ -1,26 +1,37 @@
 #include <coldpoint/automata/load_inst.h>
+#include <stddef.h>
 //FIXME:重写！咕咕 #3
 inline cpstatus load_internal(thread* t,int no)
 {
-    StackVar* const_val_entry = &t->stack[t->rbp+4];
+    StackVar* const_val_entry = &t->stack[t->rbp+offsetof(stack_frame,variables)/sizeof(stack_frame)];
+    t->rsp++;
+    print_opcode("load %d -> %d\n",const_val_entry[no].data,no);
     t->stack[t->rsp].data = const_val_entry[no].data;
     t->stack[t->rsp].type = const_val_entry[no].type;
-    t->rsp++;
     return COLD_POINT_SUCCESS;
 }
 inline cpstatus store_internal(thread* t,int no)
 {
-    StackVar* const_val_entry = &t->stack[t->rbp+4];
+    StackVar* const_val_entry = &t->stack[t->rbp+offsetof(stack_frame,variables)/sizeof(stack_frame)];
     const_val_entry[no].data = t->stack[t->rsp].data;
     const_val_entry[no].type = t->stack[t->rsp].type;
+    print_opcode("store %d <- %d\n",const_val_entry[no].data,no);
     t->rsp--;
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_load(thread* t)
 {
-    U8 no = t->code->code[t->pc];
+    U32 no;
+    if(t->is_wide&0x1) {
+        no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+        t->pc+=2;
+        t->is_wide&=(~0x1);
+    }
+    else {
+        no = t->code->code[t->pc];
+        t->pc++;
+    }
     print_opcode("i/l/f/d/aload %d\n",no);
-    t->pc++;
     return load_internal(t,no);
 }
 cpstatus opcode_load0(thread* t)
@@ -45,8 +56,16 @@ cpstatus opcode_load3(thread* t)
 }
 cpstatus opcode_store(thread* t)
 {
-    U8 no = t->code->code[t->pc];
-    t->pc++;
+    U32 no;
+    if(t->is_wide&0x1) {
+        no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
+        t->pc+=2;
+        t->is_wide&=(~0x1);
+    }
+    else {
+        no = t->code->code[t->pc];
+        t->pc++;
+    }
     print_opcode("i/l/f/d/astore %d\n",no);
     return store_internal(t,no);
 }

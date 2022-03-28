@@ -2,6 +2,7 @@
 #include <common/printk.h>
 #include <common/io.h>
 #include <acpi/dsdt.h>
+#include <acpi/hpet_table.h>
 #include <lai/helpers/sci.h>
 U8 g_acpi_interrupt;
 int parse_fadt(void* in) {
@@ -18,6 +19,9 @@ int parse_fadt(void* in) {
     }
     g_acpi_interrupt = fadt->SCI_Interrupt;
     g_acpi_table_entries[4] = (void*)(fadt->X_Dsdt|KERNEL_ADDR_OFFSET);
+    if(g_acpi_table_entries[5]!=nullptr) {
+        parse_hpet(g_acpi_table_entries[5]);
+    }
     return parse_dsdt(g_acpi_table_entries[4]);
 }
 void acpi_enable_power_button(void)

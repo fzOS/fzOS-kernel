@@ -1,6 +1,7 @@
 #include <drivers/pci.h>
 #include <drivers/sata_ahci.h>
 #include <drivers/hda.h>
+#include <drivers/vmsvga.h>
 const char* PCI_CLASS_NAME[] = {
     "Unclassified",
     "Mass Storage Controller",
@@ -321,6 +322,10 @@ void pci_check_device(U8 bus,U8 slot,U8 func)
     //注册HDA设备。
     if(class==0x04 && subclass ==0x03) {
         hda_register(bus,slot,func);
+    }
+    //注册显示设备。
+    if(class==0x03 && subclass ==0x00) {
+        vmsvga_register(bus,slot,func);
     }
 }
 void pci_check_bus(U8 bus) 

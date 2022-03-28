@@ -1,4 +1,3 @@
-#if we are debugging?
 DEBUG=1
 GNUEFI_PATH=/usr/include/efi
 ifeq '$(USER)' 'fhh'
@@ -15,17 +14,22 @@ endif
 THIS_YEAR := $(shell date +"%Y")
 BASE_DIR=${PWD}
 CC:=${CC}gcc
+CC_VER := $(shell LANG=C ${CC} --version | head -1 | awk '{printf($$3)}')
+CC_VER_MAJOR := $(shell echo ${CC_VER} | awk -F. '{print $$1}')
 CFLAGS=-fpie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -isystem "/usr/include/efi/x86_64" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-red-zone -ffreestanding
-SUBDIRS=drivers memory acpi common syscall interrupt filesystem coldpoint
+SUBDIRS=drivers memory acpi common syscall interrupt filesystem coldpoint zcrystal
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
         ( cd $$subdir && $(MAKE) all -f Makefile -e CC="${CC}" -e BASE_DIR=${BASE_DIR} -e CFLAGS='${CFLAGS}') || exit 1; \
         done
-all:version_update kernel
+all:check_gcc_ver version_update kernel
+check_gcc_ver:
+	@echo -e "\e[36;1m[GCC]\e[0m	" ${CC_VER}
+	@if [ ${CC_VER_MAJOR} -lt 11 ];then echo -e "\e[31;1m[Error]\e[0m\t GCC is too old.11 is required.";exit 1;fi
 version_update:
 	@echo -e "\e[33;1m[Ver.]\e[0m	" ${VERSION}
 kernel:
-	mkdir -p build/
+	@mkdir -p build/
 	$(RECURSIVE_MAKE)
 	@echo -e "\e[32;1m[CC]\e[0m	" helloworld.c
 	@$(CC) ${CFLAGS} -c helloworld.c -o build/helloworld.o
@@ -34,7 +38,7 @@ kernel:
 	@echo -e "\e[37;1m[NM]\e[0m	" symbols
 	@nm -n build/kernel > build/symbols
 	@echo -e "\e[35;1m[STRIP]\e[0m	" kernel
-	@strip build/kernel
+	#@strip build/kernel
 clean:
 	rm -rf build/*
 install:

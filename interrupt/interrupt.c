@@ -91,7 +91,7 @@ void (*g_int_handler_irqs[IRQS_MAX])(InterruptFrame* frame) = {
     int_handler_irq_23
 };
 //以上。
-InterruptGateDescriptor g_IDT[256];
+InterruptGateDescriptor g_IDT[MAX_INTERRUPT_COUNT];
 void set_interrupt_handler(int index,U64 addr,U8 type)
 {
     memset(g_IDT+index,0x00,sizeof(InterruptGateDescriptor));
@@ -122,4 +122,13 @@ void init_interrupt(void)
         :"m"(IDTR)
     );
     init_irq();
+}
+int get_available_interrupt(void)
+{
+    for(int i=0x20;i<MAX_INTERRUPT_COUNT;i++) {
+        if(g_IDT[i].target_offset_low==0&&g_IDT[i].target_offset_middle==0&&g_IDT[i].target_offset_high==0) {
+            return i;
+        }
+    }
+    return FzOS_ERROR;
 }

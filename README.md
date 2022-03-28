@@ -74,7 +74,7 @@ LAI(https://github.com/managarm/lai/) for ACPI Parsing
 + [x]Step7: 实现文件系统;
 + [x]Step8: 实现设备树;
 + [x]Step9: 实现JVM的类加载器;
-+ [&ensp;]Step10: 实现JVM的基础指令;
++ [x]Step10: 实现JVM的基础指令;
 + [&ensp;]Step11: 实现JVM的堆机制;
 + [&ensp;]Step12: 实现System类，与Kernel ABI交互;
 + [&ensp;]Step13: 与JVM并行线，GUI开发

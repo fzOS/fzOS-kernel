@@ -32,7 +32,7 @@ typedef struct {
 
 void* memalloc(U64 size);
 void memfree(void* pointer);
-int memcpy(void* dest,void* src,U64 n);
+int memcpy(void* dest, const void* src, U64 n);
 int memcmp(const void* first,const void* second,U64 n);
 int memmove(void* dest,void* src,U64 n);
 U64 memset(void* pointer,U8 value,U64 n);

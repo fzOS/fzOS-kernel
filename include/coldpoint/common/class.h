@@ -6,7 +6,13 @@ typedef struct {
     U8 type;
     U64 padding;
 } __attribute__((packed)) ConstantEntry;
+typedef enum {
+    CLASS_USERSPACE,
+    CLASS_KERNEL_API
+} ClassType;
 typedef struct {
+    const U8* class_name;
+    ClassType type;
     //由于JVM的奇怪的特性，只能用静态结构+索引的方式进行数据存储了……
     U64 constant_entry_offset;
     U64 method_pool_entry_offset;
@@ -25,7 +31,7 @@ typedef struct {
 typedef enum {
     CONSTANT_NULL=0,
     CONSTANT_UTF8=1,
-    CONSTANT_INT=2,
+    CONSTANT_INT=3,
     CONSTANT_FLOAT=4,
     CONSTANT_LONG=5,
     CONSTANT_DOUBLE=6,
@@ -140,6 +146,7 @@ typedef struct {
     U16 descriptor_index;
     U16 attribute_count;
     U64 attribute_info_entry_offset;
+    U64 val;
 } FieldInfoEntry,MethodInfoEntry;
 typedef struct {
     U16 attribute_name_index;
@@ -162,4 +169,9 @@ AttributeInfoEntry* class_get_method_attribute_by_name(const class* c,const Meth
 U16 class_get_utf8_string_index(const class* c,const U8* name);
 MethodInfoEntry* class_get_method_by_name_and_desc(const class* c,U16 name_index,U16 desc_index);
 void print_field_and_method_info(const class* c);
+ConstantEntry* get_const_entry_by_index(class* c,int no);
+class* get_class_by_index(class* c,int no);
+FieldInfoEntry* get_field_by_name_and_type(class* c,const U8* name,const U8* type);
+FieldInfoEntry* get_method_by_name_and_type(class* c,const U8* name,const U8* type);
+void print_method_info(const class* c,const MethodInfoEntry* method_entry);
 #endif

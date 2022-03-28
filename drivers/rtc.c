@@ -3,7 +3,7 @@
 #ifndef THIS_YEAR
 #define THIS_YEAR 2021
 #endif
-int get_update_in_progress_flag() {
+int get_update_in_progress_flag(void) {
     outb(CMOS_REG, 0x0A);
     return (inb(CMOS_DATA) & 0x80);
 }

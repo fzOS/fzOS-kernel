@@ -1,6 +1,7 @@
 #include <drivers/hda.h>
 #include <common/printk.h>
 #include <interrupt/irq.h>
+#include <interrupt/interrupt.h>
 #include <lai/helpers/pci.h>
 #include <memory/memory.h>
 #include <common/kstring.h>
@@ -120,8 +121,14 @@ void hda_register(U8 bus,U8 slot,U8 func) {
     sprintk(buf,g_hda_controller_tree_template,g_hda_controller_count++);
     strcopy(controller_node->header.name,buf,DT_NAME_LENGTH_MAX);
     controller_node->header.type = DT_BLOCK_DEVICE;
+    int int_no = get_available_interrupt();
+    if(int_no == (int)FzOS_ERROR) {
+        printk("Cannot allocate interrupt for HDA #d.Stop.\n",--g_hda_controller_count);
+        free_page(controller_node,1);
+        return;
+    }
+    irq_register(resource.base,int_no,0,0,hda_interrupt_handler,&controller_node->controller);
     device_tree_add_from_parent((DeviceTreeNode*)controller_node,(DeviceTreeNode*)base_node);
-    irq_register(resource.base, 0xDA,0,0,hda_interrupt_handler,&controller_node->controller);
     //Allocate page for CORB and RIRB.
     void* page_corb_rirb = allocate_page(1);
     page_corb_rirb=(void*)((U64)page_corb_rirb & (~KERNEL_ADDR_OFFSET));

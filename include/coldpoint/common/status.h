@@ -3,6 +3,7 @@
 typedef enum {
     COLD_POINT_SUCCESS=0,
     COLD_POINT_NULL=-1,
-    COLD_POINT_NOT_IMPLEMENTED=-2
+    COLD_POINT_NOT_IMPLEMENTED=-2,
+    COLD_POINT_EXEC_FAILURE=-3
 } cpstatus;
 #endif
