@@ -18,3 +18,5 @@ U8 gui_set_mouse_status(MousePosition input_mouse);
 // update whole screen
 U8 gui_trigger_screen_update();
 U8 gui_trigger_cpu_mouse_render_disable(U8 value);
+
+#endif

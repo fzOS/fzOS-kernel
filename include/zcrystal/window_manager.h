@@ -66,3 +66,5 @@ void gui_log_flush_hand_over(CharDev* dev);
 extern WindowManageData *g_window_list_top;
 extern WindowManageData *g_window_list_bottom;
 extern ScreenDefinition g_screen_resolution;
+
+#endif
