@@ -259,7 +259,7 @@ cpstatus iostream_class_entry(thread* t,const U8* name,const U8* desc,NativeClas
             return COLD_POINT_NOT_IMPLEMENTED;
         }
         case NATIVE_NEW: {
-            IOStreamObject* obj = memalloc(sizeof(IOStreamObject));
+            IOStreamObject* obj = allocate_heap(sizeof(IOStreamObject));
             obj->o.parent_class = (class*)&g_iostream_class_linked_node.c;
             obj->o.var_count    = 0;
             t->stack[++t->rsp].data = (U64)obj;

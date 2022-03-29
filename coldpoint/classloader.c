@@ -321,7 +321,7 @@ int init_classloader(void)
     }
     class* c = loadclass(buf);
     memfree(buf);
-    ret = generic_open("/PrintfTest.class",&file);
+    ret = generic_open("/FileTest.class",&file);
     if(ret !=FzOS_SUCCESS) {
         printk(" Open Init fail: %d!\n",ret);
         return FzOS_ERROR;

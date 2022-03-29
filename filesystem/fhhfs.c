@@ -8,7 +8,6 @@
 #include <drivers/sata_ahci.h>
 #include <common/random.h>
 #include <common/crc32.h>
-#pragma message "Someday I shall clean this mess...."
 
 U64 fhhfs_get_node_from_dir(char* filename,void* buffer,U64 length) {
 

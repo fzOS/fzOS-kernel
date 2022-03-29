@@ -79,7 +79,12 @@ cpstatus opcode_new(thread* t)
     StackVar v2;
     v2.type = STACK_TYPE_REFERENCE;
     const U8* class_name = class_get_utf8_string(t->class,((ClassInfoConstant*)const_entry)->name_index);
-    v2.data = (U64)new_object(getclass(class_name));
+    class* target_class = getclass(class_name);
+    if(target_class!=nullptr&&target_class->type==CLASS_KERNEL_API) {
+        NativeClass* native_class = (NativeClass*) target_class;
+        return native_class->entry(t,class_name,nullptr,NATIVE_NEW);
+    }
+    v2.data = (U64)new_object(target_class);
     t->stack[++(t->rsp)] = v2;
     print_opcode("%s:0x%x\n",class_name,v2.data);
     return COLD_POINT_SUCCESS;
@@ -296,7 +301,6 @@ cpstatus opcode_getfield(thread* t)
     NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,field->name_and_type_index));
     const U8* target_name = class_get_utf8_string(c,name_type_info->name_index);
     const U8* target_desc = class_get_utf8_string(c,name_type_info->descriptor_index);
-    print_opcode("getfield %s -> %s ",target_name,target_desc);
     ObjectVar* vars = obj->var;
     int found=0;
     for(int i=0;i<obj->var_count;i++) {
@@ -340,7 +344,7 @@ cpstatus opcode_getfield(thread* t)
         }
     }
     t->stack[t->rsp]=v1;
-    print_opcode("%s@%s->%s ==> %d\n",target_name,target_class_name,target_desc,v1.data);
+    print_opcode("getfield %s@%s->%s ==> %d\n",target_name,target_class_name,target_desc,v1.data);
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_checkcast(thread* t)

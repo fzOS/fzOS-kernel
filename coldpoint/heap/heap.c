@@ -65,3 +65,27 @@ object* new_object(class* c)
     o->parent_class = c;
     return o;
 }
+U64 get_parameter_in_object(object* o,const char* signature,const char* typename,const char* class)
+{
+    ObjectVar* var = o->var;
+    for(U64 i=0;i<o->var_count;i++) {
+        if(!strcomp(signature,var[i].signature)
+         &&!strcomp(typename,var[i].typename)
+         &&!strcomp(class,var[i].class)) {
+             return var[i].value;
+        }
+    }
+    return NULL;
+}
+void set_parameter_in_object(object* o,const char* signature,const char* typename,const char* class,U64 val)
+{
+    ObjectVar* var = o->var;
+    for(U64 i=0;i<o->var_count;i++) {
+        if(!strcomp(signature,var[i].signature)
+         &&!strcomp(typename,var[i].typename)
+         &&!strcomp(class,var[i].class)) {
+             var[i].value = val;
+             return;
+        }
+    }
+}

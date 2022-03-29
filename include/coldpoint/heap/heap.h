@@ -13,5 +13,7 @@ typedef struct {
     ObjectVar var[0];
 } object;
 object* new_object(class* c);
+U64 get_parameter_in_object(object* o,const char* signature,const char* typename,const char* class);
+void set_parameter_in_object(object* o,const char* signature,const char* typename,const char* class,U64 val);
 void* allocate_heap(U64 size);
 #endif
