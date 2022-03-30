@@ -67,7 +67,7 @@ void kernel_main_real()
         }
     };
     show_banner();
-    play_startup_audio();
+    //play_startup_audio();
     //启动jvm！
     init_classloader();
     //print_device_tree();

@@ -1,6 +1,5 @@
 #include <coldpoint/native/native_iostream.h>
 #include <coldpoint/common/class.h>
-#include <coldpoint/heap/heap.h>
 #include <coldpoint/automata/obj_inst.h>
 #include <coldpoint/native/native_typewrapper.h>
 #include <drivers/console.h>
@@ -116,12 +115,12 @@ static int native_printf(const char* format,Array* a,Console* c)
             pointer++;
             switch(*pointer)
             {
-                case 'c':{c->common.putchar(&c->common,((NativeTypeWrapperObject*)a[arg_count++].value)->val);break;}
-                case 'd':{native_putnum(((NativeTypeWrapperObject*)a[arg_count++].value)->val,c);break;}
-                case 'x':{native_putU64hex(((NativeTypeWrapperObject*)a[arg_count++].value)->val,c);break;}
-                case 'b':{native_putU8hex(((NativeTypeWrapperObject*)a[arg_count++].value)->val,c);break;}
-                case 'w':{native_putU16hex(((NativeTypeWrapperObject*)a[arg_count++].value)->val,c);break;}
-                case 's':{printk((const char*)get_constant_from_string(((NativeTypeWrapperObject*)a[arg_count++].value)));break;}
+                case 'c':{c->common.putchar(&c->common,((NativeTypeWrapperObject*)a->value[arg_count++])->val);break;}
+                case 'd':{native_putnum(((NativeTypeWrapperObject*)a->value[arg_count++])->val,c);break;}
+                case 'x':{native_putU64hex(((NativeTypeWrapperObject*)a->value[arg_count++])->val,c);break;}
+                case 'b':{native_putU8hex(((NativeTypeWrapperObject*)a->value[arg_count++])->val,c);break;}
+                case 'w':{native_putU16hex(((NativeTypeWrapperObject*)a->value[arg_count++])->val,c);break;}
+                case 's':{native_println((const char*)get_constant_from_string(((NativeTypeWrapperObject*)a->value[arg_count++])),c);break;}
                 //我们支持全彩色了！
                 //支持的颜色设置格式：
                 //%#RRGGBB
@@ -136,6 +135,9 @@ static int native_printf(const char* format,Array* a,Console* c)
                     break;
                 }
                 default:{count--;break;}
+            }
+            if(arg_count>=a->length) {
+                arg_count = a->length-1;
             }
         }
         else

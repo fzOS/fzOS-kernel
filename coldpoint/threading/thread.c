@@ -27,6 +27,10 @@ thread* get_next_thread(void)
         g_current_thread = (ThreadInlineLinkedListNode*)g_thread_list.head.next;
     }
     while (g_current_thread->t.status!=THREAD_READY) {
+        if(g_current_thread->t.status == THREAD_BLOCKED&&*g_current_thread->t.sem >0) {
+            g_current_thread->t.status=THREAD_READY;
+            return &g_current_thread->t;
+        }
         if((ThreadInlineLinkedListNode*)g_current_thread==prev) {
             //looping!
             if(g_current_thread->t.status==THREAD_READY) {

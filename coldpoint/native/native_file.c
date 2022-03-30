@@ -4,15 +4,9 @@
 #include <coldpoint/heap/heap.h>
 #include <coldpoint/classloader.h>
 #include <common/kstring.h>
-#include <common/file.h>
 #include <memory/memory.h>
 const char * const g_file_class_name  = "fzos/util/File";
 const char * const g_file_desc_class_name  = "fzos/util/FileDescriptor";
-typedef struct {
-    object o;
-    file f;
-    object* descriptor;
-} FileObject;
 static NativeClassInlineLinkedListNode g_file_class_linked_node = {
     .c.class_name = (const U8*)g_file_class_name,
     .c.type = CLASS_KERNEL_API,
