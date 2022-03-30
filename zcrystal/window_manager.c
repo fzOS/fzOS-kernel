@@ -310,7 +310,6 @@ WindowManageData* gui_window_manager_get_window_pointer(U32 unique_id)
 
 U8 gui_window_manager_focus_change(U32 unique_id)
 {
-    printk("Window %d is change to top\n", unique_id);
     WindowManageData* temp_pointer = NULL;
     WindowManageData* temp_pointer2 = NULL;
     temp_pointer = gui_window_manager_get_window_pointer(unique_id);
@@ -322,6 +321,7 @@ U8 gui_window_manager_focus_change(U32 unique_id)
     else
     {   
         // switch the color
+        printk("Window %d is change to top\n", unique_id);
         printk("Changing window bar color\n");
         WindowData tempWindowData = g_window_list_top->base_info;
         gui_render_application_bar_status_change(&tempWindowData, 0);
@@ -334,6 +334,7 @@ U8 gui_window_manager_focus_change(U32 unique_id)
         temp_pointer->prev = NULL;
         temp_pointer->next = g_window_list_top;
         g_window_list_top->prev = temp_pointer;
+        g_window_list_top = temp_pointer;
         return 1;
     }
 }
@@ -405,6 +406,9 @@ U8 gui_window_manager_destroy_window(U16 PID, U32 unique_id)
             // this is top layer
             g_window_list_top = temp_pointer->next;
             g_window_list_top->prev = NULL;
+            // change focus to current
+            WindowData tempWindowData = g_window_list_top->base_info;
+            gui_render_application_bar_status_change(&tempWindowData, 1);
         }
         else
         {

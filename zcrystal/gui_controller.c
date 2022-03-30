@@ -30,6 +30,9 @@ U8 gui_init_main_controller(int gui_aero_enable)
     mouse_info_temp.horizontal = g_screen_resolution.horizontal * 0.5;
     mouse_info_temp.vertical = g_screen_resolution.vertical * 0.5;
     mouse_info_temp.status = _GUI_MOUSE_RELEASED_;
+    U16 window_uid;
+    g_mouse_loc.position_type = gui_locate_mouse_position(mouse_info_temp.horizontal, mouse_info_temp.vertical, &window_uid);
+    g_mouse_loc.window_uid = window_uid;
     gui_set_mouse_status(mouse_info_temp);
     gui_trigger_screen_update();
     return 1;
@@ -49,38 +52,7 @@ U8 gui_set_mouse_status(MousePosition input_mouse)
         }
         
         // if the status change, consider need change window focus and move
-        if (g_mouse_info.status != input_mouse.status)
-        {
-            printk("top window uid: %d \n", g_window_list_top->UID);
-            printk("target window uid: %d \n", g_mouse_loc.window_uid);
-            // check the action of mouse;
-            if (g_mouse_info.status == _GUI_MOUSE_RELEASED_ && input_mouse.status == _GUI_MOUSE_PRESSED_)
-            {
-                printk("Onclick\n");
-                // pressing, check the location and focus
-                if (g_mouse_loc.window_uid != g_window_list_top->UID)
-                {
-                    // change focus
-                    gui_window_manager_focus_change(g_mouse_loc.window_uid);
-                }
-            }
-            else
-            {
-                // on release
-                switch (g_mouse_loc.position_type)
-                {
-                case _GUI_WINDOW_POS_CLOSE_:
-                    gui_window_manager_destroy_window(g_window_list_top->PID ,g_mouse_loc.window_uid);
-                    break;
-                case _GUI_WINDOW_POS_MIN_:
-                    g_window_list_top->is_hide = 1;
-                    break;
-                default:
-                    break;
-                }
-            }
-        }
-        else
+        if (g_mouse_info.status == input_mouse.status)
         {
             // check if on bar and is on action of moving the window
             if (g_mouse_info.status == _GUI_MOUSE_PRESSED_ && g_mouse_loc.position_type == _GUI_WINDOW_POS_BAR_)
@@ -92,16 +64,28 @@ U8 gui_set_mouse_status(MousePosition input_mouse)
                 // add to here if need special update function
             }
         }
+
         // update the mouse as final action, which can keep the position last time
         g_mouse_info.horizontal = input_mouse.horizontal;
         g_mouse_info.vertical = input_mouse.vertical;
     }
+
+    // check the action of mouse;
+    if (g_mouse_info.status == _GUI_MOUSE_RELEASED_ && input_mouse.status == _GUI_MOUSE_PRESSED_)
+    {
+        printk("Onclick\n");
+        printk("top window uid: %d \n", g_window_list_top->UID);
+        printk("target window uid: %d \n", g_mouse_loc.window_uid);
+        // pressing, check the location and focus
+        if (g_mouse_loc.window_uid != g_window_list_top->UID)
+        {
+            // change focus
+            gui_window_manager_focus_change(g_mouse_loc.window_uid);
+        }
+    }
     else
     {
-        // not move, check the release status
-        if (g_mouse_info.status == _GUI_MOUSE_PRESSED_ && input_mouse.status == _GUI_MOUSE_RELEASED_)
-        {
-            // on release
+        // on release
             switch (g_mouse_loc.position_type)
             {
             case _GUI_WINDOW_POS_CLOSE_:
@@ -113,7 +97,6 @@ U8 gui_set_mouse_status(MousePosition input_mouse)
             default:
                 break;
             }
-        }
     }
     g_mouse_info.status = input_mouse.status;
     /*
