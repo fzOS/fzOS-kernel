@@ -74,8 +74,9 @@ void kernel_main_real()
     // 激活GUI初始化
     gui_init_main_controller(0);
     // 测试输出转接
-    printk(" Kernel version: %s\n",VERSION);
-    printk(" Kernel log transfer to window display.\n");
+    printk("FzOS Kernel version: %s\n",VERSION);
+    printk("Kernel log now transfer to window display.\n");
+    printk("-------Divider-------\n");
     gui_trigger_cpu_mouse_render_disable(1);
     // enable mouse linkage
     mouse_gui_enable(1);
