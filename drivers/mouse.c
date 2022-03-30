@@ -72,7 +72,7 @@ void mouse_getmove(int i)
         input_mouse.vertical = g_mouse_y;
         input_mouse.status = g_left_button;
         gui_set_mouse_status(input_mouse);
-        gui_trigger_screen_update();
+        //gui_trigger_screen_update();
     }
 }
 

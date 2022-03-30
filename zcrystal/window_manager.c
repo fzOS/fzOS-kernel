@@ -5,6 +5,7 @@
 #include <drivers/asciifont.h>
 #include <common/printk.h>
 #include <types.h>
+#include <drivers/vmsvga.h>
 
 #include <zcrystal/window_manager.h>
 #include <zcrystal/gui_controller.h>
@@ -124,6 +125,7 @@ normal_print_char:;
         }
     }
     acquire_semaphore(&g_fbcon_node.con.output_in_progress);
+    gui_trigger_screen_update();
 }
 
 U8 gui_init_window_manager(int gui_aero_enable)
@@ -286,6 +288,7 @@ U8 gui_window_manager_create_window(U16 PID, U8 focus_status, U8 window_mode, U1
     info_receiver->horizontal = temp_pointer->base_info.horizontal;
     info_receiver->vertical = temp_pointer->base_info.vertical - g_window_bar_height;
     info_receiver->frame_buffer_base = temp_pointer->base_info.frame_buffer_base_User;
+    gui_trigger_screen_update();
     return 1; 
 }
 
@@ -337,6 +340,7 @@ U8 gui_window_manager_focus_change(U32 unique_id)
         g_window_list_top = temp_pointer;
         return 1;
     }
+    gui_trigger_screen_update();
 }
 
 U8 gui_window_manager_get_window_info(U16 PID, U32 unique_id, WindowDataExport *info_receiver)
@@ -431,6 +435,7 @@ U8 gui_window_manager_destroy_window(U16 PID, U32 unique_id)
         memfree(temp_pointer->base_info.frame_buffer_base);
         // finally clean this block of memory
         memfree(temp_pointer);
+        gui_trigger_screen_update();
         return 1;
     }
     else

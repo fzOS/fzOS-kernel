@@ -3,6 +3,7 @@
 #include <zcrystal/render.h>
 #include <drivers/fbcon.h>
 #include <common/printk.h>
+#include <drivers/vmsvga.h>
 
 #define _GUI_VERSION_H "0.1.0"
 
@@ -62,6 +63,7 @@ U8 gui_set_mouse_status(MousePosition input_mouse)
                 temp_pointer->start_point_h += input_mouse.horizontal - g_mouse_info.horizontal;
                 temp_pointer->start_point_v += input_mouse.vertical - g_mouse_info.vertical;
                 // add to here if need special update function
+                gui_trigger_screen_update();
             }
         }
 
@@ -201,6 +203,8 @@ U8 gui_trigger_screen_update()
         temp_pointer = temp_pointer->prev;
     }
     // gui_render_mouse(g_mouse_info.horizontal, g_mouse_info.vertical, g_mouse_info.status);
+    // ask vedio driver to update frame
+    //g_screen_dirty = 1;
     return 1;
 }
 
