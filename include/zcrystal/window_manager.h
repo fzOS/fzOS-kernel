@@ -47,6 +47,7 @@ typedef struct {
 typedef struct WindowManageData
 {
     WindowData base_info;
+	char* window_name;
     U16 PID;
     // uid is for multi window use of same process
     // doubled size for avoid oversize issue
@@ -75,6 +76,8 @@ U8 gui_window_manager_focus_change(U32 unique_id);
 U8 gui_window_manager_destroy_window(U16 PID, U32 unique_id);
 void gui_log_print_hand_over(CharDev* dev, U8 c);
 void gui_log_flush_hand_over(CharDev* dev);
+void gui_kernel_display_move_up(WindowDataExport* window);
+void gui_kernel_log_line_break(WindowDataExport* window);
 
 extern WindowManageData *g_window_list_top;
 extern WindowManageData *g_window_list_bottom;

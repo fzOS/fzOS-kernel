@@ -10,7 +10,7 @@ U8 gui_render_application_bar_status_change(WindowData* window, U8 status)
     temp_frame_buffer_pt = window->frame_buffer_base;
     if (!status)
     {
-        for (U16 i = 0; i < 30; i++)
+        for (U16 i = 0; i < g_window_bar_height; i++)
         {
             for (U16 j = 0; j < window->horizontal; j++)
             {
@@ -25,7 +25,7 @@ U8 gui_render_application_bar_status_change(WindowData* window, U8 status)
     }
     else
     {
-        for (U16 i = 0; i < 30; i++)
+        for (U16 i = 0; i < g_window_bar_height; i++)
         {
             for (U16 j = 0; j < window->horizontal; j++)
             {
@@ -45,7 +45,7 @@ U8 gui_render_draw_application_bar(WindowData* window, U8 preset)
 {
     U32* temp_frame_buffer_pt;
     temp_frame_buffer_pt = window->frame_buffer_base;
-    for (U16 i = 0; i < 30; i++)
+    for (U16 i = 0; i < g_window_bar_height; i++)
     {
         for (U16 j = 0; j < window->horizontal; j++)
         {
@@ -73,9 +73,9 @@ U8 gui_render_draw_application_bar(WindowData* window, U8 preset)
         break;
     }
     // 每个格子 30 * 30, 圆半径 10,
-    U16 v_center = 15;
-    U16 h_center = window->horizontal - 15;
-    U16 r = 7;
+    U16 v_center = g_window_bar_height / 2;
+    U16 h_center = window->horizontal - g_window_bar_height / 2;
+    U16 r = g_window_bar_height / 4;
     U32 temp_color;
     for (U8 i = 0; i < 3; i++)
     {
@@ -94,7 +94,7 @@ U8 gui_render_draw_application_bar(WindowData* window, U8 preset)
                 break;
             }
             gui_draw_cycle(window->frame_buffer_base, window->horizontal, h_center, v_center, r, temp_color);
-            h_center -= 20;
+            h_center -= g_window_bar_height * 2 / 3;
         }
     }
     return 1;
@@ -165,7 +165,7 @@ U8 gui_render_window(WindowManageData layer_to_draw)
     U32* temp_frame_buffer_pt;
     temp_frame_buffer_pt = layer_to_draw.base_info.frame_buffer_base;
     // start draw this to gop buffer here
-    if (draw_signal)
+    if (draw_signal && !layer_to_draw.is_hide)
     {
         for (U16 i = layer_to_draw.start_point_v; i < max_vertical; i++)
         {
@@ -181,7 +181,7 @@ U8 gui_render_window(WindowManageData layer_to_draw)
 
 U8 gui_render_mouse(U16 mouse_pos_h, U16 mouse_pos_v, U8 status)
 {
-    if (g_mouse_is_render)
+    if (g_mouse_is_render == 1)
     {
         if (mouse_pos_h < g_screen_resolution.horizontal && (mouse_pos_h + 10) < g_screen_resolution.horizontal
             && mouse_pos_v < g_screen_resolution.vertical && (mouse_pos_v + 10) < g_screen_resolution.vertical)
@@ -235,5 +235,24 @@ void gui_draw_cycle(U32* pt, U16 horz_resol, U16 hc, U16 vc, U16 r, U32 color)
             y--;
         }
         x++;
+    }
+}
+
+inline void gui_graphics_draw_pixel(WindowDataExport* window, int x, int y, U32 color)
+{
+    window->frame_buffer_base[y * window->horizontal + x] = color;
+}
+
+void gui_graphics_move_up(WindowDataExport* window, int delta)
+{
+    int newLine = window->vertical - delta;
+    for (int i = 0; i < window->vertical; i++){
+        for (int j = 0; j < window->horizontal; j++){
+            if (i >= newLine){
+                window->frame_buffer_base[i * window->horizontal + j] = _GUI_DEFAULT_BACKGOUND_COLOR_;
+            }else{
+                window->frame_buffer_base[i * window->horizontal + j] = window->frame_buffer_base[(i + delta) * window->horizontal + j];
+            }
+        }
     }
 }

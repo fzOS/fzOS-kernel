@@ -21,11 +21,11 @@
 #include <common/wav.h>
 #include <drivers/hda.h>
 #include <drivers/hpet.h>
-#include <drivers/mouse.h>
-#include <filesystem/efivarfs.h>
 #include <zcrystal/gui_controller.h>
 #include <zcrystal/window_manager.h>
 #include <zcrystal/render.h>
+#include <drivers/mouse.h>
+#include <filesystem/efivarfs.h>
 #ifndef VERSION
 #define VERSION "0.1"
 #endif
@@ -71,13 +71,17 @@ void kernel_main_real()
     //启动jvm！
     init_classloader();
     //print_device_tree();
-      // 激活GUI初始化
+    // 激活GUI初始化
     gui_init_main_controller(0);
+    // 测试输出转接
+    printk(" Kernel version: %s\n",VERSION);
+    printk(" Kernel log transfer to window display.\n");
     gui_trigger_cpu_mouse_render_disable(1);
+    // enable mouse linkage
+    mouse_gui_enable(1);
     gui_trigger_screen_update();
     // 创建俩窗口实验下
     WindowDataExport test_window_data;
-    gui_window_manager_create_window(5, WINDOW_MODE_NORMAL, WINDOW_MODE_NORMAL, 30, 30, 400, 700, &test_window_data);
     gui_window_manager_create_window(6, WINDOW_STATUS_NORMAL, WINDOW_MODE_NORMAL, 530, 330, 600, 300, &test_window_data);
     gui_trigger_screen_update();
 }

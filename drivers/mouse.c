@@ -5,6 +5,10 @@
 #include <interrupt/irq.h>
 #include <drivers/fbcon.h>
 #include <zcrystal/cursor.h>
+#include <zcrystal/gui_controller.h>
+
+U8 g_gui_mouse_control_enabled = 0;
+
 static U8 g_mouse_package_count = 0;
 static MouseDataPackage g_mouse_data_package = {.raw={0x00,0x00,0x00}};
 static I64 g_mouse_x=0,g_mouse_y=0;
@@ -24,6 +28,7 @@ void init_mouse(void)
 {
     g_mouse_x = g_graphics_data.pixels_per_line/2;
     g_mouse_y = g_graphics_data.pixels_vertical/2;
+    g_gui_mouse_control_enabled = 0;
     mouse_write(0xFF);//Mouse Reset.
     mouse_write(0xF4);//Mouse enable.
     g_mouse_package_count = 2;
@@ -59,4 +64,26 @@ void mouse_getmove(int i)
     g_mouse_package_count = (g_mouse_package_count+1)%3;
     (void)i;
     set_cursor_pos(g_mouse_x,g_mouse_y);
+    // this is for gui system
+    if (g_gui_mouse_control_enabled)
+    {
+        MousePosition input_mouse;
+        input_mouse.horizontal = g_mouse_x;
+        input_mouse.vertical = g_mouse_y;
+        input_mouse.status = g_left_button;
+        gui_set_mouse_status(input_mouse);
+        gui_trigger_screen_update();
+    }
+}
+
+void mouse_gui_enable(U8 value)
+{
+    if (value == 1)
+    {
+        g_gui_mouse_control_enabled = 1;
+    }
+    else
+    {
+        g_gui_mouse_control_enabled = 0;
+    }
 }

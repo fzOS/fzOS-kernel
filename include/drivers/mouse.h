@@ -17,4 +17,8 @@ typedef union {
     } __attribute__((packed)) data;
     U8 raw[3];
 } MouseDataPackage;
+
+// trigger enable the gui mouse control
+void mouse_gui_enable(U8 value);
+
 #endif

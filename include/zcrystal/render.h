@@ -19,4 +19,7 @@ U8 gui_render_window(WindowManageData layer_to_draw);
 U8 gui_render_mouse(U16 mouse_pos_h, U16 mouse_pos_v, U8 status);
 void gui_draw_cycle(U32* pt, U16 horz_resol, U16 hc, U16 vc, U16 r, U32 color);
 void gui_cycle_fill_8(U32* pt, U16 horz_resol, U16 hc, U16 vc, I32 x, I32 y, U32 color);
+void gui_graphics_draw_pixel(WindowDataExport* window, int x, int y, U32 color);
+void gui_graphics_move_up(WindowDataExport* window, int delta);
+
 #endif
