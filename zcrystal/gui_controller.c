@@ -11,6 +11,8 @@ U8 g_aero_enable;
 U8 g_mouse_is_render;
 U16 g_window_bar_height;
 
+U8 g_gui_render_lock;
+
 MousePosition g_mouse_info;
 MouseLocIndent g_mouse_loc;
 
@@ -18,6 +20,7 @@ MouseLocIndent g_mouse_loc;
 U8 gui_init_main_controller(int gui_aero_enable)
 {
     g_window_bar_height = _GUI_DEFAULT_1080P_WINDOW_BAR_HEIGHT_;
+    g_gui_render_lock = 0;
     gui_init_window_manager(gui_aero_enable);
     printk("---GUI Initiated---\n");
     printk("Screen Resolution: %dx%d\n", g_screen_resolution.horizontal, g_screen_resolution.vertical);
@@ -216,17 +219,28 @@ U8 gui_locate_mouse_position(U16 mouse_h, U16 mouse_v, U16* window_uid)
 // update whole screen
 U8 gui_trigger_screen_update()
 {
-    WindowManageData* temp_pointer;
-    temp_pointer = g_window_list_bottom;
-    while (temp_pointer != NULL)
+    // add a gui lock
+    if (g_gui_render_lock == 0)
     {
-        gui_render_window(*temp_pointer);
-        temp_pointer = temp_pointer->prev;
+        g_screen_dirty = 0;
+        g_gui_render_lock = 1;
+        WindowManageData* temp_pointer;
+        temp_pointer = g_window_list_bottom;
+        while (temp_pointer != NULL)
+        {
+            gui_render_window(*temp_pointer);
+            temp_pointer = temp_pointer->prev;
+        }
+        // gui_render_mouse(g_mouse_info.horizontal, g_mouse_info.vertical, g_mouse_info.status);
+        // ask vedio driver to update frame
+        g_gui_render_lock = 0;
+        g_screen_dirty = 1;
+        return 1;
     }
-    // gui_render_mouse(g_mouse_info.horizontal, g_mouse_info.vertical, g_mouse_info.status);
-    // ask vedio driver to update frame
-    g_screen_dirty = 1;
-    return 1;
+    else
+    {
+        return 0;
+    }
 }
 
 U8 gui_trigger_cpu_mouse_render_disable(U8 value)

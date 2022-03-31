@@ -81,7 +81,7 @@ void vmsvga_set_cursor_pos(U32 x,U32 y)
     g_fifo_address[SVGA_FIFO_CURSOR_X]  = x;
     g_fifo_address[SVGA_FIFO_CURSOR_Y]  = y;
     g_fifo_address[SVGA_FIFO_CURSOR_COUNT]++;
-    g_screen_dirty = 1;
+    // g_screen_dirty = 1;
 }
 void vmsvga_refresh_whole_screen(void)
 {
