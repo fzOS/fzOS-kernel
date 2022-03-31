@@ -65,14 +65,6 @@ void mouse_getmove(int i)
     g_mouse_package_count = (g_mouse_package_count+1)%3;
     (void)i;
     set_cursor_pos(g_mouse_x,g_mouse_y);
-    if (g_gui_mouse_control_enabled && g_gui_render_lock)
-    {
-        g_screen_dirty = 0;
-    }
-    else
-    {
-        g_screen_dirty = 1;
-    }
     // this is for gui system
     if (g_gui_mouse_control_enabled)
     {

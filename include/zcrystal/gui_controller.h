@@ -39,7 +39,7 @@ extern U8 g_aero_enable;
 extern U8 g_mouse_is_render;
 extern U16 g_window_bar_height;
 
-extern U8 g_gui_render_lock;
+extern volatile U8 g_gui_render_lock;
 
 // set up layer index for mouse click & render
 U8 gui_init_main_controller(int gui_aero_enable);

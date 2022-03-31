@@ -11,7 +11,7 @@ U8 g_aero_enable;
 U8 g_mouse_is_render;
 U16 g_window_bar_height;
 
-U8 g_gui_render_lock;
+volatile U8 g_gui_render_lock;
 
 MousePosition g_mouse_info;
 MouseLocIndent g_mouse_loc;
