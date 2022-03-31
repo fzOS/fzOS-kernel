@@ -16,6 +16,12 @@
 
 #define _GUI_DEFAULT_1080P_WINDOW_BAR_HEIGHT_ 30
 
+#define _GUI_WINDOW_VERTICAL_MIN_   0
+#define _GUI_WINDOW_HORIZONTAL_MIN_   0
+
+#define _GUI_WINDOW_VERTICAL_MAX_ADD_   200
+#define _GUI_WINDOW_HORIZONTAL_MAX_ADD_   200
+
 typedef struct {
     U16 horizontal;
     U16 vertical;

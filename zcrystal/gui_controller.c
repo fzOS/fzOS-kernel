@@ -62,6 +62,26 @@ U8 gui_set_mouse_status(MousePosition input_mouse)
                 WindowManageData* temp_pointer = gui_window_manager_get_window_pointer(g_mouse_loc.window_uid);
                 temp_pointer->start_point_h += input_mouse.horizontal - g_mouse_info.horizontal;
                 temp_pointer->start_point_v += input_mouse.vertical - g_mouse_info.vertical;
+
+                I32 temp_max = g_screen_resolution.horizontal + _GUI_WINDOW_HORIZONTAL_MAX_ADD_ - temp_pointer->base_info.horizontal;
+                if (temp_pointer->start_point_h < _GUI_WINDOW_HORIZONTAL_MIN_)
+                {
+                    temp_pointer->start_point_h = _GUI_WINDOW_HORIZONTAL_MIN_;
+                }
+                else if (temp_pointer->start_point_h > temp_max)
+                {
+                    temp_pointer->start_point_h = temp_max;
+                }
+
+                temp_max = g_screen_resolution.vertical + _GUI_WINDOW_VERTICAL_MAX_ADD_ - temp_pointer->base_info.vertical;
+                if (temp_pointer->start_point_v < _GUI_WINDOW_VERTICAL_MIN_)
+                {
+                    temp_pointer->start_point_v = _GUI_WINDOW_VERTICAL_MIN_;
+                }
+                else if (temp_pointer->start_point_v > temp_max)
+                {
+                    temp_pointer->start_point_v = temp_max;
+                }
                 // add to here if need special update function
                 gui_trigger_screen_update();
             }
@@ -85,7 +105,7 @@ U8 gui_set_mouse_status(MousePosition input_mouse)
             gui_window_manager_focus_change(g_mouse_loc.window_uid);
         }
     }
-    else
+    else if (g_mouse_info.status == _GUI_MOUSE_PRESSED_ && input_mouse.status == _GUI_MOUSE_RELEASED_)
     {
         // on release
             switch (g_mouse_loc.position_type)
@@ -95,6 +115,7 @@ U8 gui_set_mouse_status(MousePosition input_mouse)
                 break;
             case _GUI_WINDOW_POS_MIN_:
                 g_window_list_top->is_hide = 1;
+                printk("Window %d is hidden \n", g_window_list_top->UID);
                 break;
             default:
                 break;
@@ -204,7 +225,7 @@ U8 gui_trigger_screen_update()
     }
     // gui_render_mouse(g_mouse_info.horizontal, g_mouse_info.vertical, g_mouse_info.status);
     // ask vedio driver to update frame
-    //g_screen_dirty = 1;
+    g_screen_dirty = 1;
     return 1;
 }
 

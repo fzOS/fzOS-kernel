@@ -134,6 +134,8 @@ U8 gui_render_window(WindowManageData layer_to_draw)
     // these are avoid write out side gop buffer
     U16 max_horizontal;
     U16 max_vertical;
+    U16 min_horizontal = 0;
+    U16 min_vertical = 0;
     if (layer_to_draw.start_point_h + layer_to_draw.base_info.horizontal > g_screen_resolution.horizontal)
     {
         max_horizontal = g_screen_resolution.horizontal;
@@ -162,14 +164,25 @@ U8 gui_render_window(WindowManageData layer_to_draw)
         max_vertical = layer_to_draw.start_point_v + layer_to_draw.base_info.vertical;
     }
 
+    if (min_horizontal < layer_to_draw.start_point_h)
+    {
+        min_horizontal = layer_to_draw.start_point_h;
+    }
+
+    if (min_vertical < layer_to_draw.start_point_v)
+    {
+        min_vertical = layer_to_draw.start_point_v;
+    }
+
     U32* temp_frame_buffer_pt;
     temp_frame_buffer_pt = layer_to_draw.base_info.frame_buffer_base;
     // start draw this to gop buffer here
     if (draw_signal && !layer_to_draw.is_hide)
     {
-        for (U16 i = layer_to_draw.start_point_v; i < max_vertical; i++)
+        temp_frame_buffer_pt += layer_to_draw.base_info.horizontal * (min_vertical - layer_to_draw.start_point_v);
+        for (U16 i = min_vertical; i < max_vertical; i++)
         {
-            for (U16 j = layer_to_draw.start_point_h; j < max_horizontal; j++)
+            for (U16 j = min_horizontal; j < max_horizontal; j++)
             {
                 graphics_draw_pixel(j, i, *(temp_frame_buffer_pt + j - layer_to_draw.start_point_h));
             }

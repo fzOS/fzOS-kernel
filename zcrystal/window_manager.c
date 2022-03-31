@@ -196,7 +196,7 @@ U8 gui_window_manager_offline()
     return 0;
 }
 
-U8 gui_window_manager_create_window(U16 PID, U8 focus_status, U8 window_mode, U16 pos_h, U16 pos_v, U16 size_h, U16 size_v, WindowDataExport *info_receiver)
+U8 gui_window_manager_create_window(U16 PID, U8 focus_status, U8 window_mode, I32 pos_h, I32 pos_v, U16 size_h, U16 size_v, WindowDataExport *info_receiver)
 {
     // overrided: 1 for focus at top layer, 0 for trigger lower than it, 2 for initial use
     U8 focus_mode, hidden_status;
@@ -338,9 +338,10 @@ U8 gui_window_manager_focus_change(U32 unique_id)
         temp_pointer->next = g_window_list_top;
         g_window_list_top->prev = temp_pointer;
         g_window_list_top = temp_pointer;
+        printk("Window %d is changed, window relinked\n", unique_id);
+        gui_trigger_screen_update();
         return 1;
     }
-    gui_trigger_screen_update();
 }
 
 U8 gui_window_manager_get_window_info(U16 PID, U32 unique_id, WindowDataExport *info_receiver)
@@ -435,6 +436,7 @@ U8 gui_window_manager_destroy_window(U16 PID, U32 unique_id)
         memfree(temp_pointer->base_info.frame_buffer_base);
         // finally clean this block of memory
         memfree(temp_pointer);
+        printk("Window %d is destoryed \n", unique_id);
         gui_trigger_screen_update();
         return 1;
     }
