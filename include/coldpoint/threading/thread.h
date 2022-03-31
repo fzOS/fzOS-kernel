@@ -5,6 +5,7 @@
 #include <coldpoint/common/class.h>
 #include <drivers/console.h>
 #include <common/semaphore.h>
+#include <common/linkedlist.h>
 #define JVM_MAX_STACK_SIZE 16384
 typedef enum {
     STACK_TYPE_CODE_POINTER=0,
@@ -73,10 +74,17 @@ typedef struct {
     StackVar return_rbp;
     StackVar variables[0];
 } stack_frame;
+typedef struct {
+    InlineLinkedListNode node;
+    thread t;
+} ThreadInlineLinkedListNode;
+extern ThreadInlineLinkedListNode* g_current_thread;
 process* create_process(void);
+thread* create_thread(process* p,CodeAttribute* c,class* class,Console* con);
 void destroy_process(process* p);
 void thread_test(class* c);
 void destroy_thread(thread* t);
 thread* get_next_thread(void);
+thread* get_thread_by_tid(U64 tid);
 FzOSResult terminate_thread(thread* t,ThreadExitStatus status);
 #endif

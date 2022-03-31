@@ -7,14 +7,11 @@
 #include <common/bswap.h>
 #include <common/linkedlist.h>
 #include <common/iterator.h>
-typedef struct {
-    InlineLinkedListNode node;
-    thread t;
-} ThreadInlineLinkedListNode;
+
 static InlineLinkedList g_thread_list = {
     .tail = &g_thread_list.head
 };
-static ThreadInlineLinkedListNode* g_current_thread = nullptr;
+ThreadInlineLinkedListNode* g_current_thread = nullptr;
 thread* get_next_thread(void)
 {
     if(g_current_thread == nullptr) {
@@ -46,7 +43,6 @@ thread* get_next_thread(void)
         }
     }
     return &g_current_thread->t;
-
 }
 static U64 g_current_pid=0;
 static U64 g_current_tid=0;
@@ -85,6 +81,17 @@ FzOSResult terminate_thread(thread* t,ThreadExitStatus status)
     t->status = THREAD_TERMINATED;
     //TODO:Destroy status.
     return FzOS_SUCCESS;
+}
+thread* get_thread_by_tid(U64 tid)
+{
+    ThreadInlineLinkedListNode* current_thread = (ThreadInlineLinkedListNode*)g_thread_list.head.next;
+    while(current_thread!=nullptr) {
+        if(current_thread->t.tid==tid) {
+            return &current_thread->t;
+        }
+        current_thread = (ThreadInlineLinkedListNode*)current_thread->node.next;
+    }
+    return nullptr;
 }
 void thread_test(class* c)
 {
