@@ -23,9 +23,7 @@
 #include <drivers/hpet.h>
 #include <drivers/mouse.h>
 #include <filesystem/efivarfs.h>
-#include <zcrystal/gui_controller.h>
 #include <zcrystal/window_manager.h>
-#include <zcrystal/render.h>
 #ifndef VERSION
 #define VERSION "0.1"
 #endif
@@ -40,7 +38,7 @@ void kernel_main_real()
 {
     __asm__("cli");
     graphics_init(g_bss_info.gop);
-    graphics_clear_screen(0x001e1e1e);
+    graphics_clear_screen(DEFAULT_CONSOLE_BACKGROUND_COLOR);
     fbcon_init();
     print_motd();
     memory_init(g_bss_info.mem_map_descriptor_size,g_bss_info.mem_map_size,g_bss_info.memory_map);
@@ -66,18 +64,14 @@ void kernel_main_real()
             halt();
         }
     };
+    start_hpet();
     show_banner();
-    //play_startup_audio();
+    play_startup_audio();
     //启动jvm！
-    init_classloader();
+    //init_classloader();
     //print_device_tree();
-      // 激活GUI初始化
-    //gui_init_main_controller(0);
-    // 创建俩窗口实验下
-    //WindowDataExport test_window_data;
-    //gui_window_manager_create_window(5, 1, 30, 30, 400, 700, &test_window_data);
-    //gui_window_manager_create_window(6, 1, 430, 330, 600, 300, &test_window_data);
-    //gui_trigger_screen_update();
+    enter_graphical_mode();
+
 }
 void kernel_main(KernelInfo info)
 {

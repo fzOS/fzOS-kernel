@@ -4,7 +4,7 @@
 #include <drivers/graphics.h>
 
 #include <drivers/devicetree.h>
-
+#define DEFAULT_CONSOLE_BACKGROUND_COLOR 0x001e1e1e
 #define COLOR_SWITCH_CHAR 0x1A
 typedef struct {
     Console con;

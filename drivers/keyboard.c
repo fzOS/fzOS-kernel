@@ -6,7 +6,6 @@
 #include <drivers/fbcon.h>
 static const U8 SCAN_CODE_MAPPING[] = "\x00""\x1B""1234567890-=""\x08""\tqwertyuiop[]\n\0asdfghjkl;'`\0\\zxcvbnm,./\0*\0 \0\0\0\0\0\0\0\0\0\0\0\0\0-456+1230.\0\0\0\0\0";
 static const U8 SCAN_CODE_MAPPING_SHIFTED[] = "\x00""\x1B""!@#$%^&*()_+""\x08""\tQWERTYUIOP{}\n\0ASDFGHJKL:\"~\0|ZXCVBNM<>?\0*\0 \0\0\0\0\0\0\0\0\0\0\0\0\0789-456+1230.\0\0\0\0\0";
-U8 keyboard_getchar(struct CharDev*);
 void init_keyboard(void)
 {
     irq_register(0x01,0x21,0x00,0x00,keyboard_getkey,nullptr);

@@ -335,7 +335,6 @@ int init_classloader(void)
     }
     c = loadclass(buf);
     memfree(buf);
-    start_hpet();
     thread_test(c);
     return FzOS_SUCCESS;
 }

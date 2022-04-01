@@ -12,6 +12,11 @@ typedef struct {
     U32 var_count;
     ObjectVar var[0];
 } object;
+typedef struct {
+    U64 length;
+    const U8* type;
+    U64 value[0];
+} Array;
 object* new_object(class* c);
 U64 get_parameter_in_object(object* o,const char* signature,const char* typename,const char* class);
 void set_parameter_in_object(object* o,const char* signature,const char* typename,const char* class,U64 val);
