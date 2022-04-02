@@ -5,6 +5,7 @@
 #include <interrupt/irq.h>
 #include <drivers/fbcon.h>
 #include <zcrystal/cursor.h>
+#include <zcrystal/window_manager.h>
 static U8 g_mouse_package_count = 0;
 static MouseDataPackage g_mouse_data_package = {.raw={0x00,0x00,0x00}};
 static I64 g_mouse_x=0,g_mouse_y=0;
@@ -59,4 +60,5 @@ void mouse_getmove(int i)
     g_mouse_package_count = (g_mouse_package_count+1)%3;
     (void)i;
     set_cursor_pos(g_mouse_x,g_mouse_y);
+    window_mouse_event_receiver(g_mouse_x,g_mouse_y,g_left_button,g_right_button,g_middle_button);
 }

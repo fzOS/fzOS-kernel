@@ -2,6 +2,7 @@
 #include <common/io.h>
 #include <drivers/graphics.h>
 #include <zcrystal/cursor.h>
+#include <zcrystal/window_manager.h>
 #include <memory/memory.h>
 static U64 g_io_port_base;
 static U32* g_fifo_address;
@@ -85,7 +86,7 @@ void vmsvga_set_cursor_pos(U32 x,U32 y)
 }
 void vmsvga_refresh_whole_screen(void)
 {
-    if(g_screen_dirty) {
+    if(g_screen_dirty && !g_screen_lock) {
         vmsvga_update_screen(0,0,g_graphics_data.pixels_per_line,g_graphics_data.pixels_vertical);
         g_screen_dirty = 0;
     }

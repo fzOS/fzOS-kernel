@@ -20,6 +20,8 @@ typedef enum {
 #define WINDOW_CAPTION_COLOR_ACTIVE   0x00417b98
 #define WINDOW_CAPTION_COLOR_INACTIVE 0x00585858
 #define WINDOW_CAPTION_HEIGHT         32
+#define WINDOW_TITLE_GLYPH_HEIGHT     24
+#define WINDOW_TITLE_GLYPH_WIDTH      12
 typedef struct {
     U64 window_id;
     U64 x;
