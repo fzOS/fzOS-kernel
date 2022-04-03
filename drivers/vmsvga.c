@@ -9,6 +9,8 @@ static U32* g_fifo_address;
 static U64 g_fifo_length;
 static const U32 g_fifo_begin_offset = SVGA_FIFO_NUM_REGS*sizeof(U32);
 volatile int g_screen_dirty;
+static int g_dual_buffer_enabled;
+void vmsvga_define_back_buffer(void* addr,U64 pages);
 void vmsvga_write_register(U32 index,U32 value)
 {
    outl(g_io_port_base + SVGA_INDEX_PORT, index);
@@ -64,17 +66,113 @@ void vmsvga_register(U8 bus,U8 slot,U8 func)
         printk(" VMSVGA:Hardware cursor is supported.\n");
         g_cursor_accelerated = TRUE;
     }
+    vmsvga_create_cursor();
     if(reg_cap & SVGA_CAP_RECT_COPY) {
         printk(" VMSVGA:Hardware rect copy is supported.\n");
         g_move_up_accelerated = TRUE;
     }
     vmsvga_write_register(SVGA_REG_CONFIG_DONE, TRUE);
-    vmsvga_create_cursor();
+    if(fifo_cap & SVGA_FIFO_CAP_SCREEN_OBJECT_2) {
+        printk(" VMSVGA:Double framebuffer is supported.\n");
+        //Create a 2nd display area to prevent flicker.
+        U64 page_count = (g_graphics_data.pixels_per_line*g_graphics_data.pixels_vertical*sizeof(U32))/PAGE_SIZE+1;
+        void* alternative_memory_region = allocate_page(page_count);
+        vmsvga_define_back_buffer(alternative_memory_region,page_count);
+        g_graphics_data.frame_buffer_base = alternative_memory_region;
+        g_dual_buffer_enabled = 1;
+    }
     return;
+}
+U32 GMR_AllocDescriptor(SVGAGuestMemDescriptor *descArray,U32 numDescriptors)
+{
+   const U32 descPerPage = PAGE_SIZE / sizeof(SVGAGuestMemDescriptor) - 1;
+   SVGAGuestMemDescriptor *desc = NULL;
+   U32 firstPage = 0;
+   U32 page = 0;
+   int i = 0;
+
+   while (numDescriptors) {
+      if (!firstPage) {
+         firstPage = page = ((U64)allocate_page(1)&(~KERNEL_ADDR_OFFSET))/PAGE_SIZE;
+      }
+
+      desc = (void*)((page*PAGE_SIZE)|KERNEL_ADDR_OFFSET);
+
+      if (i == descPerPage) {
+         /*
+          * Terminate this page with a pointer to the next one.
+          */
+         page = ((U64)allocate_page(1)&(~KERNEL_ADDR_OFFSET))/PAGE_SIZE;
+         desc[i].ppn = page;
+         desc[i].numPages = 0;
+         i = 0;
+         continue;
+      }
+
+      desc[i] = *descArray;
+      i++;
+      descArray++;
+      numDescriptors--;
+   }
+
+   if (desc) {
+      /* Terminate the end of the descriptor list. */
+      desc[i].ppn = 0;
+      desc[i].numPages = 0;
+   }
+
+   return firstPage;
+}
+void GMR_Define(U32 gmrId,
+           SVGAGuestMemDescriptor *descArray,
+           U32 numDescriptors)
+{
+   U32 desc = GMR_AllocDescriptor(descArray, numDescriptors);
+   vmsvga_write_register(SVGA_REG_GMR_ID, gmrId);
+   vmsvga_write_register(SVGA_REG_GMR_DESCRIPTOR, desc);
+
+   if (desc) {
+      /*
+       * Clobber the first page, to verify that the device reads our
+       * descriptors synchronously when we write the GMR registers.
+       */
+      free_page((void*)((desc*PAGE_SIZE)|KERNEL_ADDR_OFFSET),1);
+   }
+}
+U32 GMR_DefineContiguous(U32 gmrId,void* data, U32 numPages)
+{
+   SVGAGuestMemDescriptor desc = {
+      .ppn = ((U64)data&(~KERNEL_ADDR_OFFSET))/PAGE_SIZE,
+      .numPages = numPages,
+   };
+   GMR_Define(gmrId, &desc, 1);
+   return desc.ppn;
+}
+void vmsvga_define_back_buffer(void* addr,U64 pages)
+{
+    GMR_DefineContiguous(SVGA_BACK_BUFFER_ID,addr,pages);
+    SVGAFifoCmdDefineGMRFB cmd = {
+        .command = SVGA_CMD_DEFINE_GMRFB,
+        .format = {
+            .split.bitsPerPixel = 32,
+            .split.colorDepth   = 24,
+            .split.reserved     = 0
+        },
+        .bytesPerLine = g_graphics_data.pixels_per_line*sizeof(U32),
+        .ptr = {
+            .gmrId = SVGA_BACK_BUFFER_ID,
+            .offset = 0
+        }
+    };
+    vmsvga_inqueue((const U32*)&cmd,sizeof(cmd));
+    //Wait.
+    while(vmsvga_read_register(SVGA_REG_BUSY));
 }
 void vmsvga_create_cursor(void)
 {
     vmsvga_inqueue((const U32*)&g_cursor_image,sizeof(g_cursor_image));
+    //Wait.
+    while(vmsvga_read_register(SVGA_REG_BUSY));
 }
 void vmsvga_set_cursor_pos(U32 x,U32 y)
 {
@@ -84,9 +182,32 @@ void vmsvga_set_cursor_pos(U32 x,U32 y)
     g_fifo_address[SVGA_FIFO_CURSOR_COUNT]++;
     g_screen_dirty = 1;
 }
+void vmsvga_transport_back_buffer(void)
+{
+    SVGAFifoCmdBlitGMRFBToScreen command = {
+        .command = SVGA_CMD_BLIT_GMRFB_TO_SCREEN,
+        .destRect= {
+            .top  = 0,
+            .left = 0,
+            .bottom = g_graphics_data.pixels_vertical,
+            .right  = g_graphics_data.pixels_per_line
+        },
+        .srcOrigin = {
+            .x = 0,
+            .y = 0
+        },
+        .destScreenId = 0
+    };
+    vmsvga_inqueue((const U32*)&command,sizeof(command));
+    //Wait.
+    while(vmsvga_read_register(SVGA_REG_BUSY));
+}
 void vmsvga_refresh_whole_screen(void)
 {
     if(g_screen_dirty && !g_screen_lock) {
+        if(g_dual_buffer_enabled) {
+            vmsvga_transport_back_buffer();
+        }
         vmsvga_update_screen(0,0,g_graphics_data.pixels_per_line,g_graphics_data.pixels_vertical);
         g_screen_dirty = 0;
     }
@@ -101,6 +222,8 @@ void vmsvga_update_screen(U32 x,U32 y,U32 width,U32 height)
         .height  = height
     };
     vmsvga_inqueue((const U32*)&update_command,sizeof(update_command));
+    //Wait.
+    while(vmsvga_read_register(SVGA_REG_BUSY));
 }
 void vmsvga_console_move_up(int delta)
 {
@@ -114,4 +237,6 @@ void vmsvga_console_move_up(int delta)
         .height = g_graphics_data.pixels_vertical-delta
     };
     vmsvga_inqueue((const U32*)&copy_command,sizeof(copy_command));
+    //Wait.
+    while(vmsvga_read_register(SVGA_REG_BUSY));
 }

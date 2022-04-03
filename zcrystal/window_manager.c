@@ -48,6 +48,7 @@ Window* create_window(U32 x,U32 y,U32 width,U32 height,char* title,object* event
     node->w.caption = title;
     node->w.buffer.length = (height+WINDOW_CAPTION_HEIGHT)*width*sizeof(U8);
     node->w.buffer.type = (const U8*)"B";
+    node->w.status = WINDOW_STATUS_INACTIVE;
     node->w.x = x;
     node->w.y = y;
     node->w.width = width;
@@ -56,7 +57,7 @@ Window* create_window(U32 x,U32 y,U32 width,U32 height,char* title,object* event
     node->w.window_id = g_next_window_id++;
     //clear to white.
     memset(node->w.buffer.value,0xFF,width*(height+WINDOW_CAPTION_HEIGHT)*sizeof(U32));
-    update_window_caption(&node->w,1);
+    update_window_caption(&node->w,0);
     insert_existing_inline_node(&g_window_linked_list,&node->node,-1);
     return &node->w;
 }
