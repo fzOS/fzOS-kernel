@@ -61,6 +61,46 @@ Window* create_window(U32 x,U32 y,U32 width,U32 height,char* title,object* event
     insert_existing_inline_node(&g_window_linked_list,&node->node,-1);
     return &node->w;
 }
+void resize_window(Window* w,U32 width,U32 height)
+{
+    WindowInlineLinkedListNode* node = (WindowInlineLinkedListNode*)g_window_linked_list.tail;
+    while(node != (WindowInlineLinkedListNode*)g_window_linked_list.head.next->prev) {
+        if(&node->w==w) {
+            int orig_width = node->w.width;
+            int copy_width = node->w.width>width?width:node->w.width;
+            int copy_height= node->w.height>height?height:node->w.height;
+            U64 size_needed = sizeof(WindowInlineLinkedListNode)+width*(height+WINDOW_CAPTION_HEIGHT)*sizeof(U32);
+            //Allocate a new Window.
+            WindowInlineLinkedListNode* new_node = memalloc(size_needed);
+            memcpy(&new_node->w,w,sizeof(Window));
+            new_node->w.width  = width;
+            new_node->w.height = height;
+            printk("New:%d/%d\n",new_node->w.width,new_node->w.height);
+            update_window_caption(&new_node->w,!(new_node->w.status&WINDOW_STATUS_INACTIVE));
+            //change.
+            new_node->node.next = node->node.next;
+            new_node->node.prev = node->node.prev;
+            if(node->node.prev!=nullptr) {
+                node->node.prev->next = &new_node->node;
+            }
+            if(node->node.next!=nullptr) {
+                node->node.next->prev = &new_node->node;
+            }
+            if(g_window_linked_list.tail==&node->node) {
+                g_window_linked_list.tail = &new_node->node;
+            }
+            //window data copy.
+            for(int i=WINDOW_CAPTION_HEIGHT;i<copy_height+WINDOW_CAPTION_HEIGHT;i++) {
+                memcpy(((void*)(new_node->w.buffer.value)+width*i*sizeof(U32)),
+                       ((void*)(node->w.buffer.value)+orig_width*i*sizeof(U32)),
+                       copy_width*sizeof(U32));
+            }
+            //delete orig node.
+            memfree(node);
+            return;
+        }
+    }
+}
 void update_window_caption(Window* w,U8 activity)
 {
     U32* pixeldata = (U32*)w->buffer.value;
@@ -202,12 +242,11 @@ void send_drag_event(int prev_x,int prev_y,int delta_x,int delta_y)
         composite();
     }
 }
-void check_caption_click(Window* w,int x) {
+int check_caption_click(Window* w,int x) {
     int offset_from_right = w->width-(x-w->x);
-    printk("offset:%d\n",offset_from_right);
     CaptionButton clicked_button=NO_BUTTON;
     if(offset_from_right<10) {
-        return;
+        return 0;
     }
     if(offset_from_right<10+WINDOW_CAPTION_BUTTON_WIDTH) {
         clicked_button = w->button[0];
@@ -222,37 +261,39 @@ void check_caption_click(Window* w,int x) {
         goto check_button;
     }
 check_button:
-    printk("Button %d\n",clicked_button);
     switch(clicked_button) {
         case NO_BUTTON: {
-            return;
+            return 0;
         }
         case CLOSE_BUTTON: {
-            return;
+            return 0;
         }
         case MAXIMIZE_BUTTON: {
-            //FIXME:REALLOC BUFFER FOR WINDOW!!!!
             if(w->status & WINDOW_STATUS_MAXIMIZED) {
-                w->width =  w->orig_width;
-                w->height = w->orig_height;
+                w->status &= (~WINDOW_STATUS_MAXIMIZED);
+                w->x      = w->orig_x;
+                w->y      = w->orig_y;
+                resize_window(w,w->orig_width,w->orig_height);
                 graphics_clear_screen(DEFAULT_BACKGROUND_COLOR);
-                w->status &= ~WINDOW_STATUS_MAXIMIZED;
-                composite();
             }
             else {
                 w->orig_height = w->height;
                 w->orig_width  = w->width;
-                w->width = g_graphics_data.pixels_per_line;
-                w->height = g_graphics_data.pixels_vertical-WINDOW_CAPTION_HEIGHT;
+                w->orig_x      = w->x;
+                w->orig_y      = w->y;
+                w->x           = 0;
+                w->y           = 0;
                 w->status |= WINDOW_STATUS_MAXIMIZED;
-                composite();
+                resize_window(w,g_graphics_data.pixels_per_line,
+                              g_graphics_data.pixels_vertical-WINDOW_CAPTION_HEIGHT);
             }
-            return;
+            return 1;
         }
         case MINIMIZE_BUTTON: {
-            return;
+            return 0;
         }
     }
+    return 0;
 }
 void send_click_event(int x,int y)
 {
@@ -283,7 +324,8 @@ void send_click_event(int x,int y)
                     node->w.status &= ~(WINDOW_STATUS_INACTIVE);
                 }
                 if(y<(node->w.y+WINDOW_CAPTION_HEIGHT)) {
-                    check_caption_click(&node->w,x);
+                    changed |= check_caption_click(&node->w,x);
+                    goto click_out;
                 }
             }
             else {
@@ -296,6 +338,7 @@ void send_click_event(int x,int y)
         }
         node = (WindowInlineLinkedListNode*)node->node.prev;
     }
+click_out:
     if(changed) {
         composite();
     }

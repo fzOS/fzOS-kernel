@@ -37,6 +37,8 @@ typedef struct {
     U64 height;
     U64 orig_width;
     U64 orig_height;
+    U64 orig_x;
+    U64 orig_y;
     char* caption;
     CaptionButton button[3];
     WindowStatus status;
