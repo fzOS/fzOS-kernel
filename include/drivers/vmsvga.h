@@ -5,7 +5,7 @@
 #define SVGA_MAX_PSEUDOCOLOR_DEPTH      8
 #define SVGA_MAX_PSEUDOCOLORS           (1 << SVGA_MAX_PSEUDOCOLOR_DEPTH)
 #define SVGA_NUM_PALETTE_REGS           (3 * SVGA_MAX_PSEUDOCOLORS)
-#define SVGA_BACK_BUFFER_ID             0
+#define SVGA_BACK_BUFFER_ID             1
 typedef struct {
     I32 left;
     I32 top;

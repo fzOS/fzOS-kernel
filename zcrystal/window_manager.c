@@ -72,6 +72,7 @@ void update_window_caption(Window* w,U8 activity)
     const U32* close_button   = activity?g_close_button_active:g_close_button_inactive;
     const U32* maximum_button = activity?g_maximize_button_active:g_maximize_button_inactive;
     const U32* minimum_button = activity?g_minimize_button_active:g_minimize_button_inactive;
+    int button_count = 0;
     I32 begin_offset = w->width - 10;
     if(!(w->mode&WINDOW_MODE_NO_CLOSE)) {
         begin_offset -= WINDOW_CAPTION_BUTTON_WIDTH;
@@ -80,6 +81,7 @@ void update_window_caption(Window* w,U8 activity)
                    close_button+i*WINDOW_CAPTION_BUTTON_WIDTH,
                    WINDOW_CAPTION_BUTTON_WIDTH*sizeof(U32));
         }
+        w->button[button_count++] = CLOSE_BUTTON;
         begin_offset -= 5;
     }
     if(!(w->mode&WINDOW_MODE_NO_MAXIMIZE)) {
@@ -89,6 +91,7 @@ void update_window_caption(Window* w,U8 activity)
                    maximum_button+i*WINDOW_CAPTION_BUTTON_WIDTH,
                    WINDOW_CAPTION_BUTTON_WIDTH*sizeof(U32));
         }
+        w->button[button_count++] = MAXIMIZE_BUTTON;
         begin_offset -= 5;
     }
     if(!(w->mode&WINDOW_MODE_NO_MINIMIZE)) {
@@ -98,6 +101,7 @@ void update_window_caption(Window* w,U8 activity)
                    minimum_button+i*WINDOW_CAPTION_BUTTON_WIDTH,
                    WINDOW_CAPTION_BUTTON_WIDTH*sizeof(U32));
         }
+        w->button[button_count++] = MINIMIZE_BUTTON;
     }
     int max_caption_offset = begin_offset;
     int caplen = strlen(w->caption);
@@ -133,7 +137,7 @@ void composite(void)
         U32* window_buffer = (U32*)w->buffer.value;
         int composite_area_left   = (w->x<0)?(-w->x):0;
         int composite_area_right  = ((w->x+w->width)>g_graphics_data.pixels_per_line)?
-                                    (g_graphics_data.pixels_vertical-w->x):
+                                    (g_graphics_data.pixels_per_line-w->x):
                                     w->width;
         int composite_area_top    = (w->y<0)?(-w->y):0;
         int composite_area_bottom = ((w->y+w->height+WINDOW_CAPTION_HEIGHT)>g_graphics_data.pixels_vertical)?
@@ -142,7 +146,7 @@ void composite(void)
         int screen_offset_x = w->x>0?w->x:0;
         int screen_offset_y = w->y>0?w->y:0;
         for(int i=composite_area_top;i<composite_area_bottom;i++) {
-            memcpy(screen_buffer+(screen_offset_y+i)*g_graphics_data.pixels_per_line+screen_offset_x,
+            memcpy(screen_buffer+(screen_offset_y+(i-composite_area_top))*g_graphics_data.pixels_per_line+screen_offset_x,
                    window_buffer+i*w->width+composite_area_left,
                    (composite_area_right-composite_area_left)*sizeof(U32));
         }
@@ -151,7 +155,105 @@ void composite(void)
     g_screen_lock = 0;
     g_screen_dirty = 1;
 }
-
+void send_drag_event(int prev_x,int prev_y,int delta_x,int delta_y)
+{
+     WindowInlineLinkedListNode* node = (WindowInlineLinkedListNode*)g_window_linked_list.tail;
+    int found = 0;
+    int changed = 0;
+    while(node != (WindowInlineLinkedListNode*)g_window_linked_list.head.next->prev) {
+        if(found) {
+            if(!(node->w.status & WINDOW_STATUS_INACTIVE)) {
+                node->w.status |= WINDOW_STATUS_INACTIVE;
+                update_window_caption(&node->w,0);
+                changed = 1;
+            }
+        }
+        else {
+            if(prev_x>=node->w.x && prev_x<(node->w.x+node->w.width)&&prev_y>=node->w.y && prev_y<(node->w.y+WINDOW_CAPTION_HEIGHT)) {
+                found = 1;
+                if(node->w.status & WINDOW_STATUS_INACTIVE) {
+                    update_window_caption(&node->w,1);
+                    if(node!=(WindowInlineLinkedListNode*)g_window_linked_list.tail) {
+                        //Send it to the last!
+                        WindowInlineLinkedListNode* current_node = node;
+                        node->node.next->prev = node->node.prev;
+                        node->node.prev->next = node->node.next;
+                        insert_existing_inline_node(&g_window_linked_list,(InlineLinkedListNode*)current_node,-1);
+                    }
+                    node->w.status &= ~(WINDOW_STATUS_INACTIVE);
+                }
+                //Fill in dirty region.
+                graphics_fill_rect(node->w.x,node->w.y,node->w.width,node->w.height+WINDOW_CAPTION_HEIGHT,DEFAULT_BACKGROUND_COLOR);
+                node->w.x += delta_x;
+                node->w.y += delta_y;
+                changed  = 1;
+            }
+            else {
+                if(!(node->w.status & WINDOW_STATUS_INACTIVE)) {
+                    node->w.status |= WINDOW_STATUS_INACTIVE;
+                    update_window_caption(&node->w,0);
+                    changed = 1;
+                }
+            }
+        }
+        node = (WindowInlineLinkedListNode*)node->node.prev;
+    }
+    if(changed) {
+        composite();
+    }
+}
+void check_caption_click(Window* w,int x) {
+    int offset_from_right = w->width-(x-w->x);
+    printk("offset:%d\n",offset_from_right);
+    CaptionButton clicked_button=NO_BUTTON;
+    if(offset_from_right<10) {
+        return;
+    }
+    if(offset_from_right<10+WINDOW_CAPTION_BUTTON_WIDTH) {
+        clicked_button = w->button[0];
+        goto check_button;
+    }
+    if(offset_from_right<10+WINDOW_CAPTION_BUTTON_WIDTH*2+5) {
+        clicked_button = w->button[1];
+        goto check_button;
+    }
+    if(offset_from_right<10+WINDOW_CAPTION_BUTTON_WIDTH*3+5*2) {
+        clicked_button = w->button[2];
+        goto check_button;
+    }
+check_button:
+    printk("Button %d\n",clicked_button);
+    switch(clicked_button) {
+        case NO_BUTTON: {
+            return;
+        }
+        case CLOSE_BUTTON: {
+            return;
+        }
+        case MAXIMIZE_BUTTON: {
+            //FIXME:REALLOC BUFFER FOR WINDOW!!!!
+            if(w->status & WINDOW_STATUS_MAXIMIZED) {
+                w->width =  w->orig_width;
+                w->height = w->orig_height;
+                graphics_clear_screen(DEFAULT_BACKGROUND_COLOR);
+                w->status &= ~WINDOW_STATUS_MAXIMIZED;
+                composite();
+            }
+            else {
+                w->orig_height = w->height;
+                w->orig_width  = w->width;
+                w->width = g_graphics_data.pixels_per_line;
+                w->height = g_graphics_data.pixels_vertical-WINDOW_CAPTION_HEIGHT;
+                w->status |= WINDOW_STATUS_MAXIMIZED;
+                composite();
+            }
+            return;
+        }
+        case MINIMIZE_BUTTON: {
+            return;
+        }
+    }
+}
 void send_click_event(int x,int y)
 {
     WindowInlineLinkedListNode* node = (WindowInlineLinkedListNode*)g_window_linked_list.tail;
@@ -180,6 +282,9 @@ void send_click_event(int x,int y)
                     changed  = 1;
                     node->w.status &= ~(WINDOW_STATUS_INACTIVE);
                 }
+                if(y<(node->w.y+WINDOW_CAPTION_HEIGHT)) {
+                    check_caption_click(&node->w,x);
+                }
             }
             else {
                 if(!(node->w.status & WINDOW_STATUS_INACTIVE)) {
@@ -196,25 +301,27 @@ void send_click_event(int x,int y)
     }
 
 }
-static int g_is_dragging=0;
-static int g_prev_x,g_prev_y;
+static int g_prev_clicked=0;
+static int g_drag_begin_x,g_drag_begin_y;
 void window_mouse_event_receiver(int x,int y,int left,int right,int mid)
 {
-    if(left) { //clicked.
-        g_is_dragging = 1;
-        g_prev_x = x;
-        g_prev_y = y;
+    if(left) {
+        if(!g_prev_clicked) {
+            g_prev_clicked = 1;
+            g_drag_begin_x = x;
+            g_drag_begin_y = y;
+        }
     }
     else {
-        if(g_is_dragging) {
-            int delta_x = x - g_prev_x;
-            int delta_y = y - g_prev_y;
-            //TODO:Draging event.
-            if(delta_x==0&&delta_y==0) {
-                //Act like a Click.
+        if(g_prev_clicked) {
+            if(x-g_drag_begin_x==0&&y-g_drag_begin_y==0) {
+                //click.
                 send_click_event(x,y);
             }
+            else {
+                send_drag_event(g_drag_begin_x,g_drag_begin_y,x-g_drag_begin_x,y-g_drag_begin_y);
+            }
+            g_prev_clicked = 0;
         }
-        g_is_dragging = 0;
     }
 }

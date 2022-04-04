@@ -9,7 +9,7 @@ static U32* g_fifo_address;
 static U64 g_fifo_length;
 static const U32 g_fifo_begin_offset = SVGA_FIFO_NUM_REGS*sizeof(U32);
 volatile int g_screen_dirty;
-static int g_dual_buffer_enabled;
+int g_dual_buffer_enabled;
 void vmsvga_define_back_buffer(void* addr,U64 pages);
 void vmsvga_write_register(U32 index,U32 value)
 {
@@ -71,7 +71,8 @@ void vmsvga_register(U8 bus,U8 slot,U8 func)
         printk(" VMSVGA:Hardware rect copy is supported.\n");
         g_move_up_accelerated = TRUE;
     }
-    vmsvga_write_register(SVGA_REG_CONFIG_DONE, TRUE);
+#pragma message "Why can't double buffer work?????"
+#if 0
     if(fifo_cap & SVGA_FIFO_CAP_SCREEN_OBJECT_2) {
         printk(" VMSVGA:Double framebuffer is supported.\n");
         //Create a 2nd display area to prevent flicker.
@@ -81,6 +82,8 @@ void vmsvga_register(U8 bus,U8 slot,U8 func)
         g_graphics_data.frame_buffer_base = alternative_memory_region;
         g_dual_buffer_enabled = 1;
     }
+#endif
+    vmsvga_write_register(SVGA_REG_CONFIG_DONE, TRUE);
     return;
 }
 U32 GMR_AllocDescriptor(SVGAGuestMemDescriptor *descArray,U32 numDescriptors)
@@ -136,7 +139,7 @@ void GMR_Define(U32 gmrId,
        * Clobber the first page, to verify that the device reads our
        * descriptors synchronously when we write the GMR registers.
        */
-      free_page((void*)((desc*PAGE_SIZE)|KERNEL_ADDR_OFFSET),1);
+//       free_page((void*)((desc*PAGE_SIZE)|KERNEL_ADDR_OFFSET),1);
    }
 }
 U32 GMR_DefineContiguous(U32 gmrId,void* data, U32 numPages)
@@ -165,14 +168,10 @@ void vmsvga_define_back_buffer(void* addr,U64 pages)
         }
     };
     vmsvga_inqueue((const U32*)&cmd,sizeof(cmd));
-    //Wait.
-    while(vmsvga_read_register(SVGA_REG_BUSY));
 }
 void vmsvga_create_cursor(void)
 {
     vmsvga_inqueue((const U32*)&g_cursor_image,sizeof(g_cursor_image));
-    //Wait.
-    while(vmsvga_read_register(SVGA_REG_BUSY));
 }
 void vmsvga_set_cursor_pos(U32 x,U32 y)
 {
@@ -199,15 +198,15 @@ void vmsvga_transport_back_buffer(void)
         .destScreenId = 0
     };
     vmsvga_inqueue((const U32*)&command,sizeof(command));
-    //Wait.
-    while(vmsvga_read_register(SVGA_REG_BUSY));
 }
 void vmsvga_refresh_whole_screen(void)
 {
     if(g_screen_dirty && !g_screen_lock) {
+#if 0
         if(g_dual_buffer_enabled) {
             vmsvga_transport_back_buffer();
         }
+#endif
         vmsvga_update_screen(0,0,g_graphics_data.pixels_per_line,g_graphics_data.pixels_vertical);
         g_screen_dirty = 0;
     }
@@ -222,8 +221,6 @@ void vmsvga_update_screen(U32 x,U32 y,U32 width,U32 height)
         .height  = height
     };
     vmsvga_inqueue((const U32*)&update_command,sizeof(update_command));
-    //Wait.
-    while(vmsvga_read_register(SVGA_REG_BUSY));
 }
 void vmsvga_console_move_up(int delta)
 {
@@ -237,6 +234,4 @@ void vmsvga_console_move_up(int delta)
         .height = g_graphics_data.pixels_vertical-delta
     };
     vmsvga_inqueue((const U32*)&copy_command,sizeof(copy_command));
-    //Wait.
-    while(vmsvga_read_register(SVGA_REG_BUSY));
 }
