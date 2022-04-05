@@ -66,7 +66,7 @@ void resize_window(Window* w,U32 width,U32 height)
     WindowInlineLinkedListNode* node = (WindowInlineLinkedListNode*)g_window_linked_list.tail;
     while(node != (WindowInlineLinkedListNode*)g_window_linked_list.head.next->prev) {
         if(&node->w==w) {
-            int orig_width = node->w.width;
+            int orig_width  = node->w.width;
             int copy_width = node->w.width>width?width:node->w.width;
             int copy_height= node->w.height>height?height:node->w.height;
             U64 size_needed = sizeof(WindowInlineLinkedListNode)+width*(height+WINDOW_CAPTION_HEIGHT)*sizeof(U32);
@@ -94,6 +94,14 @@ void resize_window(Window* w,U32 width,U32 height)
                 memcpy(((void*)(new_node->w.buffer.value)+width*i*sizeof(U32)),
                        ((void*)(node->w.buffer.value)+orig_width*i*sizeof(U32)),
                        copy_width*sizeof(U32));
+                if(copy_width<width) {
+                    memset((void*)(new_node->w.buffer.value)+(width*i+copy_width)*sizeof(U32),
+                           0xFF,(width-copy_width)*sizeof(U32));
+                }
+            }
+            if(copy_height<height) {
+                memset((void*)(new_node->w.buffer.value)+(width*copy_height)*sizeof(U32),
+                       0xFF,(height+WINDOW_CAPTION_HEIGHT-copy_height)*width*sizeof(U32));
             }
             //delete orig node.
             memfree(node);
@@ -172,23 +180,24 @@ void composite(void)
     g_screen_lock = 1;
     WindowInlineLinkedListNode* node = (WindowInlineLinkedListNode*)g_window_linked_list.head.next;
     while(node!=nullptr) {
-        //TODO:check visibility.
         Window* w = &node->w;
-        U32* window_buffer = (U32*)w->buffer.value;
-        int composite_area_left   = (w->x<0)?(-w->x):0;
-        int composite_area_right  = ((w->x+w->width)>g_graphics_data.pixels_per_line)?
-                                    (g_graphics_data.pixels_per_line-w->x):
-                                    w->width;
-        int composite_area_top    = (w->y<0)?(-w->y):0;
-        int composite_area_bottom = ((w->y+w->height+WINDOW_CAPTION_HEIGHT)>g_graphics_data.pixels_vertical)?
-                                    (g_graphics_data.pixels_vertical-w->y):
-                                    w->height+WINDOW_CAPTION_HEIGHT;
-        int screen_offset_x = w->x>0?w->x:0;
-        int screen_offset_y = w->y>0?w->y:0;
-        for(int i=composite_area_top;i<composite_area_bottom;i++) {
-            memcpy(screen_buffer+(screen_offset_y+(i-composite_area_top))*g_graphics_data.pixels_per_line+screen_offset_x,
-                   window_buffer+i*w->width+composite_area_left,
-                   (composite_area_right-composite_area_left)*sizeof(U32));
+        if(w->status!=WINDOW_STATUS_HIDDEN) {
+            U32* window_buffer = (U32*)w->buffer.value;
+            int composite_area_left   = (w->x<0)?(-w->x):0;
+            int composite_area_right  = ((w->x+w->width)>g_graphics_data.pixels_per_line)?
+                                        (g_graphics_data.pixels_per_line-w->x):
+                                        w->width;
+            int composite_area_top    = (w->y<0)?(-w->y):0;
+            int composite_area_bottom = ((w->y+w->height+WINDOW_CAPTION_HEIGHT)>g_graphics_data.pixels_vertical)?
+                                        (g_graphics_data.pixels_vertical-w->y):
+                                        w->height+WINDOW_CAPTION_HEIGHT;
+            int screen_offset_x = w->x>0?w->x:0;
+            int screen_offset_y = w->y>0?w->y:0;
+            for(int i=composite_area_top;i<composite_area_bottom;i++) {
+                memcpy(screen_buffer+(screen_offset_y+(i-composite_area_top))*g_graphics_data.pixels_per_line+screen_offset_x,
+                    window_buffer+i*w->width+composite_area_left,
+                    (composite_area_right-composite_area_left)*sizeof(U32));
+            }
         }
         node = (WindowInlineLinkedListNode*)node->node.next;
     }
