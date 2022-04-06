@@ -8,6 +8,25 @@
 #include <common/kstring.h>
 static U64 g_next_window_id;
 volatile int g_screen_lock = 0;
+static const char* const window_event_names[] = {
+    "onResize",
+    "onClick",
+    "onMove",
+    "onMinimize",
+    "onClose",
+    "onActivate",
+    "onInactivate"
+};
+static const char* const window_event_types[] = {
+    "(II)V",
+    "(II)V",
+    "(IIII)V",
+    "()V",
+    "()V",
+    "()V",
+    "()V"
+};
+
 void render_glyph_font(U32* buffer,char c,U32 glyph_color,U32 background_color)
 {
     const unsigned char* orig_font = &FONTDATA_8x16[c*16];
@@ -58,6 +77,9 @@ Window* create_window(U32 x,U32 y,U32 width,U32 height,char* title,object* event
     //clear to white.
     memset(node->w.buffer.value,0xFF,width*(height+WINDOW_CAPTION_HEIGHT)*sizeof(U32));
     update_window_caption(&node->w,0);
+    if(event_receiver!=nullptr) {
+
+    }
     insert_existing_inline_node(&g_window_linked_list,&node->node,-1);
     return &node->w;
 }

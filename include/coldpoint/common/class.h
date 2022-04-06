@@ -159,7 +159,7 @@ typedef struct {
     U32 code_length;
     U8 code[];
     //下面的暂时不解析。
-}CodeAttribute;
+} CodeAttribute;
 void print_class_constants(const class* c);
 void print_class_info(const class* c);
 const U8* class_get_utf8_string(const class* c,int no);

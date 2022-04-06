@@ -45,6 +45,13 @@ typedef struct {
     WindowMode   mode;
     //Coldpoint compat.
     object* event_receiver;
+    CodeAttribute* code_on_resize;
+    CodeAttribute* code_on_click;
+    CodeAttribute* code_on_move;
+    CodeAttribute* code_on_minimize;
+    CodeAttribute* code_on_close;
+    CodeAttribute* code_on_activate;
+    CodeAttribute* code_on_inactivate;
     Array buffer;
 } Window;
 typedef struct {

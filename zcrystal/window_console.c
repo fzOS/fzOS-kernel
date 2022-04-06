@@ -14,7 +14,6 @@ WindowConsole g_window_console = {
     .con.common.flush   = window_console_flush,
     .con.input_buffer.queue.bufsize = BUFFER_MAX,
     .con.output_buffer.queue.bufsize = BUFFER_MAX
-
 };
 
 void window_console_putchar(CharDev* dev, U8 c)
