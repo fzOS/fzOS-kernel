@@ -31,7 +31,7 @@ static U64 get_param_count(const U8* in)
     }
     return result;
 }
-static void invoke_method(thread* t,class* target_class,CodeAttribute* code_attr,U64 param_count)
+void invoke_method(thread* t,class* target_class,CodeAttribute* code_attr,U64 param_count)
 {
     U64 new_stack_size_required = sizeof(stack_frame)/sizeof(StackVar)+param_count;
     U64 new_rbp = t->rsp-param_count+1;

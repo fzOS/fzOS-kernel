@@ -6,6 +6,7 @@
 #include <memory/memory.h>
 #include <drivers/vmsvga.h>
 #include <common/kstring.h>
+#include <coldpoint/automata/invoke_inst.h>
 static U64 g_next_window_id;
 volatile int g_screen_lock = 0;
 static const char* const window_event_names[] = {
@@ -26,7 +27,7 @@ static const char* const window_event_types[] = {
     "()V",
     "()V"
 };
-
+_Static_assert(sizeof(window_event_names)==sizeof(window_event_types),"Window event Names & Types don't match!");
 void render_glyph_font(U32* buffer,char c,U32 glyph_color,U32 background_color)
 {
     const unsigned char* orig_font = &FONTDATA_8x16[c*16];
@@ -41,6 +42,31 @@ void render_glyph_font(U32* buffer,char c,U32 glyph_color,U32 background_color)
 InlineLinkedList g_window_linked_list = {
     .tail = &g_window_linked_list.head
 };
+void register_window_callbacks(Window* w)
+{
+    class* target_class = w->event_receiver->parent_class;
+    CodeAttribute** attributes[] = {
+        &w->code_on_resize,
+        &w->code_on_click,
+        &w->code_on_move,
+        &w->code_on_minimize,
+        &w->code_on_close,
+        &w->code_on_activate,
+        &w->code_on_inactivate
+    };
+    _Static_assert(sizeof(attributes)==sizeof(window_event_types),"Window event Names & Types don't match!");
+    for(int i=0;i<sizeof(window_event_names)/sizeof(char*);i++) {
+        MethodInfoEntry* method_info = get_method_by_name_and_type(target_class,
+                                                                   (U8*)window_event_names[i],
+                                                                   (U8*)window_event_types[i]);
+        if(method_info==nullptr) {
+            continue;
+        }
+        U64 code_name_index = class_get_utf8_string_index(target_class,(U8*)"Code");
+        CodeAttribute* code = (CodeAttribute*)&target_class->buffer[class_get_method_attribute_by_name(target_class,method_info,code_name_index)->info_offset];
+        *attributes[i] = code;
+    }
+}
 FzOSResult enter_graphical_mode(void)
 {
     //First,we disable console.
@@ -48,9 +74,9 @@ FzOSResult enter_graphical_mode(void)
     //Then,we clear the whole screen.
     graphics_clear_screen(DEFAULT_BACKGROUND_COLOR);
     //After that, We create the debug window.
-    create_window(100,100,600,400,"Debug Log",nullptr);
-    create_window(200,200,800,600,"Test Window #2",nullptr);
-    create_window(400,400,300,500,"Test Window #3",nullptr);
+    create_window(100,100,600,400,"Debug Log",nullptr,nullptr);
+    create_window(200,200,800,600,"Test Window #2",nullptr,nullptr);
+    create_window(400,400,300,500,"Test Window #3",nullptr,nullptr);
     composite();
     return FzOS_SUCCESS;
 }
@@ -60,10 +86,11 @@ FzOSResult exit_graphical_mode(void)
     graphics_clear_screen(DEFAULT_CONSOLE_BACKGROUND_COLOR);
     return FzOS_SUCCESS;
 }
-Window* create_window(U32 x,U32 y,U32 width,U32 height,char* title,object* event_receiver)
+Window* create_window(U32 x,U32 y,U32 width,U32 height,char* title,object* event_receiver,thread* ui_thread)
 {
     U64 size_needed = sizeof(WindowInlineLinkedListNode)+width*(height+WINDOW_CAPTION_HEIGHT)*sizeof(U32);
     WindowInlineLinkedListNode* node = memalloc(size_needed);
+    memset(&node->w,0x00,sizeof(Window));
     node->w.caption = title;
     node->w.buffer.length = (height+WINDOW_CAPTION_HEIGHT)*width*sizeof(U8);
     node->w.buffer.type = (const U8*)"B";
@@ -74,11 +101,12 @@ Window* create_window(U32 x,U32 y,U32 width,U32 height,char* title,object* event
     node->w.height = height;
     node->w.event_receiver = event_receiver;
     node->w.window_id = g_next_window_id++;
+    node->w.ui_thread = ui_thread;
     //clear to white.
     memset(node->w.buffer.value,0xFF,width*(height+WINDOW_CAPTION_HEIGHT)*sizeof(U32));
     update_window_caption(&node->w,0);
     if(event_receiver!=nullptr) {
-
+        register_window_callbacks(&node->w);
     }
     insert_existing_inline_node(&g_window_linked_list,&node->node,-1);
     return &node->w;
@@ -317,6 +345,18 @@ check_button:
                 w->status |= WINDOW_STATUS_MAXIMIZED;
                 resize_window(w,g_graphics_data.pixels_per_line,
                               g_graphics_data.pixels_vertical-WINDOW_CAPTION_HEIGHT);
+            }
+            if(w->code_on_resize!=nullptr) {
+                w->ui_thread->stack[++w->ui_thread->rsp].data = (U64)w->event_receiver;//this
+                w->ui_thread->stack[w->ui_thread->rsp].type   = STACK_TYPE_REFERENCE;
+                w->ui_thread->stack[++w->ui_thread->rsp].data = (U64)w->width;
+                w->ui_thread->stack[w->ui_thread->rsp].type   = STACK_TYPE_INT;
+                w->ui_thread->stack[++w->ui_thread->rsp].data = (U64)w->height;
+                w->ui_thread->stack[w->ui_thread->rsp].type   = STACK_TYPE_INT;
+                invoke_method(w->ui_thread,
+                              w->event_receiver->parent_class,
+                              w->code_on_resize,
+                              3);
             }
             return 1;
         }

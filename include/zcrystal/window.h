@@ -3,6 +3,7 @@
 #include <types.h>
 #include <drivers/console.h>
 #include <coldpoint/heap/heap.h>
+#include <coldpoint/threading/thread.h>
 #include <common/linkedlist.h>
 typedef enum {
     WINDOW_MODE_NORMAL      = 0x00000000,
@@ -39,12 +40,13 @@ typedef struct {
     U64 orig_height;
     U64 orig_x;
     U64 orig_y;
-    char* caption;
-    CaptionButton button[3];
-    WindowStatus status;
-    WindowMode   mode;
+    char*          caption;
+    CaptionButton  button[3];
+    WindowStatus   status;
+    WindowMode     mode;
     //Coldpoint compat.
-    object* event_receiver;
+    thread*        ui_thread;
+    object*        event_receiver;
     CodeAttribute* code_on_resize;
     CodeAttribute* code_on_click;
     CodeAttribute* code_on_move;
