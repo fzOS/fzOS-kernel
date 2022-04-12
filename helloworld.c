@@ -66,11 +66,11 @@ void kernel_main_real()
     };
     start_hpet();
     show_banner();
-    play_startup_audio();
+    //play_startup_audio();
     //启动jvm！
-    //init_classloader();
+    init_classloader();
     //print_device_tree();
-    enter_graphical_mode();
+    //enter_graphical_mode();
 
 }
 void kernel_main(KernelInfo info)

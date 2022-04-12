@@ -74,9 +74,9 @@ FzOSResult enter_graphical_mode(void)
     //Then,we clear the whole screen.
     graphics_clear_screen(DEFAULT_BACKGROUND_COLOR);
     //After that, We create the debug window.
-    create_window(100,100,600,400,"Debug Log",nullptr,nullptr);
-    create_window(200,200,800,600,"Test Window #2",nullptr,nullptr);
-    create_window(400,400,300,500,"Test Window #3",nullptr,nullptr);
+    create_window(100,100,600,400,"Debug Log",WINDOW_MODE_NORMAL,nullptr,nullptr);
+    create_window(200,200,800,600,"Test Window #2",WINDOW_MODE_NORMAL,nullptr,nullptr);
+    create_window(400,400,300,500,"Test Window #3",WINDOW_MODE_NORMAL,nullptr,nullptr);
     composite();
     return FzOS_SUCCESS;
 }
@@ -86,11 +86,12 @@ FzOSResult exit_graphical_mode(void)
     graphics_clear_screen(DEFAULT_CONSOLE_BACKGROUND_COLOR);
     return FzOS_SUCCESS;
 }
-Window* create_window(U32 x,U32 y,U32 width,U32 height,char* title,object* event_receiver,thread* ui_thread)
+Window* create_window(U32 x,U32 y,U32 width,U32 height,char* title,int attr,object* event_receiver,thread* ui_thread)
 {
     U64 size_needed = sizeof(WindowInlineLinkedListNode)+width*(height+WINDOW_CAPTION_HEIGHT)*sizeof(U32);
     WindowInlineLinkedListNode* node = memalloc(size_needed);
     memset(&node->w,0x00,sizeof(Window));
+    node->w.mode = attr;
     node->w.caption = title;
     node->w.buffer.length = (height+WINDOW_CAPTION_HEIGHT)*width*sizeof(U8);
     node->w.buffer.type = (const U8*)"B";

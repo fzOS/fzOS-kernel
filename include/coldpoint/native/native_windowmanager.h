@@ -11,8 +11,4 @@ typedef struct {
 cpstatus window_class_entry(thread* t, const U8* name, const U8* type, NativeClassOperations operations);
 cpstatus windowmanager_class_entry(thread* t, const U8* name, const U8* type, NativeClassOperations operations);
 cpstatus windowmanager_class_register(InlineLinkedList* loaded_class_list);
-typedef struct {
-    object o;
-    U64 val;
-} NativeTypeWrapperObject;
 #endif
