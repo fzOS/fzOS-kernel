@@ -12,11 +12,6 @@ typedef enum {
     T_INT,
     T_LONG
 } ArrayType;
-typedef struct {
-    U64 length;
-    const U8* type;
-    U64 value[0];
-} Array;
 cpstatus opcode_ldc(thread* t);
 cpstatus opcode_ldc2_w(thread* t);
 cpstatus opcode_new(thread* t);

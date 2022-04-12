@@ -1,292 +1,442 @@
-#include <drivers/graphics.h>
-#include <drivers/fbcon.h>
-#include <drivers/chardev.h>
-#include <memory/memory.h>
-#include <types.h>
-
 #include <zcrystal/window_manager.h>
-#include <zcrystal/render.h>
-extern FbconDeviceTreeNode g_fbcon_node;
-ScreenDefinition g_screen_resolution;
-// 双向链表
-WindowManageData *g_window_list_top;
-WindowManageData *g_window_list_bottom;
-
-U32 g_gui_loading_window_uid;
-U32 g_gui_current_max_uid = 0;
-
-U8 g_gui_in_loading_screen = 1;
-
-void gui_log_print_hand_over(CharDev* dev, U8 c)
+#include <zcrystal/window_console.h>
+#include <zcrystal/window_decoration.h>
+#include <drivers/asciifont.h>
+#include <drivers/fbcon.h>
+#include <memory/memory.h>
+#include <drivers/vmsvga.h>
+#include <common/kstring.h>
+#include <coldpoint/automata/invoke_inst.h>
+static U64 g_next_window_id;
+volatile int g_screen_lock = 0;
+static const char* const window_event_names[] = {
+    "onResize",
+    "onClick",
+    "onMove",
+    "onMinimize",
+    "onClose",
+    "onActivate",
+    "onInactivate"
+};
+static const char* const window_event_types[] = {
+    "(II)V",
+    "(II)V",
+    "(IIII)V",
+    "()V",
+    "()V",
+    "()V",
+    "()V"
+};
+_Static_assert(sizeof(window_event_names)==sizeof(window_event_types),"Window event Names & Types don't match!");
+void render_glyph_font(U32* buffer,char c,U32 glyph_color,U32 background_color)
 {
-    
+    const unsigned char* orig_font = &FONTDATA_8x16[c*16];
+    for(int j=0;j<WINDOW_TITLE_GLYPH_HEIGHT;j++) {
+        for(int i=0;i<WINDOW_TITLE_GLYPH_WIDTH;i++) {
+            buffer[j*WINDOW_TITLE_GLYPH_WIDTH+i] = (orig_font[(int)(j/1.5)]&(1<<(8-(int)(i/1.5))))?
+                                                      glyph_color:
+                                                      background_color;
+        }
+    }
 }
-
-void gui_log_flush_hand_over(CharDev* dev)
+InlineLinkedList g_window_linked_list = {
+    .tail = &g_window_linked_list.head
+};
+void register_window_callbacks(Window* w)
 {
-
+    class* target_class = w->event_receiver->parent_class;
+    CodeAttribute** attributes[] = {
+        &w->code_on_resize,
+        &w->code_on_click,
+        &w->code_on_move,
+        &w->code_on_minimize,
+        &w->code_on_close,
+        &w->code_on_activate,
+        &w->code_on_inactivate
+    };
+    _Static_assert(sizeof(attributes)==sizeof(window_event_types),"Window event Names & Types don't match!");
+    for(int i=0;i<sizeof(window_event_names)/sizeof(char*);i++) {
+        MethodInfoEntry* method_info = get_method_by_name_and_type(target_class,
+                                                                   (U8*)window_event_names[i],
+                                                                   (U8*)window_event_types[i]);
+        if(method_info==nullptr) {
+            continue;
+        }
+        U64 code_name_index = class_get_utf8_string_index(target_class,(U8*)"Code");
+        CodeAttribute* code = (CodeAttribute*)&target_class->buffer[class_get_method_attribute_by_name(target_class,method_info,code_name_index)->info_offset];
+        *attributes[i] = code;
+    }
 }
-
-U8 gui_init_window_manager(int gui_aero_enable)
+FzOSResult enter_graphical_mode(void)
 {
-    g_gui_current_max_uid = 0;
-    // setup the memory block for the window list
-    g_screen_resolution.horizontal = g_graphics_data.gop->Mode->Info->HorizontalResolution;
-    g_screen_resolution.vertical = g_graphics_data.gop->Mode->Info->VerticalResolution;
-    // set up loading screen (also use as desktop bg)
-    g_window_list_bottom = memalloc(sizeof(WindowManageData));
-    // link top window to the bottom too
-    g_window_list_top = g_window_list_bottom;
-    // initial the doubly linked list
-    g_window_list_bottom->next = NULL;
-    g_window_list_bottom->prev = NULL;
-    // setup window info
-    g_window_list_bottom->start_point_h = 0;
-    g_window_list_bottom->start_point_v = 0;
-    g_window_list_bottom->is_hide = 0;
-    // use pid 0 to get the window
-    g_window_list_bottom->PID = 0;
-
-    // initialize the first window(background)
-    WindowDataExport loading_screen_info_receiver;
-    g_gui_loading_window_uid = gui_window_manager_create_window(0, 2, 0, 0, 0, 0, &loading_screen_info_receiver);
-    // Clear debug info, make screen ready for desktop
-    graphics_clear_screen(0xFFFFFFFF);
-    // overide the fbcon default kernel print
-    // window 0 is defaultly for loading screen
-    //g_fbcon_node.con.max_x = ;
-    //g_fbcon_node.con.max_y = ;
-    g_fbcon_node.con.current_y = 0;
-    g_fbcon_node.con.current_x = 0;
-    g_fbcon_node.con.con.common.putchar = gui_log_print_hand_over;
-    g_fbcon_node.con.con.common.flush = gui_log_flush_hand_over;
-    return 1;
+    //First,we disable console.
+    hook_window_console();
+    //Then,we clear the whole screen.
+    graphics_clear_screen(DEFAULT_BACKGROUND_COLOR);
+    //After that, We create the debug window.
+    create_window(100,100,600,400,"Debug Log",WINDOW_MODE_NORMAL,nullptr,nullptr);
+    create_window(200,200,800,600,"Test Window #2",WINDOW_MODE_NORMAL,nullptr,nullptr);
+    create_window(400,400,300,500,"Test Window #3",WINDOW_MODE_NORMAL,nullptr,nullptr);
+    composite();
+    return FzOS_SUCCESS;
 }
-
-U8 gui_trigger_loading_screen_status(U8 status)
+FzOSResult exit_graphical_mode(void)
 {
-    // status:  ==0: hide loading screen
-    //          > 0: trigger loading screen
-    g_gui_in_loading_screen = status;
-    return 1;
+    restore_window_console();
+    graphics_clear_screen(DEFAULT_CONSOLE_BACKGROUND_COLOR);
+    return FzOS_SUCCESS;
 }
-
-U8 gui_window_manager_offline()
+Window* create_window(U32 x,U32 y,U32 width,U32 height,char* title,int attr,object* event_receiver,thread* ui_thread)
 {
-    // clear window draw buffer and the window manager itself
-    WindowManageData* temp_pointer, temp_pointer_next;
-    (void)temp_pointer_next;
-    temp_pointer = g_window_list_top;
-    while (temp_pointer->next != NULL)
-    {
-        temp_pointer_next = *temp_pointer->next;
-        gui_window_manager_destroy_window(temp_pointer->PID, temp_pointer->UID);
+    U64 size_needed = sizeof(WindowInlineLinkedListNode)+width*(height+WINDOW_CAPTION_HEIGHT)*sizeof(U32);
+    WindowInlineLinkedListNode* node = memalloc(size_needed);
+    memset(&node->w,0x00,sizeof(Window));
+    node->w.mode = attr;
+    node->w.caption = title;
+    node->w.buffer.length = (height+WINDOW_CAPTION_HEIGHT)*width*sizeof(U8);
+    node->w.buffer.type = (const U8*)"B";
+    node->w.status = WINDOW_STATUS_INACTIVE;
+    node->w.x = x;
+    node->w.y = y;
+    node->w.width = width;
+    node->w.height = height;
+    node->w.event_receiver = event_receiver;
+    node->w.window_id = g_next_window_id++;
+    node->w.ui_thread = ui_thread;
+    //clear to white.
+    memset(node->w.buffer.value,0xFF,width*(height+WINDOW_CAPTION_HEIGHT)*sizeof(U32));
+    update_window_caption(&node->w,0);
+    if(event_receiver!=nullptr) {
+        register_window_callbacks(&node->w);
     }
-    // clear screen
-    graphics_clear_screen(0xFFFFFFFF);
-    //reset fbcon to the default kernel print
-    g_fbcon_node.con.max_x = g_graphics_data.pixels_per_line / 8 - 1;
-    g_fbcon_node.con.max_y = g_graphics_data.gop->Mode->Info->VerticalResolution;
-    g_fbcon_node.con.current_y = 0;
-    g_fbcon_node.con.current_x = 0;
-    g_fbcon_node.con.con.common.putchar = fbcon_putchar;
-    g_fbcon_node.con.con.common.flush = fbcon_flush;
-    return 0;
+    insert_existing_inline_node(&g_window_linked_list,&node->node,-1);
+    return &node->w;
 }
-
-U8 gui_window_manager_create_window(U16 PID, U8 focus_mode, U16 pos_h, U16 pos_v, U16 size_h, U16 size_v, WindowDataExport *info_receiver)
+void resize_window(Window* w,U32 width,U32 height)
 {
-    WindowManageData* temp_pointer;
-    // depends on if it is the initial process
-    if (focus_mode != 2)
-    {
-        // not initial, create new space for window
-        temp_pointer = memalloc(sizeof(WindowManageData));
+    WindowInlineLinkedListNode* node = (WindowInlineLinkedListNode*)g_window_linked_list.tail;
+    while(node != (WindowInlineLinkedListNode*)g_window_linked_list.head.next->prev) {
+        if(&node->w==w) {
+            int orig_width  = node->w.width;
+            int copy_width = node->w.width>width?width:node->w.width;
+            int copy_height= node->w.height>height?height:node->w.height;
+            U64 size_needed = sizeof(WindowInlineLinkedListNode)+width*(height+WINDOW_CAPTION_HEIGHT)*sizeof(U32);
+            //Allocate a new Window.
+            WindowInlineLinkedListNode* new_node = memalloc(size_needed);
+            memcpy(&new_node->w,w,sizeof(Window));
+            new_node->w.width  = width;
+            new_node->w.height = height;
+            printk("New:%d/%d\n",new_node->w.width,new_node->w.height);
+            update_window_caption(&new_node->w,!(new_node->w.status&WINDOW_STATUS_INACTIVE));
+            //change.
+            new_node->node.next = node->node.next;
+            new_node->node.prev = node->node.prev;
+            if(node->node.prev!=nullptr) {
+                node->node.prev->next = &new_node->node;
+            }
+            if(node->node.next!=nullptr) {
+                node->node.next->prev = &new_node->node;
+            }
+            if(g_window_linked_list.tail==&node->node) {
+                g_window_linked_list.tail = &new_node->node;
+            }
+            //window data copy.
+            for(int i=WINDOW_CAPTION_HEIGHT;i<copy_height+WINDOW_CAPTION_HEIGHT;i++) {
+                memcpy(((void*)(new_node->w.buffer.value)+width*i*sizeof(U32)),
+                       ((void*)(node->w.buffer.value)+orig_width*i*sizeof(U32)),
+                       copy_width*sizeof(U32));
+                if(copy_width<width) {
+                    memset((void*)(new_node->w.buffer.value)+(width*i+copy_width)*sizeof(U32),
+                           0xFF,(width-copy_width)*sizeof(U32));
+                }
+            }
+            if(copy_height<height) {
+                memset((void*)(new_node->w.buffer.value)+(width*copy_height)*sizeof(U32),
+                       0xFF,(height+WINDOW_CAPTION_HEIGHT-copy_height)*width*sizeof(U32));
+            }
+            //delete orig node.
+            memfree(node);
+            return;
+        }
     }
-    else
-    {
-        temp_pointer = g_window_list_top;
-    }
-
-    if (focus_mode == 1 || g_window_list_top->next == NULL)
-    {
-        temp_pointer->prev = NULL;
-        temp_pointer->next = g_window_list_top;
-        g_window_list_top->prev = temp_pointer;
-        g_window_list_top = temp_pointer;
-    }
-    else
-    {
-        // add current window below the top layer
-        temp_pointer->prev = g_window_list_top;
-        temp_pointer->next = g_window_list_top->next;
-        g_window_list_top->next = temp_pointer;
-    }
-
-    temp_pointer->UID = g_gui_current_max_uid;
-    g_gui_current_max_uid += 1;
-    temp_pointer->PID = PID;
-    if (focus_mode == 2 && PID == 0)
-    {
-        //loading screen
-        temp_pointer->start_point_h = 0;
-        temp_pointer->start_point_v = 0;
-        temp_pointer->base_info.vertical = g_screen_resolution.horizontal;
-        temp_pointer->base_info.horizontal = g_screen_resolution.vertical;
-    }
-    else
-    {
-        //normal procedure
-        temp_pointer->start_point_h = pos_h;
-        temp_pointer->start_point_v = pos_v;
-        temp_pointer->base_info.vertical = size_v;
-        temp_pointer->base_info.horizontal = size_h;
-    }
-    temp_pointer->base_info.frame_buffer_base = memalloc(sizeof(U32)* (temp_pointer->base_info.vertical) * (temp_pointer->base_info.horizontal));
-    temp_pointer->base_info.frame_buffer_base_User = temp_pointer->base_info.frame_buffer_base + 30 * (temp_pointer->base_info.horizontal);
-    // *info_receiver = *temp_pointer->base_info;
-    // if it is the normal window, loading window will ignore this
-    WindowData tempWindowData;
-    tempWindowData = temp_pointer->base_info;
-    gui_render_preset_window(&tempWindowData);
-    info_receiver->horizontal = temp_pointer->base_info.horizontal;
-    info_receiver->vertical = temp_pointer->base_info.vertical - 30;
-    info_receiver->frame_buffer_base = temp_pointer->base_info.frame_buffer_base_User;
-    return 1; 
 }
-
-WindowManageData* gui_window_manager_get_window_pointer(U32 unique_id)
+void update_window_caption(Window* w,U8 activity)
 {
-    WindowManageData* temp_pointer;
-    temp_pointer = g_window_list_top;
-    while (temp_pointer->next != NULL)
-    {
-        if (temp_pointer->UID == unique_id)
-        {
-            return temp_pointer;
+    U32* pixeldata = (U32*)w->buffer.value;
+    for(int i=0;i<WINDOW_CAPTION_HEIGHT;i++) {
+        for(int j=0;j<w->width;j++) {
+            pixeldata[i*w->width+j] = activity?WINDOW_CAPTION_COLOR_ACTIVE:WINDOW_CAPTION_COLOR_INACTIVE;
+        }
+    }
+    const U32* close_button   = activity?g_close_button_active:g_close_button_inactive;
+    const U32* maximum_button = activity?g_maximize_button_active:g_maximize_button_inactive;
+    const U32* minimum_button = activity?g_minimize_button_active:g_minimize_button_inactive;
+    int button_count = 0;
+    I32 begin_offset = w->width - 10;
+    if(!(w->mode&WINDOW_MODE_NO_CLOSE)) {
+        begin_offset -= WINDOW_CAPTION_BUTTON_WIDTH;
+        for(int i=0;i<WINDOW_CAPTION_BUTTON_HEIGHT;i++) {
+            memcpy(pixeldata+(4+i)*w->width+begin_offset,
+                   close_button+i*WINDOW_CAPTION_BUTTON_WIDTH,
+                   WINDOW_CAPTION_BUTTON_WIDTH*sizeof(U32));
+        }
+        w->button[button_count++] = CLOSE_BUTTON;
+        begin_offset -= 5;
+    }
+    if(!(w->mode&WINDOW_MODE_NO_MAXIMIZE)) {
+        begin_offset -= WINDOW_CAPTION_BUTTON_WIDTH;
+        for(int i=0;i<WINDOW_CAPTION_BUTTON_HEIGHT;i++) {
+            memcpy(pixeldata+(4+i)*w->width+begin_offset,
+                   maximum_button+i*WINDOW_CAPTION_BUTTON_WIDTH,
+                   WINDOW_CAPTION_BUTTON_WIDTH*sizeof(U32));
+        }
+        w->button[button_count++] = MAXIMIZE_BUTTON;
+        begin_offset -= 5;
+    }
+    if(!(w->mode&WINDOW_MODE_NO_MINIMIZE)) {
+        begin_offset -= WINDOW_CAPTION_BUTTON_WIDTH;
+        for(int i=0;i<WINDOW_CAPTION_BUTTON_HEIGHT;i++) {
+            memcpy(pixeldata+(4+i)*w->width+begin_offset,
+                   minimum_button+i*WINDOW_CAPTION_BUTTON_WIDTH,
+                   WINDOW_CAPTION_BUTTON_WIDTH*sizeof(U32));
+        }
+        w->button[button_count++] = MINIMIZE_BUTTON;
+    }
+    int max_caption_offset = begin_offset;
+    int caplen = strlen(w->caption);
+    begin_offset = (w->width-caplen*WINDOW_TITLE_GLYPH_WIDTH)/2;
+    if(begin_offset<0) {
+        begin_offset = 0;
+    }
+    U32 glyph_buffer[WINDOW_TITLE_GLYPH_HEIGHT*WINDOW_CAPTION_BUTTON_WIDTH];
+    for(int i=0;i<caplen;i++) {
+        render_glyph_font(glyph_buffer,
+                        w->caption[i],
+                        0xFFFFFFFF,
+                        activity?WINDOW_CAPTION_COLOR_ACTIVE:WINDOW_CAPTION_COLOR_INACTIVE);
+        for(int j=0;j<WINDOW_TITLE_GLYPH_HEIGHT;j++) {
+            memcpy(pixeldata+(4+j)*w->width+begin_offset,
+                   glyph_buffer+j*WINDOW_TITLE_GLYPH_WIDTH,
+                   WINDOW_TITLE_GLYPH_WIDTH*sizeof(U32));
+        }
+        begin_offset += WINDOW_TITLE_GLYPH_WIDTH;
+        if((begin_offset+WINDOW_TITLE_GLYPH_WIDTH)>max_caption_offset) {
             break;
         }
-        else
-        {
-            temp_pointer = temp_pointer->next;
-        }
-    }
-    return NULL;
-}
-
-U8 gui_window_manager_focus_change(U32 unique_id)
-{
-    WindowManageData* temp_pointer = NULL;
-    WindowManageData* temp_pointer2 = NULL;
-    temp_pointer = gui_window_manager_get_window_pointer(unique_id);
-    if (temp_pointer == NULL)
-    {
-        return 0;
-    }
-    else
-    {   
-        temp_pointer2 = temp_pointer->prev;
-        temp_pointer2->next = temp_pointer->next;
-        temp_pointer2 = temp_pointer->next;
-        temp_pointer2->prev = temp_pointer->prev;
-        temp_pointer->prev = NULL;
-        temp_pointer->next = g_window_list_top;
-        g_window_list_top->prev = temp_pointer;
-        return 1;
     }
 }
-
-U8 gui_window_manager_get_window_info(U16 PID, U32 unique_id, WindowDataExport *info_receiver)
+void composite(void)
 {
-    WindowManageData* temp_pointer = NULL;
-    temp_pointer = gui_window_manager_get_window_pointer(unique_id);
-    if (temp_pointer != NULL && temp_pointer->PID == PID)
-    {
-        //FIXME:What is this?
-        info_receiver = ( WindowDataExport*)&(temp_pointer->base_info);
-        if (unique_id > 0)
-        {
-            // if it is the normal window
-            info_receiver->horizontal = temp_pointer->base_info.horizontal;
-            // the top 30 are default for head bar
-            info_receiver->vertical = temp_pointer->base_info.vertical - 30;
-            info_receiver->frame_buffer_base = temp_pointer->base_info.frame_buffer_base_User;
+    U32* screen_buffer = g_graphics_data.frame_buffer_base;
+    g_screen_lock = 1;
+    WindowInlineLinkedListNode* node = (WindowInlineLinkedListNode*)g_window_linked_list.head.next;
+    while(node!=nullptr) {
+        Window* w = &node->w;
+        if(w->status!=WINDOW_STATUS_HIDDEN) {
+            U32* window_buffer = (U32*)w->buffer.value;
+            int composite_area_left   = (w->x<0)?(-w->x):0;
+            int composite_area_right  = ((w->x+w->width)>g_graphics_data.pixels_per_line)?
+                                        (g_graphics_data.pixels_per_line-w->x):
+                                        w->width;
+            int composite_area_top    = (w->y<0)?(-w->y):0;
+            int composite_area_bottom = ((w->y+w->height+WINDOW_CAPTION_HEIGHT)>g_graphics_data.pixels_vertical)?
+                                        (g_graphics_data.pixels_vertical-w->y):
+                                        w->height+WINDOW_CAPTION_HEIGHT;
+            int screen_offset_x = w->x>0?w->x:0;
+            int screen_offset_y = w->y>0?w->y:0;
+            for(int i=composite_area_top;i<composite_area_bottom;i++) {
+                memcpy(screen_buffer+(screen_offset_y+(i-composite_area_top))*g_graphics_data.pixels_per_line+screen_offset_x,
+                    window_buffer+i*w->width+composite_area_left,
+                    (composite_area_right-composite_area_left)*sizeof(U32));
+            }
         }
-        
-        return 1;
+        node = (WindowInlineLinkedListNode*)node->node.next;
     }
-    else
-    {
-        return 0;
+    g_screen_lock = 0;
+    g_screen_dirty = 1;
+}
+void send_drag_event(int prev_x,int prev_y,int delta_x,int delta_y)
+{
+     WindowInlineLinkedListNode* node = (WindowInlineLinkedListNode*)g_window_linked_list.tail;
+    int found = 0;
+    int changed = 0;
+    while(node != (WindowInlineLinkedListNode*)g_window_linked_list.head.next->prev) {
+        if(found) {
+            if(!(node->w.status & WINDOW_STATUS_INACTIVE)) {
+                node->w.status |= WINDOW_STATUS_INACTIVE;
+                update_window_caption(&node->w,0);
+                changed = 1;
+            }
+        }
+        else {
+            if(prev_x>=node->w.x && prev_x<(node->w.x+node->w.width)&&prev_y>=node->w.y && prev_y<(node->w.y+WINDOW_CAPTION_HEIGHT)) {
+                found = 1;
+                if(node->w.status & WINDOW_STATUS_INACTIVE) {
+                    update_window_caption(&node->w,1);
+                    if(node!=(WindowInlineLinkedListNode*)g_window_linked_list.tail) {
+                        //Send it to the last!
+                        WindowInlineLinkedListNode* current_node = node;
+                        node->node.next->prev = node->node.prev;
+                        node->node.prev->next = node->node.next;
+                        insert_existing_inline_node(&g_window_linked_list,(InlineLinkedListNode*)current_node,-1);
+                    }
+                    node->w.status &= ~(WINDOW_STATUS_INACTIVE);
+                }
+                //Fill in dirty region.
+                graphics_fill_rect(node->w.x,node->w.y,node->w.width,node->w.height+WINDOW_CAPTION_HEIGHT,DEFAULT_BACKGROUND_COLOR);
+                node->w.x += delta_x;
+                node->w.y += delta_y;
+                changed  = 1;
+            }
+            else {
+                if(!(node->w.status & WINDOW_STATUS_INACTIVE)) {
+                    node->w.status |= WINDOW_STATUS_INACTIVE;
+                    update_window_caption(&node->w,0);
+                    changed = 1;
+                }
+            }
+        }
+        node = (WindowInlineLinkedListNode*)node->node.prev;
+    }
+    if(changed) {
+        composite();
     }
 }
-
-U8 gui_loading_screen_request(WindowDataExport *info_receiver)
-{
-    WindowManageData* temp_pointer = NULL;
-    U32 unique_id = 0;
-    //FIXME:WHERE IS PID?
-    U32 PID=0;
-    temp_pointer = gui_window_manager_get_window_pointer(unique_id);
-    if (temp_pointer != NULL && temp_pointer->PID == PID)
-    {
-        //FIXME:WHERE IS THIS?
-        info_receiver = (WindowDataExport *)&(temp_pointer->base_info);
-        if (unique_id > 0)
-        {
-            // if it is the normal window
-            info_receiver->horizontal = temp_pointer->base_info.horizontal;
-            // the top 30 are default for head bar
-            info_receiver->vertical = temp_pointer->base_info.vertical;
-            info_receiver->frame_buffer_base = temp_pointer->base_info.frame_buffer_base;
-        }
-        
-        return 1;
-    }
-    else
-    {
+int check_caption_click(Window* w,int x) {
+    int offset_from_right = w->width-(x-w->x);
+    CaptionButton clicked_button=NO_BUTTON;
+    if(offset_from_right<10) {
         return 0;
     }
+    if(offset_from_right<10+WINDOW_CAPTION_BUTTON_WIDTH) {
+        clicked_button = w->button[0];
+        goto check_button;
+    }
+    if(offset_from_right<10+WINDOW_CAPTION_BUTTON_WIDTH*2+5) {
+        clicked_button = w->button[1];
+        goto check_button;
+    }
+    if(offset_from_right<10+WINDOW_CAPTION_BUTTON_WIDTH*3+5*2) {
+        clicked_button = w->button[2];
+        goto check_button;
+    }
+check_button:
+    switch(clicked_button) {
+        case NO_BUTTON: {
+            return 0;
+        }
+        case CLOSE_BUTTON: {
+            return 0;
+        }
+        case MAXIMIZE_BUTTON: {
+            if(w->status & WINDOW_STATUS_MAXIMIZED) {
+                w->status &= (~WINDOW_STATUS_MAXIMIZED);
+                w->x      = w->orig_x;
+                w->y      = w->orig_y;
+                resize_window(w,w->orig_width,w->orig_height);
+                graphics_clear_screen(DEFAULT_BACKGROUND_COLOR);
+            }
+            else {
+                w->orig_height = w->height;
+                w->orig_width  = w->width;
+                w->orig_x      = w->x;
+                w->orig_y      = w->y;
+                w->x           = 0;
+                w->y           = 0;
+                w->status |= WINDOW_STATUS_MAXIMIZED;
+                resize_window(w,g_graphics_data.pixels_per_line,
+                              g_graphics_data.pixels_vertical-WINDOW_CAPTION_HEIGHT);
+            }
+            if(w->code_on_resize!=nullptr) {
+                w->ui_thread->stack[++w->ui_thread->rsp].data = (U64)w->event_receiver;//this
+                w->ui_thread->stack[w->ui_thread->rsp].type   = STACK_TYPE_REFERENCE;
+                w->ui_thread->stack[++w->ui_thread->rsp].data = (U64)w->width;
+                w->ui_thread->stack[w->ui_thread->rsp].type   = STACK_TYPE_INT;
+                w->ui_thread->stack[++w->ui_thread->rsp].data = (U64)w->height;
+                w->ui_thread->stack[w->ui_thread->rsp].type   = STACK_TYPE_INT;
+                invoke_method(w->ui_thread,
+                              w->event_receiver->parent_class,
+                              w->code_on_resize,
+                              3);
+            }
+            return 1;
+        }
+        case MINIMIZE_BUTTON: {
+            return 0;
+        }
+    }
+    return 0;
 }
-
-U8 gui_window_manager_destroy_window(U16 PID, U32 unique_id)
+void send_click_event(int x,int y)
 {
-    WindowManageData* temp_pointer = NULL;
-    temp_pointer = gui_window_manager_get_window_pointer(unique_id);
-    if (temp_pointer != NULL && temp_pointer->PID == PID)
-    {
-        //start destory process
-        WindowManageData* temp_pointer2 = NULL;
-        // reconnect linked list
-        if (temp_pointer->prev == NULL)
-        {
-            // this is top layer
-            g_window_list_top = temp_pointer->next;
+    WindowInlineLinkedListNode* node = (WindowInlineLinkedListNode*)g_window_linked_list.tail;
+    int found = 0;
+    int changed = 0;
+    while(node != (WindowInlineLinkedListNode*)g_window_linked_list.head.next->prev) {
+        if(found) {
+            if(!(node->w.status & WINDOW_STATUS_INACTIVE)) {
+                node->w.status |= WINDOW_STATUS_INACTIVE;
+                update_window_caption(&node->w,0);
+                changed = 1;
+            }
         }
-        else
-        {
-            temp_pointer2 = temp_pointer->prev;
-            temp_pointer2->next = temp_pointer->next;
+        else {
+            if(x>=node->w.x && x<(node->w.x+node->w.width)&&y>=node->w.y && y<(node->w.y+WINDOW_CAPTION_HEIGHT+node->w.height)) {
+                found = 1;
+                if(node->w.status & WINDOW_STATUS_INACTIVE) {
+                    update_window_caption(&node->w,1);
+                    if(node!=(WindowInlineLinkedListNode*)g_window_linked_list.tail) {
+                        //Send it to the last!
+                        WindowInlineLinkedListNode* current_node = node;
+                        node->node.next->prev = node->node.prev;
+                        node->node.prev->next = node->node.next;
+                        insert_existing_inline_node(&g_window_linked_list,(InlineLinkedListNode*)current_node,-1);
+                    }
+                    changed  = 1;
+                    node->w.status &= ~(WINDOW_STATUS_INACTIVE);
+                }
+                if(y<(node->w.y+WINDOW_CAPTION_HEIGHT)) {
+                    changed |= check_caption_click(&node->w,x);
+                    goto click_out;
+                }
+            }
+            else {
+                if(!(node->w.status & WINDOW_STATUS_INACTIVE)) {
+                    node->w.status |= WINDOW_STATUS_INACTIVE;
+                    update_window_caption(&node->w,0);
+                    changed = 1;
+                }
+            }
         }
-        // should never reach here, unless it is killing the desktop/loading window
-        if (temp_pointer->next == NULL)
-        {
-            // this is top layer
-            g_window_list_bottom = temp_pointer->prev;
-        }
-        else
-        {
-            temp_pointer2 = temp_pointer->next;
-            *temp_pointer2->prev = *temp_pointer->prev;
-        }
-        // free the window screen buffer
-        memfree(temp_pointer->base_info.frame_buffer_base);
-        // finally clean this block of memory
-        memfree(temp_pointer);
-        return 1;
+        node = (WindowInlineLinkedListNode*)node->node.prev;
     }
-    else
-    {
-        return 0;
+click_out:
+    if(changed) {
+        composite();
+    }
+
+}
+static int g_prev_clicked=0;
+static int g_drag_begin_x,g_drag_begin_y;
+void window_mouse_event_receiver(int x,int y,int left,int right,int mid)
+{
+    if(left) {
+        if(!g_prev_clicked) {
+            g_prev_clicked = 1;
+            g_drag_begin_x = x;
+            g_drag_begin_y = y;
+        }
+    }
+    else {
+        if(g_prev_clicked) {
+            if(x-g_drag_begin_x==0&&y-g_drag_begin_y==0) {
+                //click.
+                send_click_event(x,y);
+            }
+            else {
+                send_drag_event(g_drag_begin_x,g_drag_begin_y,x-g_drag_begin_x,y-g_drag_begin_y);
+            }
+            g_prev_clicked = 0;
+        }
     }
 }

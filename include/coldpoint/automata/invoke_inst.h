@@ -6,4 +6,5 @@ cpstatus opcode_invokestatic(thread* t);
 cpstatus opcode_invokevirtual(thread* t);
 cpstatus opcode_invokeinterface(thread* t);
 cpstatus opcode_return(thread* t);
+void invoke_method(thread* t,class* target_class,CodeAttribute* code_attr,U64 param_count);
 #endif

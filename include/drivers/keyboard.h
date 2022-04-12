@@ -8,5 +8,5 @@
 #define KEY_CAPS (0x3A)
 void init_keyboard(void);
 void keyboard_getkey(int);
-
+U8 keyboard_getchar(struct CharDev*);
 #endif
