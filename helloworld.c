@@ -71,7 +71,6 @@ void kernel_main_real()
     init_classloader();
     //print_device_tree();
     //enter_graphical_mode();
-
 }
 void kernel_main(KernelInfo info)
 {
