@@ -74,16 +74,18 @@ cpstatus opcode_new(thread* t)
     U32 no;
     no = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
     t->pc+=2;
-    print_opcode("new #%d:",no);
     ConstantEntry* const_entry = ((ConstantEntry*)(t->class->buffer+t->class->constant_entry_offset))+no;
     StackVar v2;
     v2.type = STACK_TYPE_REFERENCE;
     const U8* class_name = class_get_utf8_string(t->class,((ClassInfoConstant*)const_entry)->name_index);
+    print_opcode("new %s:",class_name);
     class* target_class = getclass(class_name);
     if(target_class!=nullptr&&target_class->type==CLASS_KERNEL_API) {
+        print_opcode("(Kernel API)\n");
         NativeClass* native_class = (NativeClass*) target_class;
         return native_class->entry(t,class_name,nullptr,NATIVE_NEW);
     }
+    print_opcode("(Java API)\n");
     v2.data = (U64)new_object(target_class);
     t->stack[++(t->rsp)] = v2;
     print_opcode("%s:0x%x\n",class_name,v2.data);

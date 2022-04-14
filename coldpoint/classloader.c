@@ -321,7 +321,40 @@ int init_classloader(void)
     }
     class* c = loadclass(buf);
     memfree(buf);
-    ret = generic_open("/AudioTest.class",&file);
+
+
+    ret = generic_open("/BackgroundMusicThread.class",&file);
+    if(ret !=FzOS_SUCCESS) {
+        printk(" Open java.lang.Object fail: %d!\n",ret);
+        return FzOS_ERROR;
+    }
+    buf = memalloc(file.size);
+    ret = file.filesystem->read(&file,buf,file.size);
+    if(ret==0) {
+        memfree(buf);
+        printk(" Read Object fail: %d!\n",ret);
+        return FzOS_ERROR;
+    }
+    c = loadclass(buf);
+    memfree(buf);
+    ret = generic_open("/MainWindowEvent.class",&file);
+    if(ret !=FzOS_SUCCESS) {
+        printk(" Open java.lang.Object fail: %d!\n",ret);
+        return FzOS_ERROR;
+    }
+    buf = memalloc(file.size);
+    ret = file.filesystem->read(&file,buf,file.size);
+    if(ret==0) {
+        memfree(buf);
+        printk(" Read Object fail: %d!\n",ret);
+        return FzOS_ERROR;
+    }
+    c = loadclass(buf);
+    memfree(buf);
+
+
+
+    ret = generic_open("/SDKTest.class",&file);
     if(ret !=FzOS_SUCCESS) {
         printk(" Open Init fail: %d!\n",ret);
         return FzOS_ERROR;

@@ -70,7 +70,7 @@ void register_window_callbacks(Window* w)
 FzOSResult enter_graphical_mode(void)
 {
     //First,we disable console.
-    hook_window_console();
+    //hook_window_console();
     //Then,we clear the whole screen.
     graphics_clear_screen(DEFAULT_BACKGROUND_COLOR);
     //After that, We create the debug window.

@@ -33,13 +33,16 @@ static U64 get_param_count(const U8* in)
 }
 void invoke_method(thread* t,class* target_class,CodeAttribute* code_attr,U64 param_count)
 {
-    U64 new_stack_size_required = sizeof(stack_frame)/sizeof(StackVar)+param_count;
+    U64 new_stack_size_required = sizeof(stack_frame)/sizeof(StackVar);
     U64 new_rbp = t->rsp-param_count+1;
     t->rsp-=param_count;
     U64 new_rsp = new_rbp+new_stack_size_required;
     for(I64 i=param_count-1;i>=0;i--) {
-        t->stack[new_rsp+i] = t->stack[new_rbp+i];
+        t->stack[new_rsp+i].data = t->stack[new_rbp+i].data;
+        t->stack[new_rsp+i].type = t->stack[new_rbp+i].type;
+        print_opcode("param %d:type %d,val %x,stack no %d->%d\n",i,t->stack[new_rsp+i].type,t->stack[new_rsp+i].data,new_rbp+i,new_rsp+i);
     }
+    new_rsp += param_count;
     /*
     我们的JVM栈结构：
     (RBP位置)
@@ -104,7 +107,7 @@ cpstatus opcode_invokespecial(thread* t)
     NameAndTypeInfoConstant* name_type_info = ((NameAndTypeInfoConstant*)get_const_entry_by_index(t->class,ref->name_and_type_index));
     const U8* target_name = class_get_utf8_string(t->class,name_type_info->name_index);
     const U8* target_desc = class_get_utf8_string(t->class,name_type_info->descriptor_index);
-    print_opcode("invokespecial %s->%s(%s)\n",target_name,target_desc,target_class->type==CLASS_KERNEL_API?"Kernel API":"Java API");
+    print_opcode("invokespecial %s.%s->%s(%s)\n",target_class->class_name,target_name,target_desc,target_class->type==CLASS_KERNEL_API?"Kernel API":"Java API");
     if(target_class->type==CLASS_KERNEL_API) {
         NativeClass* native_class = (NativeClass*) target_class;
         return native_class->entry(t,target_name,target_desc,NATIVE_INVOKE);

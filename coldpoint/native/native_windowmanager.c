@@ -1,6 +1,9 @@
 #include <coldpoint/native/native_windowmanager.h>
 #include <common/kstring.h>
 #include <coldpoint/native/native_typewrapper.h>
+#include <common/file.h>
+#include <coldpoint/classloader.h>
+#include <memory/memory.h>
 const char * const g_windowmanager_class_name  = "fzos/gui/WindowManager";
 const char * const g_window_class_name  = "fzos/gui/Window";
 static NativeClassInlineLinkedListNode g_windowmanager_class_linked_node = {
@@ -22,7 +25,7 @@ static NativeMethod g_windowmanager_methods[] = {
     },
     {
         (U8*)"createWindow",
-        (U8*)"(IIIIILjava/lang/String;)Lfzos/gui/Window",
+        (U8*)"(IIIIILjava/lang/String;)Lfzos/gui/Window;",
         native_windowmanager_create_window
     },
     {
@@ -284,5 +287,22 @@ cpstatus windowmanager_class_register(InlineLinkedList* loaded_class_list)
 {
     insert_existing_inline_node(loaded_class_list,&g_windowmanager_class_linked_node.node,-1);
     insert_existing_inline_node(loaded_class_list,&g_window_class_linked_node.node,-1);
+    file file;
+    int ret;
+    //load java.lang.Object
+    ret = generic_open("/WindowEvent.class",&file);
+    if(ret !=FzOS_SUCCESS) {
+        printk(" Open fzos.gui.WindowEvent fail: %d!\n",ret);
+        return COLD_POINT_EXEC_FAILURE;
+    }
+    void* buf = memalloc(file.size);
+    ret = file.filesystem->read(&file,buf,file.size);
+    if(ret==0) {
+        memfree(buf);
+        printk(" fzos.gui.WindowEvent fail: %d!\n",ret);
+        return COLD_POINT_EXEC_FAILURE;;
+    }
+    loadclass(buf);
+    memfree(buf);
     return COLD_POINT_SUCCESS;
 }

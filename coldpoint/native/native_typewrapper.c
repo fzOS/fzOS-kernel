@@ -137,7 +137,12 @@ cpstatus typewrapper_class_entry(thread* t, const U8* name, const U8* type, Nati
             t->stack[t->rsp] = t1;
         }
         case NATIVE_NEW: {
-            //We do NOT expose ANYTHING!
+            if(!strcomp((char*)name,"java/lang/String")) {
+                Array* a = (Array*)t->stack[t->rsp].data;
+                NativeTypeWrapperObject* str = constant_to_string((const U8*)a->value);
+                t->stack[t->rsp].data = (U64)str;
+                return COLD_POINT_SUCCESS;
+            }
             return COLD_POINT_NOT_IMPLEMENTED;
         }
     }
