@@ -5,7 +5,6 @@ inline cpstatus load_internal(thread* t,int no)
 {
     U64 stack_offset = t->rbp+offsetof(stack_frame,variables)/sizeof(StackVar)+no;
     t->rsp++;
-    printk("rbp:%d\n",t->rbp);
     print_opcode("load 0x%x(stack %d) -> %d\n",t->stack[stack_offset].data,stack_offset,no);
     t->stack[t->rsp].data = t->stack[stack_offset].data;
     t->stack[t->rsp].type = t->stack[stack_offset].type;
@@ -14,7 +13,6 @@ inline cpstatus load_internal(thread* t,int no)
 inline cpstatus store_internal(thread* t,int no)
 {
     U64 stack_offset = t->rbp+offsetof(stack_frame,variables)/sizeof(StackVar)+no;
-    printk("rbp:%d\n",t->rbp);
     t->stack[stack_offset].data = t->stack[t->rsp].data;
     t->stack[stack_offset].type = t->stack[t->rsp].type;
     print_opcode("store 0x%x(stack %d)-> %d\n",t->stack[stack_offset].data,stack_offset,no);

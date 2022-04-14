@@ -79,6 +79,7 @@ typedef struct {
     thread t;
 } ThreadInlineLinkedListNode;
 extern ThreadInlineLinkedListNode* g_current_thread;
+extern InlineLinkedList g_thread_list;
 process* create_process(void);
 thread* create_thread(process* p,CodeAttribute* c,class* class,Console* con);
 void destroy_process(process* p);

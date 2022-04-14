@@ -66,7 +66,7 @@ void kernel_main_real()
     };
     start_hpet();
     show_banner();
-    //play_startup_audio();
+    play_startup_audio();
     //启动jvm！
     init_classloader();
     //print_device_tree();
@@ -141,7 +141,8 @@ void play_startup_audio(void)
         printk(" Startup Audio not recognized!\n");
     }
 skip_playing_audio:
-    free_page(buf,(music_file.size/PAGE_SIZE+1));
+    //free_page(buf,(music_file.size/PAGE_SIZE+1));
+    printk(" Play done.");
 }
 
 void print_boot_arg(void)

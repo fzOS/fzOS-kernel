@@ -1,5 +1,6 @@
 #include <coldpoint/native/native_typewrapper.h>
 #include <common/kstring.h>
+#include <memory/memory.h>
 const char * const g_integer_class_name  = "java/lang/Integer";
 const char * const g_character_class_name  = "java/lang/Character";
 const char * const g_byte_class_name  = "java/lang/Byte";
@@ -109,37 +110,48 @@ cpstatus typewrapper_class_entry(thread* t, const U8* name, const U8* type, Nati
                 t1.data = (U64)o;
                 t1.type = STACK_TYPE_REFERENCE;
             }
+            else if(!strcomp((char*)name,"<init>")) {
+                //String.
+                Array* a = (Array*)t1.data;
+                NativeTypeWrapperObject* o = (NativeTypeWrapperObject*)t->stack[--t->rsp].data;
+                strcopy((char*)o->val,(char*)a->value,a->length+1);
+                return COLD_POINT_SUCCESS;
+            }
             else {
                 //getValue.
                 t1.data = ((NativeTypeWrapperObject*)t1.data)->val;
-                if(!strcomp((char*)name,"intValue:()I")) {
+                if(!strcomp((char*)name,"intValue")) {
                     t1.type = STACK_TYPE_INT;
                 }
-                else if(!strcomp((char*)name,"charValue:()C")) {
+                else if(!strcomp((char*)name,"charValue")) {
                     t1.type = STACK_TYPE_CHAR;
                 }
-                else if(!strcomp((char*)name,"byteValue:()B")) {
+                else if(!strcomp((char*)name,"byteValue")) {
                     t1.type = STACK_TYPE_BYTE;
                 }
-                else if(!strcomp((char*)name,"shortValue:()S")) {
+                else if(!strcomp((char*)name,"shortValue")) {
                     t1.type = STACK_TYPE_SHORT;
                 }
-                else if(!strcomp((char*)name,"longValue:()J")) {
+                else if(!strcomp((char*)name,"longValue")) {
                     t1.type = STACK_TYPE_LONG;
                 }
-                else if(!strcomp((char*)name,"floatValue:()F")) {
+                else if(!strcomp((char*)name,"floatValue")) {
                     t1.type = STACK_TYPE_FLOAT;
                 }
-                else if(!strcomp((char*)name,"doubleValue:()D")) {
+                else if(!strcomp((char*)name,"doubleValue")) {
                     t1.type = STACK_TYPE_DOUBLE;
                 }
             }
             t->stack[t->rsp] = t1;
+            return COLD_POINT_SUCCESS;
         }
         case NATIVE_NEW: {
             if(!strcomp((char*)name,"java/lang/String")) {
-                Array* a = (Array*)t->stack[t->rsp].data;
-                NativeTypeWrapperObject* str = constant_to_string((const U8*)a->value);
+                int len = t->stack[t->rsp].data;
+                NativeTypeWrapperObject* str = allocate_heap(sizeof(NativeTypeWrapperObject));
+                str->val = (U64)allocate_heap(len);
+                str->o.parent_class = (class*)&g_string_class_linked_node.c;
+                str->o.var_count    = 0;
                 t->stack[t->rsp].data = (U64)str;
                 return COLD_POINT_SUCCESS;
             }
@@ -150,7 +162,7 @@ cpstatus typewrapper_class_entry(thread* t, const U8* name, const U8* type, Nati
 }
 NativeTypeWrapperObject* constant_to_string(const U8* in)
 {
-    NativeTypeWrapperObject* o = allocate_heap(sizeof(NameAndTypeInfoConstant));
+    NativeTypeWrapperObject* o = allocate_heap(sizeof(NativeTypeWrapperObject));
     o->val = (U64)in;
     o->o.parent_class = (class*)&g_string_class_linked_node.c;
     o->o.var_count    = 0;

@@ -100,6 +100,7 @@ static int native_println(const char* format,Console* c)
     while(*pointer!='\0') {
         c->common.putchar(&c->common,*pointer);
     }
+    c->common.putchar(&c->common,LINE_SEPARATOR);
     return pointer-format;
 }
 static int native_printf(const char* format,Array* a,Console* c)
@@ -180,7 +181,6 @@ static NativeMethod g_iostream_methods[] = {
 
 cpstatus native_iostream_printf(thread* t)
 {
-    print_opcode("Got native call printf().\n");
     //(Ljava/lang/String;[Ljava/lang/Object;)V
     //Get String.
     Array* a = (Array*)t->stack[t->rsp].data;
@@ -198,14 +198,13 @@ cpstatus native_iostream_printf(thread* t)
 }
 cpstatus native_iostream_println(thread* t)
 {
-    print_opcode("Got native call println().\n");
-    //(Ljava/lang/String;[Ljava/lang/Object;)V
+    //(Ljava/lang/String;)V
     //Get String.
-    NativeTypeWrapperObject* o = (NativeTypeWrapperObject*)t->stack[t->rsp-1].data;
+    NativeTypeWrapperObject* o = (NativeTypeWrapperObject*)t->stack[t->rsp].data;
     t->rsp-=2;
     const char* val = (const char*)get_constant_from_string(o);
     if(val!=nullptr) {
-        native_println(val,t->console);
+        //native_println(val,t->console);
     }
     else {
         except(t,"No string found");
@@ -215,7 +214,6 @@ cpstatus native_iostream_println(thread* t)
 }
 cpstatus native_iostream_putchar(thread* t)
 {
-    print_opcode("Got native call putchar().\n");
     char c = (U8)t->stack[t->rsp].data;
     t->rsp--;
     t->console->common.putchar(&t->console->common,c);
@@ -223,7 +221,6 @@ cpstatus native_iostream_putchar(thread* t)
 }
 cpstatus native_iostream_getchar(thread* t)
 {
-    print_opcode("Got native call getchar().\n");
     char c = t->console->common.getchar(&t->console->common);
     t->stack[++t->rsp].data = c;
     t->stack[t->rsp].type   = STACK_TYPE_CHAR;

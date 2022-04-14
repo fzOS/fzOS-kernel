@@ -8,7 +8,7 @@
 #include <common/linkedlist.h>
 #include <common/iterator.h>
 
-static InlineLinkedList g_thread_list = {
+InlineLinkedList g_thread_list = {
     .tail = &g_thread_list.head
 };
 ThreadInlineLinkedListNode* g_current_thread = nullptr;

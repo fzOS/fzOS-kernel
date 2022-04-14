@@ -44,7 +44,9 @@ void hda_interrupt_handler(int no) {
             void* chosen = buffer_desc->stream_buffer_addr + ((buffer_desc->current_buffer_page)&1)*HDA_BUFFER_SIZE;
             if(buffer_desc->current_buffer_page>=buffer_desc->total_buffer_page_count) {
                 memset(chosen,0,1*HDA_BUFFER_SIZE);
-                release_semaphore(&controller->stream_buffer_desc[i].stream_semaphore);
+                if(buffer_desc->current_buffer_page>=buffer_desc->total_buffer_page_count) {
+                    release_semaphore(&controller->stream_buffer_desc[i].stream_semaphore);
+                }
             }
             memcpy(chosen,buffer_desc->buffer+(buffer_desc->current_buffer_page) *HDA_BUFFER_SIZE,1*HDA_BUFFER_SIZE);
             if(buffer_desc->buffer_length-(buffer_desc->current_buffer_page)*HDA_BUFFER_SIZE<HDA_BUFFER_SIZE) {
@@ -467,5 +469,6 @@ semaphore* play_pcm(AudioInfo* info_buffer, void* pcm_buffer,HDAConnector* conne
     }
     //Play!
     reg->sdctl |= 0x06;
+    acquire_semaphore(&connector->codec->controller->stream_buffer_desc[stream_no].stream_semaphore);
     return &connector->codec->controller->stream_buffer_desc[stream_no].stream_semaphore;
 }
