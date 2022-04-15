@@ -141,7 +141,7 @@ void play_startup_audio(void)
         printk(" Startup Audio not recognized!\n");
     }
 skip_playing_audio:
-    //free_page(buf,(music_file.size/PAGE_SIZE+1));
+    free_page(buf,(music_file.size/PAGE_SIZE+1));
     printk(" Play done.");
 }
 
