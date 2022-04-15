@@ -125,7 +125,6 @@ void resize_window(Window* w,U32 width,U32 height)
             memcpy(&new_node->w,w,sizeof(Window));
             new_node->w.width  = width;
             new_node->w.height = height;
-            printk("New:%d/%d\n",new_node->w.width,new_node->w.height);
             update_window_caption(&new_node->w,!(new_node->w.status&WINDOW_STATUS_INACTIVE));
             //change.
             new_node->node.next = node->node.next;
@@ -150,8 +149,8 @@ void resize_window(Window* w,U32 width,U32 height)
                 }
             }
             if(copy_height<height) {
-                memset((void*)(new_node->w.buffer.value)+(width*copy_height)*sizeof(U32),
-                       0xFF,(height+WINDOW_CAPTION_HEIGHT-copy_height)*width*sizeof(U32));
+                memset((void*)(new_node->w.buffer.value)+(width*(copy_height+WINDOW_CAPTION_HEIGHT))*sizeof(U32),
+                       0xFF,(height-copy_height)*width*sizeof(U32));
             }
             //delete orig node.
             memfree(node);
