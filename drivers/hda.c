@@ -408,8 +408,15 @@ int bind_stream_to_converter(HDACodec* codec,int stream_id,int converter_widget_
     codec->controller->registers->intctl|=(1<<stream_id);
     return ret;
 }
+void stop_stream(HDAConnector* connector)
+{
+    int stream_no;
+    StreamDescRegisters* reg = get_output_stream_desc(connector->codec->controller,&stream_no);
+    reg->sdctl &= (~0x1);
+}
 semaphore* play_pcm(AudioInfo* info_buffer, void* pcm_buffer,HDAConnector* connector)
 {
+    stop_stream(connector);
     int stream_no;
     //Get Stream Descriptor.
     StreamDescRegisters* reg = get_output_stream_desc(connector->codec->controller,&stream_no);
@@ -469,6 +476,7 @@ semaphore* play_pcm(AudioInfo* info_buffer, void* pcm_buffer,HDAConnector* conne
     }
     //Play!
     reg->sdctl |= 0x06;
+
     connector->codec->controller->stream_buffer_desc[stream_no].stream_semaphore=0;
     return &connector->codec->controller->stream_buffer_desc[stream_no].stream_semaphore;
 }
