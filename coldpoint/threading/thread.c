@@ -70,6 +70,8 @@ thread* create_thread(process* p,CodeAttribute* c,class* class,Console* con)
     t->class = class;
     t->code = c;
     t->process = p;
+    t->rbp = 0;
+    t->pc = 0;
     t->rsp = sizeof(stack_frame)/sizeof(StackVar)+bswap16(t->code->max_locals)+1;
     t->status = THREAD_READY;
     t->tid = g_current_tid++;

@@ -194,6 +194,36 @@ cpstatus opcode_invokeinterface(thread* t)
     //What is an interface?
     return opcode_invokevirtual(t);
 }
+cpstatus opcode_ireturn(thread* t)
+{
+    print_opcode("ireturn\n");
+    return_from_method(t,1);
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_lreturn(thread* t)
+{
+    print_opcode("lreturn\n");
+    return_from_method(t,1);
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_freturn(thread* t)
+{
+    print_opcode("freturn\n");
+    return_from_method(t,1);
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_dreturn(thread* t)
+{
+    print_opcode("dreturn\n");
+    return_from_method(t,1);
+    return COLD_POINT_SUCCESS;
+}
+cpstatus opcode_areturn(thread* t)
+{
+    print_opcode("areturn\n");
+    return_from_method(t,1);
+    return COLD_POINT_SUCCESS;
+}
 cpstatus opcode_return(thread* t)
 {
     print_opcode("return\n");

@@ -52,8 +52,8 @@ cpstatus native_register_thread(thread* t)
     thread* new_thread = create_thread(g_current_thread->t.process,code,c,g_current_thread->t.console);
     set_parameter_in_object(java_thread_object,"threadId","I",g_native_thread_class_name,new_thread->tid);
     //Emulate parameter "this"
-    new_thread->stack[++new_thread->rsp].data = (U64)java_thread_object;
-    new_thread->stack[++new_thread->rsp].type = STACK_TYPE_REFERENCE;
+    new_thread->stack[sizeof(stack_frame)/sizeof(StackVar)].data = (U64)java_thread_object;
+    new_thread->stack[sizeof(stack_frame)/sizeof(StackVar)].type = STACK_TYPE_REFERENCE;
     return COLD_POINT_SUCCESS;
 }
 cpstatus native_start_thread(thread* t)

@@ -59,13 +59,13 @@ cpstatus (*g_automata_opcode[256])(thread* c)= {
     opcode_ificmpne,opcode_ificmplt,opcode_ificmpge,opcode_ificmpgt,//0xa0~0xa3
     opcode_ificmple,opcode_ifacmpeq,opcode_ifacmpne,opcode_goto,//0xa4~0xa7,
     invalid_opcode,invalid_opcode,opcode_tableswitch,opcode_lookupswitch,//0xa8~0xab
-    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xac~0xaf
-    invalid_opcode,opcode_return,opcode_getstatic,opcode_putstatic,//0xb0~0xb3
+    opcode_ireturn,opcode_lreturn,opcode_freturn,opcode_dreturn,//0xac~0xaf
+    opcode_areturn,opcode_return,opcode_getstatic,opcode_putstatic,//0xb0~0xb3
     opcode_getfield,opcode_putfield,opcode_invokevirtual,opcode_invokespecial,//0xb4~0xb7
     opcode_invokestatic,opcode_invokeinterface,invalid_opcode,opcode_new,//0xb8~0xbb
     opcode_newarray,opcode_anewarray,opcode_arraylength,invalid_opcode,//0xbc~0xbf
     opcode_checkcast,opcode_instanceof,invalid_opcode,invalid_opcode,//0xc0~0xc3
-    invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xc4~0xc7
+    invalid_opcode,invalid_opcode,opcode_ifnull,opcode_ifnonnull,//0xc4~0xc7
     invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xc8~0xcb
     invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xcc~0xcf
     invalid_opcode,invalid_opcode,invalid_opcode,invalid_opcode,//0xd0~0xd3
@@ -107,7 +107,7 @@ void automata_main_loop()
 
         }
         if(t->status == THREAD_RUNNING) {
-            print_opcode(" %d %d ",t->pc,t->rsp);
+            print_opcode(" %d %d 0x%b ",t->pc,t->rsp,t->code->code[t->pc]);
             g_automata_opcode[t->code->code[t->pc++]](t);
         }
         else {
