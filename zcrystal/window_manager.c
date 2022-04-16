@@ -65,6 +65,7 @@ void register_window_callbacks(Window* w)
         U64 code_name_index = class_get_utf8_string_index(target_class,(U8*)"Code");
         CodeAttribute* code = (CodeAttribute*)&target_class->buffer[class_get_method_attribute_by_name(target_class,method_info,code_name_index)->info_offset];
         *attributes[i] = code;
+        printk("%s:%x\n",window_event_names[i],code);
     }
 }
 FzOSResult enter_graphical_mode(void)
@@ -397,6 +398,18 @@ void send_click_event(int x,int y)
                     changed |= check_caption_click(&node->w,x);
                     goto click_out;
                 }
+                if(node->w.code_on_click!=nullptr) {
+                    node->w.ui_thread->stack[++node->w.ui_thread->rsp].data = (U64)node->w.event_receiver;//this
+                    node->w.ui_thread->stack[node->w.ui_thread->rsp].type   = STACK_TYPE_REFERENCE;
+                    node->w.ui_thread->stack[++node->w.ui_thread->rsp].data = x-(U64)node->w.x;
+                    node->w.ui_thread->stack[node->w.ui_thread->rsp].type   = STACK_TYPE_INT;
+                    node->w.ui_thread->stack[++node->w.ui_thread->rsp].data = y-(U64)node->w.y-WINDOW_CAPTION_HEIGHT;
+                    node->w.ui_thread->stack[node->w.ui_thread->rsp].type   = STACK_TYPE_INT;
+                    invoke_method(node->w.ui_thread,
+                                  node->w.event_receiver->parent_class,
+                                  node->w.code_on_click,
+                                  3);
+                    }
             }
             else {
                 if(!(node->w.status & WINDOW_STATUS_INACTIVE)) {

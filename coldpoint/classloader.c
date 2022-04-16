@@ -299,19 +299,13 @@ class* loadclass(void* class_file)
     node->c.type = CLASS_USERSPACE;
     return &node->c;
 }
-
-int init_classloader(void)
+int load_class_from_file(char* filename)
 {
-
     file file;
-    int ret = register_native_classes(&g_loaded_class_linked_list);
-    if(ret!=COLD_POINT_SUCCESS) {
-        return FzOS_ERROR;
-    }
     //load java.lang.Object
-    ret = generic_open("/Object.class",&file);
+    int ret = generic_open(filename,&file);
     if(ret !=FzOS_SUCCESS) {
-        printk(" Open java.lang.Object fail: %d!\n",ret);
+        printk(" Open %s fail: %d!\n",filename,ret);
         return FzOS_ERROR;
     }
     void* buf = memalloc(file.size);
@@ -321,55 +315,44 @@ int init_classloader(void)
         printk(" Read Object fail: %d!\n",ret);
         return FzOS_ERROR;
     }
-    class* c = loadclass(buf);
+    loadclass(buf);
     memfree(buf);
+    return FzOS_SUCCESS;
+}
+int init_classloader(void)
+{
 
+    int ret = register_native_classes(&g_loaded_class_linked_list);
+    if(ret!=COLD_POINT_SUCCESS) {
+        return FzOS_ERROR;
+    }
+    ret = load_class_from_file("/Object.class");
+    if(ret!=COLD_POINT_SUCCESS) {
+        return FzOS_ERROR;
+    }
+//测试！
+    ret = load_class_from_file("/BMPImage.class");
+    if(ret!=COLD_POINT_SUCCESS) {
+        return FzOS_ERROR;
+    }
+    ret = load_class_from_file("/GameLogicThread.class");
+    if(ret!=COLD_POINT_SUCCESS) {
+        return FzOS_ERROR;
+    }
+    ret = load_class_from_file("/GameWindowEvent.class");
+    if(ret!=COLD_POINT_SUCCESS) {
+        return FzOS_ERROR;
+    }
+    ret = load_class_from_file("/MusicThread.class");
+    if(ret!=COLD_POINT_SUCCESS) {
+        return FzOS_ERROR;
+    }
+    ret = load_class_from_file("/GameEntry.class");
+    if(ret!=COLD_POINT_SUCCESS) {
+        return FzOS_ERROR;
+    }
 
-    ret = generic_open("/BackgroundMusicThread.class",&file);
-    if(ret !=FzOS_SUCCESS) {
-        printk(" Open java.lang.Object fail: %d!\n",ret);
-        return FzOS_ERROR;
-    }
-    buf = memalloc(file.size);
-    ret = file.filesystem->read(&file,buf,file.size);
-    if(ret==0) {
-        memfree(buf);
-        printk(" Read Object fail: %d!\n",ret);
-        return FzOS_ERROR;
-    }
-    c = loadclass(buf);
-    memfree(buf);
-    ret = generic_open("/MainWindowEvent.class",&file);
-    if(ret !=FzOS_SUCCESS) {
-        printk(" Open java.lang.Object fail: %d!\n",ret);
-        return FzOS_ERROR;
-    }
-    buf = memalloc(file.size);
-    ret = file.filesystem->read(&file,buf,file.size);
-    if(ret==0) {
-        memfree(buf);
-        printk(" Read Object fail: %d!\n",ret);
-        return FzOS_ERROR;
-    }
-    c = loadclass(buf);
-    memfree(buf);
-
-
-
-    ret = generic_open("/SDKTest.class",&file);
-    if(ret !=FzOS_SUCCESS) {
-        printk(" Open Init fail: %d!\n",ret);
-        return FzOS_ERROR;
-    }
-    buf = memalloc(file.size);
-    ret = file.filesystem->read(&file,buf,file.size);
-    if(ret==0) {
-        memfree(buf);
-        printk(" Read Init fail: %d!\n",ret);
-        return FzOS_ERROR;
-    }
-    c = loadclass(buf);
-    memfree(buf);
+    class* c = getclass((U8*)"finalgame/GameEntry");
     thread_test(c);
     return FzOS_SUCCESS;
 }

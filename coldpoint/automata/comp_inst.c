@@ -4,7 +4,7 @@ static inline void relative_jump(thread* t)
 {
     U8 offset1=t->code->code[t->pc];
     U8 offset2=t->code->code[t->pc+1];
-    t->pc+=2;
+    t->pc-=1;
     short offset = (offset1<<8)|offset2;
     t->pc += offset;
 }

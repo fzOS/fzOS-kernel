@@ -20,7 +20,8 @@ typedef enum {
     STACK_TYPE_DOUBLE,
     STACK_TYPE_CHAR,
     STACK_TYPE_REFERENCE,
-    STACK_TYPE_CLASS_REF
+    STACK_TYPE_CLASS_REF,
+    STACK_TYPE_THREAD_STATUS
 } StackVarType;
 typedef struct {
     StackVarType type;
@@ -54,6 +55,7 @@ typedef struct {
 /*
     我们的JVM栈结构：
     (RBP位置)
+    |-return thread status
     |-return class*(U64)
     |-return code*(U64)
     |-return pc(U64)
@@ -67,6 +69,7 @@ typedef struct {
          浮点类型-> double;
 */
 typedef struct {
+    StackVar return_thread_status;
     StackVar return_class;
     StackVar return_code;//code_attribute*
     StackVar pc;

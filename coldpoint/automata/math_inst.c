@@ -23,6 +23,7 @@ cpstatus opcode_add(thread* t)
             long val1=(long)v1.data;
             long val2=(long)v2.data;
             v1.data = val1+val2;
+            print_opcode("%d+%d=%d\n",val1,val2,v1.data);
             if(v1.type==STACK_TYPE_INT) {
                 v1.data = (int)v1.data;
             }
@@ -52,6 +53,7 @@ cpstatus opcode_sub(thread* t)
             long val1=(long)v1.data;
             long val2=(long)v2.data;
             v1.data = val1-val2;
+            print_opcode("%d-%d=%d\n",val1,val2,v1.data);
             if(v1.type==STACK_TYPE_INT) {
                 v1.data = (int)v1.data;
             }
@@ -81,6 +83,7 @@ cpstatus opcode_mul(thread* t)
             long val1=(long)v1.data;
             long val2=(long)v2.data;
             v1.data = val1*val2;
+            print_opcode("%d*%d=%d\n",val1,val2,v1.data);
             if(v1.type==STACK_TYPE_INT) {
                 v1.data = (int)v1.data;
             }
@@ -118,6 +121,7 @@ cpstatus opcode_div(thread* t)
                 return COLD_POINT_EXEC_FAILURE;
             }
             v1.data = val1/val2;
+            print_opcode("%d/%d=%d\n",val1,val2,v1.data);
             if(v1.type==STACK_TYPE_INT) {
                 v1.data = (int)v1.data;
             }
@@ -142,6 +146,7 @@ cpstatus opcode_mod(thread* t)
         }
         case STACK_TYPE_INT:
         case STACK_TYPE_LONG: {
+            print_opcode("%d mod %d=%d\n",v1.data,v2.data,v1.data%v2.data);
             v1.data %= v2.data;
             if(v1.type ==STACK_TYPE_INT) {
                 v1.data = (int)v1.data;
@@ -176,11 +181,14 @@ cpstatus opcode_shl(thread* t)
 {
     print_opcode("i/l/f/d/shl\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
+    print_opcode("%d,%d\n",v1.type,v2.type);
     t->rsp -= 1;
     switch(v1.type) {
         case STACK_TYPE_INT:
         case STACK_TYPE_LONG: {
+            print_opcode("%d<<%d=%d\n",v1.data,v2.data,v1.data<<v2.data);
             v1.data <<= v2.data;
+
             break;
         }
     }
@@ -232,6 +240,7 @@ cpstatus opcode_and(thread* t)
     print_opcode("i/l/and\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
+    print_opcode("%d&%d=%d\n",v1.data,v2.data,v1.data&v2.data);
     v1.data &= v2.data;
     t->stack[t->rsp] = v1;
     return COLD_POINT_SUCCESS;
@@ -241,7 +250,8 @@ cpstatus opcode_or(thread* t)
     print_opcode("i/l/or\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
-    v1.data &= v2.data;
+    print_opcode("%d|%d=%d\n",v1.data,v2.data,v1.data|v2.data);
+    v1.data |= v2.data;
     t->stack[t->rsp] = v1;
     return COLD_POINT_SUCCESS;
 }
@@ -249,8 +259,9 @@ cpstatus opcode_xor(thread* t)
 {
     print_opcode("i/l/xor\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
+    print_opcode("%d^%d=%d\n",v1.data,v2.data,v1.data<<v2.data);
     t->rsp -= 1;
-    v1.data &= v2.data;
+    v1.data ^= v2.data;
     t->stack[t->rsp] = v1;
     return COLD_POINT_SUCCESS;
 }

@@ -259,7 +259,7 @@ inline FieldInfoEntry* get_field_by_name_and_type(class* c,const U8* name,const 
         for(int i=0;i<c->fields_pool_entry_count;i++) {
             if(!strcomp((char*)name,(char*)class_get_utf8_string(c,field_entry[i].name_index))
              &&!strcomp((char*)type,(char*)class_get_utf8_string(c,field_entry[i].descriptor_index))) {
-                return field_entry;
+                return &field_entry[i];
             }
         }
     }
@@ -272,7 +272,7 @@ inline MethodInfoEntry* get_method_by_name_and_type(class* c,const U8* name,cons
         for(int i=0;i<c->method_pool_entry_count;i++) {
             if(!strcomp((char*)name,(char*)class_get_utf8_string(c,method_entry[i].name_index))
              &&!strcomp((char*)type,(char*)class_get_utf8_string(c,method_entry[i].descriptor_index))) {
-                return method_entry;
+                return &method_entry[i];
             }
         }
     }

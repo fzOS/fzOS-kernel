@@ -262,7 +262,7 @@ cpstatus native_windowmanager_create_window(thread* t)
     int height  = (t->stack[t->rsp--].data)&0xFFFFFFFF;
     int width   = (t->stack[t->rsp--].data)&0xFFFFFFFF;
     int attrs   = (t->stack[t->rsp--].data)&0xFFFFFFFF;
-    Window* w   = create_window(pos_x,pos_y,width,height,title,attrs,nullptr,t);
+    Window* w   = create_window(pos_x,pos_y,width,height,title,attrs,nullptr,nullptr);
     WindowObject* o = allocate_heap(sizeof(WindowObject));
     o->o.parent_class = (class*)&g_window_class_linked_node.c;
     o->w = w;
@@ -279,7 +279,15 @@ cpstatus native_windowmanager_set_window_event(thread* t)
 {
     object* o       = (object*)t->stack[t->rsp--].data;
     WindowObject* w = (WindowObject*)t->stack[t->rsp--].data;
+    class* super_window_event_class = getclass((U8*)"fzos/gui/WindowEvent");
     w->w->event_receiver = o;
+    MethodInfoEntry* method_info = get_method_by_name_and_type(super_window_event_class,
+                                                              (U8*)"init",
+                                                              (U8*)"()V");
+    U64 code_name_index = class_get_utf8_string_index(super_window_event_class,(U8*)"Code");
+    CodeAttribute* code = (CodeAttribute*)&super_window_event_class->buffer[class_get_method_attribute_by_name(super_window_event_class,method_info,code_name_index)->info_offset];
+    thread* ui_thread = create_thread(t->process,code,o->parent_class,t->console);
+    w->w->ui_thread = ui_thread;
     register_window_callbacks(w->w);
     return COLD_POINT_SUCCESS;
 }

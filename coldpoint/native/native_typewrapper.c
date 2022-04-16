@@ -127,10 +127,10 @@ cpstatus typewrapper_class_entry(thread* t, const U8* name, const U8* type, Nati
                     t1.type = STACK_TYPE_CHAR;
                 }
                 else if(!strcomp((char*)name,"byteValue")) {
-                    t1.type = STACK_TYPE_BYTE;
+                    t1.type = STACK_TYPE_INT;
                 }
                 else if(!strcomp((char*)name,"shortValue")) {
-                    t1.type = STACK_TYPE_SHORT;
+                    t1.type = STACK_TYPE_INT;
                 }
                 else if(!strcomp((char*)name,"longValue")) {
                     t1.type = STACK_TYPE_LONG;

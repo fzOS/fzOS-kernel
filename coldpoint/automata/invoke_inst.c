@@ -46,6 +46,7 @@ void invoke_method(thread* t,class* target_class,CodeAttribute* code_attr,U64 pa
     /*
     我们的JVM栈结构：
     (RBP位置)
+    |-return thread status
     |-return class*(U64)
     |-return code*(U64)
     |-return pc(U64)
@@ -58,19 +59,22 @@ void invoke_method(thread* t,class* target_class,CodeAttribute* code_attr,U64 pa
     i.e. 整数类型-> U64;
          浮点类型-> double;
     */
-    t->stack[new_rbp].data = (U64)t->class;
-    t->stack[new_rbp].type = STACK_TYPE_CLASS_REF;
-    t->stack[new_rbp+1].data = (U64)t->code;
-    t->stack[new_rbp+1].type = STACK_TYPE_CODE_POINTER;
-    t->stack[new_rbp+2].data = t->pc;
-    t->stack[new_rbp+2].type = STACK_TYPE_PC;
-    t->stack[new_rbp+3].data = t->rsp;
-    t->stack[new_rbp+3].type = STACK_TYPE_RSP;
-    t->stack[new_rbp+4].data = t->rbp;
-    t->stack[new_rbp+4].type = STACK_TYPE_RBP;
+    t->stack[new_rbp  ].data = (U64)t->status;
+    t->stack[new_rbp  ].type = STACK_TYPE_THREAD_STATUS;
+    t->stack[new_rbp+1].data = (U64)t->class;
+    t->stack[new_rbp+1].type = STACK_TYPE_CLASS_REF;
+    t->stack[new_rbp+2].data = (U64)t->code;
+    t->stack[new_rbp+2].type = STACK_TYPE_CODE_POINTER;
+    t->stack[new_rbp+3].data = t->pc;
+    t->stack[new_rbp+3].type = STACK_TYPE_PC;
+    t->stack[new_rbp+4].data = t->rsp;
+    t->stack[new_rbp+4].type = STACK_TYPE_RSP;
+    t->stack[new_rbp+5].data = t->rbp;
+    t->stack[new_rbp+5].type = STACK_TYPE_RBP;
     t->class = target_class;
     t->code = code_attr;
     t->pc = 0;
+    t->status = (t->status==THREAD_RUNNING)?THREAD_RUNNING:THREAD_READY;
     t->rsp = new_rsp;
     t->rbp = new_rbp;
     return;
@@ -83,11 +87,12 @@ static void return_from_method(thread* t,int has_return_val)
     }
     StackVar var = t->stack[t->rsp];
     U64 base = t->rbp;
-    t->class = (class*)t->stack[base].data;
-    t->code  = (CodeAttribute*)t->stack[base+1].data;
-    t->pc    = t->stack[base+2].data;
-    t->rsp   = t->stack[base+3].data;
-    t->rbp   = t->stack[base+4].data;
+    t->status= t->stack[base].data;
+    t->class = (class*)t->stack[base+1].data;
+    t->code  = (CodeAttribute*)t->stack[base+2].data;
+    t->pc    = t->stack[base+3].data;
+    t->rsp   = t->stack[base+4].data;
+    t->rbp   = t->stack[base+5].data;
     if(has_return_val) {
         t->stack[++t->rsp] = var;
     }

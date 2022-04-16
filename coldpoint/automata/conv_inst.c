@@ -97,7 +97,7 @@ cpstatus opcode_int_to_byte(thread* t)
 {
     print_opcode("i2b\n");
     t->stack[t->rsp].data = (byte)t->stack[t->rsp].data;
-    t->stack[t->rsp].type = STACK_TYPE_BYTE;
+    t->stack[t->rsp].type = STACK_TYPE_INT;
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_int_to_char(thread* t)
@@ -111,6 +111,6 @@ cpstatus opcode_int_to_short(thread* t)
 {
     print_opcode("i2s\n");
     t->stack[t->rsp].data = (short)t->stack[t->rsp].data;
-    t->stack[t->rsp].type = STACK_TYPE_SHORT;
+    t->stack[t->rsp].type = STACK_TYPE_INT;
     return COLD_POINT_SUCCESS;
 }

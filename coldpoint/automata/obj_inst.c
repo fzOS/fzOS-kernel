@@ -484,7 +484,7 @@ cpstatus opcode_baload(thread* t)
 {
     U64 result = aload_internal(t,sizeof(char));
     if(result==COLD_POINT_SUCCESS)
-        t->stack[t->rsp].type = STACK_TYPE_BYTE;
+        t->stack[t->rsp].type = STACK_TYPE_INT;
     return result;
 }
 cpstatus opcode_caload(thread* t)
