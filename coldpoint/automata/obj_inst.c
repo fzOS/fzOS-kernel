@@ -287,7 +287,7 @@ cpstatus opcode_putfield(thread* t)
         except(t,"Field not found.");
         return COLD_POINT_EXEC_FAILURE;
     }
-    print_opcode("%s@%s->%s <== %d\n",target_name,target_class_name,target_desc,v2.data);
+    print_opcode("%s@%s->%s <== %x\n",target_name,target_class_name,target_desc,v2.data);
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_getfield(thread* t)
@@ -346,7 +346,7 @@ cpstatus opcode_getfield(thread* t)
         }
     }
     t->stack[t->rsp]=v1;
-    print_opcode("getfield %s@%s->%s ==> %d\n",target_name,target_class_name,target_desc,v1.data);
+    print_opcode("getfield %s@%s->%s ==> %x\n",target_name,target_class_name,target_desc,v1.data);
     return COLD_POINT_SUCCESS;
 }
 cpstatus opcode_checkcast(thread* t)

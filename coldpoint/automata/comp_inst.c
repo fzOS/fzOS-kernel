@@ -10,9 +10,9 @@ static inline void relative_jump(thread* t)
 }
 cpstatus opcode_lcmp(thread* t)
 {
-    print_opcode("lcmp\n");
     StackVar v2=t->stack[t->rsp],v1=t->stack[t->rsp-1];
     t->rsp -= 1;
+    print_opcode("lcmp %d<->%d\n",v1.data,v2.data);
     if(v1.data>v2.data) {
         t->stack[t->rsp].data = 1;
     }
@@ -67,10 +67,10 @@ cpstatus opcode_cmpl(thread* t)
 }
 cpstatus opcode_ifeq(thread* t)
 {
-    print_opcode("ifeq\n");
     t->rsp -= 1;
     StackVar *v1=&t->stack[t->rsp];
     int val = (int)(v1->data);
+    print_opcode("ifeq %d\n",val);
     if(val==0) {
         relative_jump(t);
     }
@@ -81,10 +81,9 @@ cpstatus opcode_ifeq(thread* t)
 }
 cpstatus opcode_ifne(thread* t)
 {
-    print_opcode("ifne\n");
-    t->rsp -= 1;
-    StackVar *v1=&t->stack[t->rsp];
-    int val = (int)(v1->data);
+    StackVar v1=t->stack[t->rsp--];
+    int val = (int)(v1.data);
+    print_opcode("ifne %d\n",val);
     if(val!=0) {
         relative_jump(t);
     }
@@ -95,10 +94,9 @@ cpstatus opcode_ifne(thread* t)
 }
 cpstatus opcode_iflt(thread* t)
 {
-    print_opcode("iflt\n");
-    t->rsp -= 1;
-    StackVar *v1=&t->stack[t->rsp];
+    StackVar *v1=&t->stack[t->rsp--];
     int val = (int)(v1->data);
+    print_opcode("iflt %d\n",val);
     if(val<0) {
         relative_jump(t);
     }
@@ -109,10 +107,9 @@ cpstatus opcode_iflt(thread* t)
 }
 cpstatus opcode_ifle(thread* t)
 {
-    print_opcode("ifle\n");
-    t->rsp -= 1;
-    StackVar *v1=&t->stack[t->rsp];
+    StackVar *v1=&t->stack[t->rsp--];
     int val = (int)(v1->data);
+    print_opcode("ifle %d\n",val);
     if(val<=0) {
         relative_jump(t);
     }
@@ -123,10 +120,9 @@ cpstatus opcode_ifle(thread* t)
 }
 cpstatus opcode_ifgt(thread* t)
 {
-    print_opcode("ifgt\n");
-    t->rsp -= 1;
-    StackVar *v1=&t->stack[t->rsp];
+    StackVar *v1=&t->stack[t->rsp--];
     int val = (int)(v1->data);
+    print_opcode("ifgt %d\n",val);
     if(val>0) {
         relative_jump(t);
     }
@@ -137,10 +133,9 @@ cpstatus opcode_ifgt(thread* t)
 }
 cpstatus opcode_ifge(thread* t)
 {
-    print_opcode("ifge\n");
-    t->rsp -= 1;
-    StackVar *v1=&t->stack[t->rsp];
+    StackVar *v1=&t->stack[t->rsp--];
     int val = (int)(v1->data);
+    print_opcode("ifge %d\n",val);
     if(val>=0) {
         relative_jump(t);
     }
