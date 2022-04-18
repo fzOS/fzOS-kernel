@@ -451,3 +451,11 @@ void window_mouse_event_receiver(int x,int y,int left,int right,int mid)
         }
     }
 }
+void set_sprite(Window* w,void* data,int width,int height)
+{
+    return;
+}
+void update_sprite_position(Window* w,int x,int y)
+{
+    return;
+}

@@ -56,6 +56,9 @@ static NativeClassInlineLinkedListNode g_window_class_linked_node = {
     .c.type = CLASS_KERNEL_API,
     .c.entry = window_class_entry
 };
+cpstatus native_window_set_content(thread* t);
+cpstatus native_window_set_sprite(thread* t);
+cpstatus native_window_set_sprite_position(thread* t);
 cpstatus native_window_show(thread* t);
 cpstatus native_window_hide(thread* t);
 static NativeMethod g_window_methods[] = {
@@ -68,6 +71,21 @@ static NativeMethod g_window_methods[] = {
         (U8*)"hide",
         (U8*)"()V",
         native_window_hide
+    },
+    {
+        (U8*)"setContent",
+        (U8*)"([B)V",
+        native_window_set_content
+    },
+    {
+        (U8*)"setSprite",
+        (U8*)"([BII)V",
+        native_window_set_sprite
+    },
+    {
+        (U8*)"setSpritePos",
+        (U8*)"(II)V",
+        native_window_set_sprite_position
     }
 };
 cpstatus native_window_show(thread* t)
@@ -314,3 +332,30 @@ cpstatus windowmanager_class_register(InlineLinkedList* loaded_class_list)
     memfree(buf);
     return COLD_POINT_SUCCESS;
 }
+cpstatus native_window_set_content(thread* t)
+{
+    Array* a       = (Array*)t->stack[t->rsp--].data;
+    WindowObject* w = (WindowObject*)t->stack[t->rsp--].data;
+    //TODO:Flip window.
+    memcpy(((U32*)w->w->buffer.value)+w->w->width*WINDOW_CAPTION_HEIGHT,a->value,w->w->width*w->w->height*sizeof(U32));
+    return COLD_POINT_SUCCESS;
+}
+cpstatus native_window_set_sprite(thread* t)
+{
+    int height      = t->stack[t->rsp--].data;
+    int width       = t->stack[t->rsp--].data;
+    Array* a        = (Array*)t->stack[t->rsp--].data;
+    WindowObject* w = (WindowObject*)t->stack[t->rsp--].data;
+    set_sprite(w->w,a->value,width,height);
+    return COLD_POINT_SUCCESS;
+}
+cpstatus native_window_set_sprite_position(thread* t)
+{
+    int y           = t->stack[t->rsp--].data;
+    int x           = t->stack[t->rsp--].data;
+    WindowObject* w = (WindowObject*)t->stack[t->rsp--].data;
+    update_sprite_position(w->w,x,y);
+    return COLD_POINT_SUCCESS;
+}
+cpstatus native_window_show(thread* t);
+cpstatus native_window_hide(thread* t);

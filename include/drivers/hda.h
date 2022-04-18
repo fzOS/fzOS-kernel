@@ -250,4 +250,5 @@ void hda_register(U8 bus,U8 slot,U8 func);
 StreamDescRegisters* get_input_stream_desc(HDAController* controller,int* stream_id_buffer);
 StreamDescRegisters* get_output_stream_desc(HDAController* controller,int* stream_id_buffer);
 semaphore* play_pcm(AudioInfo* info_buffer, void* pcm_buffer,HDAConnector* connector);
+void stop_stream(HDAConnector* connector);
 #endif

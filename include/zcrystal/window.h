@@ -54,6 +54,9 @@ typedef struct {
     CodeAttribute* code_on_close;
     CodeAttribute* code_on_activate;
     CodeAttribute* code_on_inactivate;
+    Array* sprite;
+    U8*    shadow_sprite;
+    int sprite_x,sprite_y,sprite_w,sprite_h;
     Array buffer;
 } Window;
 typedef struct {
