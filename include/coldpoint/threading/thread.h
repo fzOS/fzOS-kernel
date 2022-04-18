@@ -55,7 +55,7 @@ typedef struct {
 /*
     我们的JVM栈结构：
     (RBP位置)
-    |-return thread status
+    |-return thread status(U64)
     |-return class*(U64)
     |-return code*(U64)
     |-return pc(U64)

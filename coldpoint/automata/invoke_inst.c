@@ -4,6 +4,7 @@
 #include <coldpoint/automata/automata.h>
 #include <coldpoint/heap/heap.h>
 #include <common/kstring.h>
+#include <common/bswap.h>
 #include <coldpoint/native/nativehandler.h>
 static U64 get_param_count(const U8* in)
 {
@@ -42,7 +43,7 @@ void invoke_method(thread* t,class* target_class,CodeAttribute* code_attr,U64 pa
         t->stack[new_rsp+i].type = t->stack[new_rbp+i].type;
         print_opcode("param %d:type %d,val %x,stack no %d->%d\n",i,t->stack[new_rsp+i].type,t->stack[new_rsp+i].data,new_rbp+i,new_rsp+i);
     }
-    new_rsp += param_count;
+    new_rsp += bswap16(code_attr->max_locals);
     /*
     我们的JVM栈结构：
     (RBP位置)

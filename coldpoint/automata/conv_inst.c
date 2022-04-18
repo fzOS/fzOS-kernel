@@ -15,6 +15,8 @@ cpstatus opcode_to_long(thread* t)
             break;
         }
         default: {
+            printk("Type %d cannot be converted into long!\n",v1.type);
+            while(1);
             return COLD_POINT_NOT_IMPLEMENTED;
         }
     }

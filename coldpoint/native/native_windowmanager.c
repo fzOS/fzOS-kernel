@@ -337,7 +337,18 @@ cpstatus native_window_set_content(thread* t)
     Array* a       = (Array*)t->stack[t->rsp--].data;
     WindowObject* w = (WindowObject*)t->stack[t->rsp--].data;
     //TODO:Flip window.
-    memcpy(((U32*)w->w->buffer.value)+w->w->width*WINDOW_CAPTION_HEIGHT,a->value,w->w->width*w->w->height*sizeof(U32));
+    int flip=1;
+    U32 width=w->w->width,height=w->w->height;
+    U32* window_begin_pos =((U32*)w->w->buffer.value)+width*WINDOW_CAPTION_HEIGHT;
+    U32* image_begin_pos =(U32*)a->value;
+    if(flip) {
+        for(int i=0;i<height;i++) {
+            memcpy(window_begin_pos+(height-i-1)*width,image_begin_pos+i*width,width*sizeof(U32));
+        }
+    }
+    else {
+        memcpy(window_begin_pos,image_begin_pos,width*height*sizeof(U32));
+    }
     return COLD_POINT_SUCCESS;
 }
 cpstatus native_window_set_sprite(thread* t)

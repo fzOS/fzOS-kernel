@@ -5,7 +5,7 @@ inline cpstatus load_internal(thread* t,int no)
 {
     U64 stack_offset = t->rbp+offsetof(stack_frame,variables)/sizeof(StackVar)+no;
     t->rsp++;
-    print_opcode("load 0x%x(stack %d) -> %d\n",t->stack[stack_offset].data,stack_offset,no);
+    print_opcode("load 0x%x(stack %d) -> stack %d\n",t->stack[stack_offset].data,stack_offset,t->rsp);
     t->stack[t->rsp].data = t->stack[stack_offset].data;
     t->stack[t->rsp].type = t->stack[stack_offset].type;
     return COLD_POINT_SUCCESS;

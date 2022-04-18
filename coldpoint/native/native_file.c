@@ -69,7 +69,7 @@ cpstatus native_file_seek(thread* t)
 {
     I64 delta = t->stack[t->rsp--].data;
     FileObject* o = (FileObject*)t->stack[t->rsp--].data;
-    o->f.filesystem->seek(&o->f,delta,SEEK_FROM_CURRENT);
+    o->f.filesystem->seek(&o->f,delta,SEEK_FROM_BEGINNING);
     set_parameter_in_object(o->descriptor,"offset","J",g_file_desc_class_name,o->f.offset);
     t->stack[++t->rsp].type = STACK_TYPE_LONG;
     t->stack[t->rsp].data   = o->f.offset;
