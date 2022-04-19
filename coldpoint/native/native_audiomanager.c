@@ -10,6 +10,12 @@ const char * const g_audio_class_name = "fzos/audio/Audio";
 cpstatus native_audiomanager_open_audio(thread* t);
 cpstatus native_audiomanager_play_audio(thread* t);
 static HDAConnector* g_default_playback_connector;
+void audiomanager_check_sem(thread* t)
+{
+    if(*t->sem>0) {
+        t->status = THREAD_READY;
+    }
+}
 static NativeMethod g_audiomanager_methods[] = {
     {
         (U8*)"openAudioFromFile",
@@ -60,6 +66,7 @@ cpstatus native_audiomanager_play_audio(thread* t)
         info.data_length    = get_parameter_in_object(obj,"dataLength","I",g_audio_class_name);
         Array* data         = (Array*)get_parameter_in_object(obj,"data","[B",g_audio_class_name);
         t->sem = play_pcm(&info,((void*)data->value)+info.offset_to_data,g_default_playback_connector);
+        t->check_sem = audiomanager_check_sem;
         t->status = THREAD_BLOCKED;
     }
     return COLD_POINT_SUCCESS;

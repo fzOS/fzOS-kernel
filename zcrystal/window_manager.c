@@ -524,7 +524,7 @@ void update_sprite_position(Window* w,int x,int y)
     }
     //Create new Shadow.
     for(int i=0;i<sprite_h;i++) {
-        memcpy(shadow_sprite+i*sprite_w,window_buffer+(i+WINDOW_CAPTION_HEIGHT+y)*w->width+x,sprite_w*sizeof(U32));
+        memcpy(shadow_sprite+i*sprite_w,window_buffer+(i+y)*w->width+x,sprite_w*sizeof(U32));
     }
     //Fill in Sprite.
     for(int i=0;i<sprite_h;i++) {

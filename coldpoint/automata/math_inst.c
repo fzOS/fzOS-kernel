@@ -267,8 +267,6 @@ cpstatus opcode_xor(thread* t)
 }
 cpstatus opcode_inc(thread* t)
 {
-    print_opcode("i/l/inc\n");
-    StackVar* const_val_entry = &t->stack[t->rbp+offsetof(stack_frame,variables)/sizeof(stack_frame)];
     U32 index;
     I32 val;
     if(t->is_wide&0x01) {
@@ -283,9 +281,11 @@ cpstatus opcode_inc(thread* t)
         val = (I8)t->code->code[t->pc+1];
         t->pc+=2;
     }
-    const_val_entry[index].data += val;
-    if(const_val_entry[index].type==STACK_TYPE_INT) {
-        const_val_entry[index].data = (int)const_val_entry[index].data;
+    print_opcode("i/l/inc %d,delta=%d\n",index,val);
+    U64 stack_offset = t->rbp+offsetof(stack_frame,variables)/sizeof(StackVar)+index;
+    t->stack[stack_offset].data += val;
+    if(t->stack[stack_offset].type==STACK_TYPE_INT) {
+        t->stack[stack_offset].data = (int)t->stack[stack_offset].data;
     }
     return COLD_POINT_SUCCESS;
 }

@@ -11,7 +11,17 @@ cpstatus native_iostream_println(thread* t);
 cpstatus native_iostream_putchar(thread* t);
 cpstatus native_iostream_getchar(thread* t);
 cpstatus native_iostream_getnbytes(thread* t);
-
+void iostream_check_sem(thread* t)
+{
+    if(*t->sem>0) {
+        char c = queue_out_single(&g_default_console->input_buffer.queue);
+        acquire_semaphore(t->sem);
+        t->stack[++t->rsp].data = c;
+        printk("c:%d\n",c);
+        t->stack[t->rsp].type   = STACK_TYPE_INT;
+        t->status = THREAD_READY;
+    }
+}
 
 static void native_putU64hex(U64 data,Console* c)
 {
@@ -173,7 +183,7 @@ static NativeMethod g_iostream_methods[] = {
     },
     {
         (U8*)"getchar",
-        (U8*)"()V",
+        (U8*)"()C",
         native_iostream_getchar
     }
 
@@ -221,9 +231,18 @@ cpstatus native_iostream_putchar(thread* t)
 }
 cpstatus native_iostream_getchar(thread* t)
 {
-    char c = t->console->common.getchar(&t->console->common);
-    t->stack[++t->rsp].data = c;
-    t->stack[t->rsp].type   = STACK_TYPE_CHAR;
+    if(g_default_console->input_sem>0) {
+        char c = queue_out_single(&g_default_console->input_buffer.queue);
+        acquire_semaphore(&g_default_console->input_sem);
+        t->stack[++t->rsp].data = c;
+        t->stack[t->rsp].data   = STACK_TYPE_INT;
+
+    }
+    else {
+        t->sem       = &g_default_console->input_sem;
+        t->check_sem = iostream_check_sem;
+        t->status    = THREAD_BLOCKED;
+    }
     return COLD_POINT_SUCCESS;
 }
 static NativeClassInlineLinkedListNode g_iostream_class_linked_node = {

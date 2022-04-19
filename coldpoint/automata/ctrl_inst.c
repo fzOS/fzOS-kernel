@@ -41,10 +41,10 @@ cpstatus opcode_lookupswitch(thread* t)
 {
     StackVar v1=t->stack[t->rsp];
     t->rsp--;
-    U64 orig_pc=t->pc;
+    U64 orig_pc=t->pc-1;
     //skip the padding.
     if(t->pc&0x3) {
-        t->pc = (t->pc&(~0x3)) +1;
+        t->pc = (t->pc&(~0x3))+4;
     }
     //Default Offset.
     I32* p = (I32*)&t->code->code[t->pc];

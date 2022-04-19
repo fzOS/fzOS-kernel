@@ -38,12 +38,13 @@ typedef enum {
     EXIT_KILLED,
     EXIT_EXCEPT
 } ThreadExitStatus;
-typedef struct {
+typedef struct thread {
     process* process;
     U64 tid;
     U8 is_wide;
     U8 status;
     semaphore* sem;
+    void (*check_sem)(struct thread* t);
     Console* console;
     class* class;
     CodeAttribute* code;
