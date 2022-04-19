@@ -41,7 +41,6 @@ void invoke_method(thread* t,class* target_class,CodeAttribute* code_attr,U64 pa
     for(I64 i=param_count-1;i>=0;i--) {
         t->stack[new_rsp+i].data = t->stack[new_rbp+i].data;
         t->stack[new_rsp+i].type = t->stack[new_rbp+i].type;
-        print_opcode("param %d:type %d,val %x,stack no %d->%d\n",i,t->stack[new_rsp+i].type,t->stack[new_rsp+i].data,new_rbp+i,new_rsp+i);
     }
     new_rsp += bswap16(code_attr->max_locals);
     /*

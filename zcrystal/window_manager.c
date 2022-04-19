@@ -284,7 +284,10 @@ void send_drag_event(int prev_x,int prev_y,int delta_x,int delta_y)
                 //Fill in dirty region.
                 graphics_fill_rect(node->w.x,node->w.y,node->w.width,node->w.height+WINDOW_CAPTION_HEIGHT,DEFAULT_BACKGROUND_COLOR);
                 node->w.x += delta_x;
-                node->w.y += delta_y;
+                //When minimize,we do not change Y data.
+                if(!(node->w.status&WINDOW_STATUS_MINIMIZED)) {
+                    node->w.y += delta_y;
+                }
                 changed  = 1;
             }
             else {
@@ -361,7 +364,26 @@ check_button:
             return 1;
         }
         case MINIMIZE_BUTTON: {
-            return 0;
+            if(w->status & WINDOW_STATUS_MINIMIZED) {
+                w->status &= (~WINDOW_STATUS_MINIMIZED);
+                w->y      = w->orig_y;
+                graphics_clear_screen(DEFAULT_BACKGROUND_COLOR);
+            }
+            else {
+                w->orig_y      = w->y;
+                w->y           = g_graphics_data.pixels_vertical-WINDOW_CAPTION_HEIGHT;
+                graphics_clear_screen(DEFAULT_BACKGROUND_COLOR);
+                w->status |= WINDOW_STATUS_MINIMIZED;
+            }
+            if(w->code_on_minimize!=nullptr) {
+                w->ui_thread->stack[++w->ui_thread->rsp].data = (U64)w->event_receiver;//this
+                w->ui_thread->stack[w->ui_thread->rsp].type   = STACK_TYPE_REFERENCE;
+                invoke_method(w->ui_thread,
+                              w->event_receiver->parent_class,
+                              w->code_on_minimize,
+                              1);
+            }
+            return 1;
         }
     }
     return 0;
