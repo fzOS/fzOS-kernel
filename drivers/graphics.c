@@ -22,8 +22,11 @@ void graphics_clear_screen(U32 color) {
 
 //画方形，x起点，y起点，宽，高，颜色
 void graphics_fill_rect(int x, int y, int w, int h, U32 color) {
-    for (int j = y; j < y + h; ++j) {
-      for (int i = x; i < x + w; ++i) {
+    int actual_x,actual_y;
+    actual_x = (x+w>g_graphics_data.pixels_per_line)?g_graphics_data.pixels_per_line-w:x;
+    actual_y = (y+h>g_graphics_data.pixels_vertical)?g_graphics_data.pixels_vertical-h:y;
+    for (int j = actual_y; j < actual_y + h; ++j) {
+      for (int i = actual_x; i < actual_x + w; ++i) {
         graphics_draw_pixel(i, j, color);
       }
     }

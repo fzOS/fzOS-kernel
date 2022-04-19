@@ -9,6 +9,7 @@
 #include <coldpoint/automata/invoke_inst.h>
 static U64 g_next_window_id;
 volatile int g_screen_lock = 0;
+static U64 g_gui_started = 0;
 static const char* const window_event_names[] = {
     "onResize",
     "onClick",
@@ -78,6 +79,7 @@ FzOSResult enter_graphical_mode(void)
     Window* w = create_window(900,50,400,800,"Debug Log",WINDOW_MODE_NORMAL|WINDOW_MODE_NO_CLOSE,nullptr,nullptr);
     set_window_console_window(w,0xFFFFFFFF,0x3a6fa6);
     composite();
+    g_gui_started = 1;
     return FzOS_SUCCESS;
 }
 FzOSResult exit_graphical_mode(void)
@@ -235,8 +237,7 @@ void composite(void)
             U32* window_buffer = (U32*)w->buffer.value;
             int composite_area_left   = (w->x<0)?(-w->x):0;
             int composite_area_right  = ((w->x+w->width)>g_graphics_data.pixels_per_line)?
-                                        (g_graphics_data.pixels_per_line-w->x):
-                                        w->width;
+                                        (g_graphics_data.pixels_per_line-w->x):w->width;
             int composite_area_top    = (w->y<0)?(-w->y):0;
             int composite_area_bottom = ((w->y+w->height+WINDOW_CAPTION_HEIGHT)>g_graphics_data.pixels_vertical)?
                                         (g_graphics_data.pixels_vertical-w->y):
@@ -453,6 +454,9 @@ static int g_prev_clicked=0;
 static int g_drag_begin_x,g_drag_begin_y;
 void window_mouse_event_receiver(int x,int y,int left,int right,int mid)
 {
+    if(!g_gui_started) {
+        return;
+    }
     if(left) {
         if(!g_prev_clicked) {
             g_prev_clicked = 1;
@@ -475,9 +479,62 @@ void window_mouse_event_receiver(int x,int y,int left,int right,int mid)
 }
 void set_sprite(Window* w,void* data,int width,int height)
 {
+    w->sprite_h = height;
+    w->sprite_w = width;
+    w->sprite_x = 0;
+    w->sprite_y = WINDOW_CAPTION_HEIGHT;
+    w->sprite   = data;
+    //TODO:Flip.
+    int flip = 1;
+    if(flip) {
+        U32* databuf = (U32*) data;
+        U32* copybuf = memalloc(width*sizeof(U32));
+        for(int i=0;i<height/2;i++) {
+            memcpy(copybuf,databuf+i*width,width*sizeof(U32));
+            memcpy(databuf+i*width,databuf+(height-1-i)*width,width*sizeof(U32));
+            memcpy(databuf+(height-1-i)*width,copybuf,width*sizeof(U32));
+        }
+    }
+    w->shadow_sprite = memalloc(width*height*sizeof(U32));
+    //Create Shadow sprite.
+    for(int i=0;i<height;i++) {
+        memcpy(w->shadow_sprite+i*width,((U32*)w->buffer.value)+(i+WINDOW_CAPTION_HEIGHT)*w->width,width*sizeof(U32));
+    }
     return;
 }
 void update_sprite_position(Window* w,int x,int y)
 {
+    if(x+w->sprite_w>w->width) {
+        x = w->width-w->sprite_w;
+    }
+    if(y+w->sprite_h>w->height) {
+        y = w->height-w->sprite_h;
+    }
+    y += WINDOW_CAPTION_HEIGHT;
+    int sprite_h = w->sprite_h;
+    int sprite_w = w->sprite_w;
+    int sprite_x = w->sprite_x;
+    int sprite_y = w->sprite_y;
+    U32* window_buffer = (U32*)w->buffer.value;
+    U32* sprite_buffer = w->sprite;
+    U32* shadow_sprite = w->shadow_sprite;
+    //Shadow copy.
+    for(int i=0;i<sprite_h;i++) {
+        memcpy(window_buffer+(i+sprite_y)*w->width+sprite_x,shadow_sprite+i*sprite_w,sprite_w*sizeof(U32));
+    }
+    //Create new Shadow.
+    for(int i=0;i<sprite_h;i++) {
+        memcpy(shadow_sprite+i*sprite_w,window_buffer+(i+WINDOW_CAPTION_HEIGHT+y)*w->width+x,sprite_w*sizeof(U32));
+    }
+    //Fill in Sprite.
+    for(int i=0;i<sprite_h;i++) {
+        for(int j=0;j<sprite_w;j++) {
+            if(sprite_buffer[i*sprite_w+j]&0x80000000) {
+                window_buffer[(i+y)*w->width+(j+x)] = sprite_buffer[i*sprite_w+j];
+            }
+        }
+    }
+    w->sprite_x = x;
+    w->sprite_y = y;
     return;
 }

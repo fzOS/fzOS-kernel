@@ -51,6 +51,7 @@ process* create_process(void)
     process* p = memalloc(sizeof(process));
     memset(p,0x00,sizeof(process));
     p->pid = g_current_pid++;
+    p->input_buffer.q.bufsize = 128;
     return p;
 }
 void destroy_process(process* p)

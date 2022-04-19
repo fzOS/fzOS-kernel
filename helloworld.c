@@ -10,7 +10,6 @@
 #include <memory/gdt.h>
 #include <interrupt/interrupt.h>
 #include <drivers/keyboard.h>
-#include <syscall/syscall.h>
 #include <drivers/pci.h>
 #include <common/kstring.h>
 #include <drivers/rtc.h>
@@ -54,7 +53,6 @@ void kernel_main_real()
     init_hpet();
     init_random();
     __asm__("sti");
-    init_syscall();
     //然后是PCI设备。
     init_pci();
     //查找根分区并挂载。
