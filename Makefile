@@ -1,4 +1,4 @@
-DEBUG=1
+#DEBUG=1
 GNUEFI_PATH=/usr/include/efi
 ifeq '$(USER)' 'fhh'
 export PATH:=/home/fhh/.ccache/:${PATH}
@@ -9,7 +9,7 @@ endif
 ifeq '$(DEBUG)' '1'
 VERSION := $(shell echo git-`git rev-parse --short HEAD`)
 else
-VERSION := 0.3.0
+VERSION := 1.0.0
 endif
 THIS_YEAR := $(shell date +"%Y")
 BASE_DIR=${PWD}
@@ -52,7 +52,7 @@ install:
 	losetup -d $$a
 	# @su - fhh -c 'VBoxManage startvm "UEFITest" -E VBOX_GUI_DBG_ENABLED=true' #-E VBOX_GUI_DBG_AUTO_SHOW=true
 stat:
-	@a=$$(eval echo $$(wc -l `find acpi/*.c interrupt/ syscall/ drivers/ memory/ common/ coldpoint/ include/ | grep -v "lai" | grep -v "asciifont"` 2>/dev/null |  tail -n 1)) && \
+	@a=$$(eval echo $$(wc -l `find acpi/*.c interrupt/ drivers/ memory/ common/ coldpoint/ include/ | grep -v "lai" | grep -v "asciifont"` 2>/dev/null |  tail -n 1)) && \
 	echo -e "\e[36;1m[LINES]\e[0m\t$$a"
 	@b=$$(git log | grep "^Author: " | wc -l) && \
 	echo -e "\e[33;1m[COMMIT]\e[0m$$b"
