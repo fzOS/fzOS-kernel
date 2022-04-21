@@ -45,6 +45,9 @@ void vmsvga_register(U8 bus,U8 slot,U8 func)
         return;
     }
     printk(" VMSVGA:Got VMSVGA II at PCI bus %d,slot %d,func %d.\n",bus,slot,func);
+    //Bug Fix: Framebuffer disappear while initializing.
+    void* temp_framebuffer = memalloc(g_graphics_data.pixels_per_line*g_graphics_data.pixels_vertical*sizeof(U32));
+    memcpy(temp_framebuffer,g_graphics_data.frame_buffer_base,g_graphics_data.pixels_per_line*g_graphics_data.pixels_vertical*sizeof(U32));
     g_io_port_base = (U64)pci_get_bar_address(bus,slot,func,0)&0xFFFFFFF0;
     g_fifo_address = (U32*)((U64)(pci_get_bar_address(bus,slot,func,2)&0xFFFFFFF0)|KERNEL_ADDR_OFFSET);
     U32 fifo_size = vmsvga_read_register(SVGA_REG_MEM_SIZE);
@@ -60,6 +63,8 @@ void vmsvga_register(U8 bus,U8 slot,U8 func)
     g_fifo_address[SVGA_FIFO_NEXT_CMD] = g_fifo_address[SVGA_FIFO_MIN];
     g_fifo_address[SVGA_FIFO_STOP] = g_fifo_address[SVGA_FIFO_MIN];
     g_fifo_address[SVGA_FIFO_RESERVED] = 0;
+    memcpy(g_graphics_data.frame_buffer_base,temp_framebuffer,g_graphics_data.pixels_per_line*g_graphics_data.pixels_vertical*sizeof(U32));
+    memfree(temp_framebuffer);
     U32 fifo_cap = g_fifo_address[SVGA_FIFO_CAPABILITIES];
     U32 reg_cap  = vmsvga_read_register(SVGA_REG_CAPABILITIES);
     if(fifo_cap & SVGA_FIFO_CAP_CURSOR_BYPASS_3) {

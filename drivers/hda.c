@@ -39,7 +39,6 @@ void hda_interrupt_handler(int no) {
             if(buffer_desc->current_buffer_page-1>buffer_desc->total_buffer_page_count) {
                 controller->registers->stream_desc_registers[i].sdctl = 0x00;
                 release_semaphore(&controller->stream_buffer_desc[i].stream_semaphore);
-                printk("Done.\n");
                 return;
             }
             //换缓冲。

@@ -8,7 +8,6 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
-
 #include <acpispec/resources.h>
 #include <acpispec/hw.h>
 #include <acpispec/tables.h>

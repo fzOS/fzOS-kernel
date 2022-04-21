@@ -28,11 +28,12 @@
 #endif
 
 //定义的标准输入/输出。
-static volatile KernelInfo g_bss_info;
+static KernelInfo g_bss_info;
 void print_motd(void);
 void show_banner(void);
 void play_startup_audio(void);
 void print_boot_arg(void);
+void press_key_to_boot(void);
 void kernel_main_real()
 {
     __asm__("cli");
@@ -65,10 +66,19 @@ void kernel_main_real()
     start_hpet();
     show_banner();
     play_startup_audio();
+    printk("Device Tree:\n");
+    print_device_tree();
+    //等待用户按键以启动JVM！
+    press_key_to_boot();
     //启动jvm！
     init_classloader();
-    //print_device_tree();
+
     //enter_graphical_mode();
+}
+void press_key_to_boot(void)
+{
+    printk("Press <Any key> to start Coldpoint VM.\n");
+    g_default_console->common.getchar(&g_default_console->common);
 }
 void kernel_main(KernelInfo info)
 {
@@ -115,6 +125,7 @@ void show_banner(void)
     U64 length =banner_file.filesystem->read(&banner_file,buf,(banner_file.size/PAGE_SIZE+1)*PAGE_SIZE);
     ((U8*)buf)[length] = '\0';
     printk("%s\n",buf);
+    g_default_console->common.flush(&g_default_console->common);
     free_page(buf,(banner_file.size/PAGE_SIZE+1));
 }
 
@@ -140,7 +151,6 @@ void play_startup_audio(void)
     }
 skip_playing_audio:
     free_page(buf,(music_file.size/PAGE_SIZE+1));
-    printk(" Play done.");
 }
 
 void print_boot_arg(void)
