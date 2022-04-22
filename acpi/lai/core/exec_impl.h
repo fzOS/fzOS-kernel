@@ -1,7 +1,6 @@
-
 /*
- * Lightweight ACPI Implementation
- * Copyright (C) 2018-2019 the lai authors
+ * Lightweight AML Interpreter
+ * Copyright (C) 2018-2021 The lai authors
  */
 
 // Internal header file. Do not use outside of LAI.
@@ -11,9 +10,9 @@
 #include <lai/core.h>
 
 struct lai_amlname {
-    int is_absolute;   // Is the path absolute or not?
-    int height;        // Number of scopes to exit before resolving the name.
-                       // In other words, this is the number of ^ in front of the name.
+    int is_absolute; // Is the path absolute or not?
+    int height; // Number of scopes to exit before resolving the name.
+                // In other words, this is the number of ^ in front of the name.
     int search_scopes; // Is the name searched in the scopes of all parents?
 
     // Internal variables used by the parser.
@@ -40,8 +39,8 @@ char *lai_stringify_amlname(const struct lai_amlname *amln);
 lai_nsnode_t *lai_do_resolve(lai_nsnode_t *ctx_handle, const struct lai_amlname *amln);
 
 // Used in the implementation of lai_resolve_new_node().
-void lai_do_resolve_new_node(lai_nsnode_t *node,
-        lai_nsnode_t *ctx_handle, const struct lai_amlname *amln);
+void lai_do_resolve_new_node(lai_nsnode_t *node, lai_nsnode_t *ctx_handle,
+                             const struct lai_amlname *amln);
 
 // Evaluate constant data (and keep result).
 //     Primitive objects are parsed.
@@ -55,21 +54,171 @@ void lai_do_resolve_new_node(lai_nsnode_t *node,
 #define LAI_OBJECT_MODE 2
 // Like LAI_OBJECT_MODE, but discard the result.
 #define LAI_EXEC_MODE 3
-#define LAI_REFERENCE_MODE 4
-#define LAI_IMMEDIATE_BYTE_MODE 5
-#define LAI_IMMEDIATE_WORD_MODE 6
+#define LAI_UNRESOLVED_MODE 4
+#define LAI_REFERENCE_MODE 5
+#define LAI_OPTIONAL_REFERENCE_MODE 6
+#define LAI_IMMEDIATE_BYTE_MODE 7
+#define LAI_IMMEDIATE_WORD_MODE 8
+#define LAI_IMMEDIATE_DWORD_MODE 9
 
-// Allocate a new package.
-int lai_create_string(lai_variable_t *, size_t);
-int lai_create_c_string(lai_variable_t *, const char *);
-int lai_create_buffer(lai_variable_t *, size_t);
-int lai_create_pkg(lai_variable_t *, size_t);
+// Operation is expected to return a result (on the opstack).
+#define LAI_MF_RESULT 1
+// Resolve names to namespace nodes.
+#define LAI_MF_RESOLVE 2
+// Allow unresolvable names.
+#define LAI_MF_NULLABLE 4
+// Parse method invocations.
+// Requires LAI_MF_RESOLVE.
+#define LAI_MF_INVOKE 8
 
-void lai_load(lai_state_t *, struct lai_operand *, lai_variable_t *);
-void lai_store(lai_state_t *, struct lai_operand *, lai_variable_t *);
+static const uint32_t lai_mode_flags[] = {
+    [LAI_IMMEDIATE_BYTE_MODE] = LAI_MF_RESULT,
+    [LAI_IMMEDIATE_WORD_MODE] = LAI_MF_RESULT,
+    [LAI_IMMEDIATE_DWORD_MODE] = LAI_MF_RESULT,
+    [LAI_EXEC_MODE] = LAI_MF_RESOLVE | LAI_MF_INVOKE,
+    [LAI_UNRESOLVED_MODE] = LAI_MF_RESULT,
+    [LAI_DATA_MODE] = LAI_MF_RESULT,
+    [LAI_OBJECT_MODE] = LAI_MF_RESULT | LAI_MF_RESOLVE | LAI_MF_INVOKE,
+    [LAI_REFERENCE_MODE] = LAI_MF_RESULT | LAI_MF_RESOLVE,
+    [LAI_OPTIONAL_REFERENCE_MODE] = LAI_MF_RESULT | LAI_MF_RESOLVE | LAI_MF_NULLABLE,
+};
+
+void lai_exec_ref_load(lai_variable_t *, lai_variable_t *);
+void lai_exec_ref_store(lai_variable_t *, lai_variable_t *);
+
+void lai_exec_access(lai_variable_t *, lai_nsnode_t *);
+void lai_store_ns(lai_nsnode_t *target, lai_variable_t *object);
+void lai_mutate_ns(lai_nsnode_t *target, lai_variable_t *object);
+
+void lai_operand_load(lai_state_t *, struct lai_operand *, lai_variable_t *);
+void lai_operand_mutate(lai_state_t *, struct lai_operand *, lai_variable_t *);
+void lai_operand_emplace(lai_state_t *, struct lai_operand *, lai_variable_t *);
 
 void lai_exec_get_objectref(lai_state_t *, struct lai_operand *, lai_variable_t *);
 void lai_exec_get_integer(lai_state_t *, struct lai_operand *, lai_variable_t *);
+
+// --------------------------------------------------------------------------------------
+// Synchronization functions.
+// --------------------------------------------------------------------------------------
+
+#define LAI_MUTEX_BITS 3u
+#define LAI_MUTEX_LOCKED 1u
+#define LAI_MUTEX_CONTENDED 2u
+
+static inline int lai_mutex_lock(struct lai_sync_state *sync, int64_t deadline) {
+    unsigned int v = __atomic_load_n(&sync->val, __ATOMIC_RELAXED);
+    for (;;) {
+        LAI_ENSURE(!(v & ~LAI_MUTEX_BITS));
+
+        if (!(v & LAI_MUTEX_LOCKED)) {
+            // Try to lock the mutex.
+            if (__atomic_compare_exchange_n(&sync->val, &v, LAI_MUTEX_LOCKED, 0, __ATOMIC_ACQUIRE,
+                                            __ATOMIC_RELAXED))
+                return 0;
+        } else {
+            // Try to switch the mutex to contended state.
+            if (!(v & LAI_MUTEX_CONTENDED)) {
+                if (!__atomic_compare_exchange_n(&sync->val, &v,
+                                                 LAI_MUTEX_LOCKED | LAI_MUTEX_CONTENDED, 0,
+                                                 __ATOMIC_RELAXED, __ATOMIC_RELAXED))
+                    continue;
+            }
+
+            // Block this thread.
+            if (!laihost_sync_wait)
+                lai_panic("laihost_sync_wait() is needed to lock contended mutex");
+            if (laihost_sync_wait(sync, LAI_MUTEX_LOCKED | LAI_MUTEX_CONTENDED, deadline))
+                return 1;
+        }
+    }
+}
+
+static inline void lai_mutex_unlock(struct lai_sync_state *sync) {
+    unsigned int v = __atomic_exchange_n(&sync->val, 0, __ATOMIC_RELEASE);
+    LAI_ENSURE(!(v & ~LAI_MUTEX_BITS));
+    LAI_ENSURE(v & LAI_MUTEX_LOCKED);
+
+    if (v & LAI_MUTEX_CONTENDED) {
+        if (!laihost_sync_wake)
+            lai_panic("laihost_sync_wake() is needed to unlock contended mutex");
+        laihost_sync_wake(sync);
+    }
+}
+
+#define LAI_EVENT_COUNT 0x7FFFFFFFu
+#define LAI_EVENT_WAITERS 0x80000000u
+
+static inline int lai_event_wait(struct lai_sync_state *sync, int64_t deadline) {
+    unsigned int v = __atomic_load_n(&sync->val, __ATOMIC_RELAXED);
+    for (;;) {
+        if (v & LAI_EVENT_COUNT) {
+            LAI_ENSURE(!(v & LAI_EVENT_WAITERS));
+
+            // Decrement the event count.
+            if (__atomic_compare_exchange_n(&sync->val, &v, v - 1, 0, __ATOMIC_ACQUIRE,
+                                            __ATOMIC_RELAXED))
+                return 0;
+        } else {
+            // Try to set the waiters bit.
+            if (!(v & LAI_EVENT_WAITERS)) {
+                if (!__atomic_compare_exchange_n(&sync->val, &v, LAI_EVENT_WAITERS, 0,
+                                                 __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+                    continue;
+            }
+
+            // Block this thread.
+            if (!laihost_sync_wait)
+                lai_panic("laihost_sync_wait() is needed to wait for contended event");
+            if (laihost_sync_wait(sync, LAI_MUTEX_LOCKED | LAI_MUTEX_CONTENDED, deadline))
+                return 1;
+        }
+    }
+}
+
+static inline void lai_event_signal(struct lai_sync_state *sync) {
+    unsigned int v = __atomic_load_n(&sync->val, __ATOMIC_RELAXED);
+    for (;;) {
+        if (!(v & LAI_EVENT_WAITERS)) {
+            // Increment the event count.
+            LAI_ENSURE(!((v + 1) & ~LAI_EVENT_COUNT)); // Avoid overflows.
+            if (__atomic_compare_exchange_n(&sync->val, &v, v + 1, 0, __ATOMIC_ACQUIRE,
+                                            __ATOMIC_RELAXED))
+                return;
+        } else {
+            LAI_ENSURE(!(v & LAI_EVENT_COUNT));
+
+            // Try to unset the waiters bit.
+            if (!__atomic_compare_exchange_n(&sync->val, &v, 1, 0, __ATOMIC_ACQUIRE,
+                                             __ATOMIC_RELAXED))
+                continue;
+
+            // Unblock a waiter.
+            if (!laihost_sync_wake)
+                lai_panic("laihost_sync_wake() is needed to signal contended event");
+            laihost_sync_wake(sync);
+            return;
+        }
+    }
+}
+
+static inline void lai_event_reset(struct lai_sync_state *sync) {
+    unsigned int v = __atomic_load_n(&sync->val, __ATOMIC_RELAXED);
+    for (;;) {
+        if (!(v & LAI_EVENT_WAITERS)) {
+            // Try to reset the event count to zero.
+            if (v & LAI_EVENT_COUNT) {
+                if (!__atomic_compare_exchange_n(&sync->val, &v, 0, 0, __ATOMIC_ACQUIRE,
+                                                 __ATOMIC_RELAXED))
+                    continue;
+            }
+        } else {
+            LAI_ENSURE(!(v & LAI_EVENT_COUNT));
+        }
+
+        // The event count must be zero here (in both cases).
+        return;
+    }
+}
 
 // --------------------------------------------------------------------------------------
 // Inline function for context stack manipulation.
@@ -86,7 +235,8 @@ static inline int lai_exec_reserve_ctxstack(lai_state_t *state) {
         memcpy(new_stack, state->ctxstack_base,
                (state->ctxstack_ptr + 1) * sizeof(struct lai_ctxitem));
         if (state->ctxstack_base != state->small_ctxstack)
-            laihost_free(state->ctxstack_base);
+            laihost_free(state->ctxstack_base,
+                         state->ctxstack_capacity * sizeof(struct lai_ctxitem));
         state->ctxstack_base = new_stack;
         state->ctxstack_capacity = new_capacity;
     }
@@ -118,7 +268,7 @@ static inline void lai_exec_pop_ctxstack_back(lai_state_t *state) {
             lai_var_finalize(&ctxitem->invocation->arg[i]);
         for (int i = 0; i < 8; i++)
             lai_var_finalize(&ctxitem->invocation->local[i]);
-        laihost_free(ctxitem->invocation);
+        laihost_free(ctxitem->invocation, sizeof(*ctxitem->invocation));
     }
     state->ctxstack_ptr -= 1;
 }
@@ -138,7 +288,8 @@ static inline int lai_exec_reserve_blkstack(lai_state_t *state) {
         memcpy(new_stack, state->blkstack_base,
                (state->blkstack_ptr + 1) * sizeof(struct lai_blkitem));
         if (state->blkstack_base != state->small_blkstack)
-            laihost_free(state->blkstack_base);
+            laihost_free(state->blkstack_base,
+                         state->blkstack_capacity * sizeof(struct lai_blkitem));
         state->blkstack_base = new_stack;
         state->blkstack_capacity = new_capacity;
     }
@@ -179,10 +330,9 @@ static inline int lai_exec_reserve_stack(lai_state_t *state) {
             lai_warn("failed to allocate memory for execution stack");
             return 1;
         }
-        memcpy(new_stack, state->stack_base,
-               (state->stack_ptr + 1) * sizeof(lai_stackitem_t));
+        memcpy(new_stack, state->stack_base, (state->stack_ptr + 1) * sizeof(lai_stackitem_t));
         if (state->stack_base != state->small_stack)
-            laihost_free(state->stack_base);
+            laihost_free(state->stack_base, state->stack_capacity * sizeof(lai_stackitem_t));
         state->stack_base = new_stack;
         state->stack_capacity = new_capacity;
     }
@@ -236,10 +386,9 @@ static inline int lai_exec_reserve_opstack(lai_state_t *state) {
         }
         // TODO: Here, we rely on the fact that moving lai_variable_t via memcpy() is OK.
         //       Implement a some sophisticated lai_operand_move()?
-        memcpy(new_stack, state->opstack_base,
-               state->opstack_ptr * sizeof(struct lai_operand));
+        memcpy(new_stack, state->opstack_base, state->opstack_ptr * sizeof(struct lai_operand));
         if (state->opstack_base != state->small_opstack)
-            laihost_free(state->opstack_base);
+            laihost_free(state->opstack_base, state->opstack_capacity * sizeof(struct lai_operand));
         state->opstack_base = new_stack;
         state->opstack_capacity = new_capacity;
     }

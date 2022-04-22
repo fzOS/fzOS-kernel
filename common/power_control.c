@@ -2,11 +2,13 @@
 #include <acpi/acpi_parser.h>
 #include <acpi/fadt.h>
 #include <filesystem/filesystem.h>
+#include <lai/helpers/pm.h>
 void poweroff(void)
 {
     unmount_all_mounted_filesystems();
-    FADT* fadt = (FADT*)(g_acpi_table_entries[0]);
-    outw(fadt->X_PM1aControlBlock.Address,0b11010000000000); //FIXME:Get real val from DSDT.
+//     FADT* fadt = (FADT*)(g_acpi_table_entries[0]);
+//     outw(fadt->X_PM1aControlBlock.Address,0b11010000000000); //FIXME:Get real val from DSDT.
+    lai_enter_sleep(5);
 }
 void reset(void)
 {

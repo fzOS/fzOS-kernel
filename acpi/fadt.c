@@ -26,13 +26,14 @@ int parse_fadt(void* in) {
 }
 void acpi_enable_power_button(void)
 {
-    FADT* fadt = (FADT*)(g_acpi_table_entries[0]);
-    //获取pm1(a/b)_enable_registers.
-    U16 pm1_enable_port = (U16)fadt->X_PM1aEventBlock.Address+fadt->PM1EventLength/2;
-    //printk("%x\n",pm1_enable_port+fadt->PM1EventLength/2);
-    outw(pm1_enable_port,1<<8);
-    if(pm1_enable_port=(U16)fadt->X_PM1bEventBlock.Address,pm1_enable_port) {
-        pm1_enable_port += fadt->PM1EventLength/2;
-        outw(pm1_enable_port,1<<8);
-    }
+    //FADT* fadt = (FADT*)(g_acpi_table_entries[0]);
+    lai_enable_acpi(1);
+//     //获取pm1(a/b)_enable_registers.
+//     U16 pm1_enable_port = (U16)fadt->X_PM1aEventBlock.Address+fadt->PM1EventLength/2;
+//     //printk("%x\n",pm1_enable_port+fadt->PM1EventLength/2);
+//     outw(pm1_enable_port,1<<8);
+//     if(pm1_enable_port=(U16)fadt->X_PM1bEventBlock.Address,pm1_enable_port) {
+//         pm1_enable_port += fadt->PM1EventLength/2;
+//         outw(pm1_enable_port,1<<8);
+//     }
 }

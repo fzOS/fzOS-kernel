@@ -76,8 +76,18 @@ FzOSResult enter_graphical_mode(void)
     //Then,we clear the whole screen.
     graphics_clear_screen(DEFAULT_BACKGROUND_COLOR);
     //After that, We create the debug window.
-    Window* w = create_window(900,50,400,800,"Debug Log",WINDOW_MODE_NORMAL|WINDOW_MODE_NO_CLOSE,nullptr,nullptr);
-    set_window_console_window(w,0xFFFFFFFF,0x3a6fa6);
+    Window* w = create_window(900,50,400,800,
+#ifdef FZOS_DEBUG_SWITCH
+                                "Debug Log",
+#else
+                                "Output Log",
+#endif
+                              WINDOW_MODE_NORMAL|WINDOW_MODE_NO_CLOSE,nullptr,nullptr);
+    for(int i=400*WINDOW_CAPTION_HEIGHT;i<400*(800+WINDOW_CAPTION_HEIGHT);i++) {
+        ((U32*)w->buffer.value)[i] = DEBUG_CONSOLE_BACKGROUND_COLOR;
+    }
+    set_window_console_window(w,0xFFFFFFFF,DEBUG_CONSOLE_BACKGROUND_COLOR);
+
     composite();
     g_gui_started = 1;
     return FzOS_SUCCESS;

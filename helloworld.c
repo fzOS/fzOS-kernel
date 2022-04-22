@@ -66,8 +66,10 @@ void kernel_main_real()
     start_hpet();
     show_banner();
     play_startup_audio();
+#ifdef FZOS_DEBUG_SWITCH
     printk("Device Tree:\n");
     print_device_tree();
+#endif
     //等待用户按键以启动JVM！
     press_key_to_boot();
     //启动jvm！

@@ -1,35 +1,32 @@
-
 /*
- * Lightweight ACPI Implementation
- * Copyright (C) 2018-2019 the lai authors
+ * Lightweight AML Interpreter
+ * Copyright (C) 2018-2021 The lai authors
  */
 
 /* System Control Interrupt Initialization */
 
 #include <lai/helpers/sci.h>
-#include "../core/libc.h"
-#include "../core/exec_impl.h"
 
-volatile uint16_t lai_last_event = 0;
+#include "../core/exec_impl.h"
+#include "../core/libc.h"
 
 // read contents of event registers.
 uint16_t lai_get_sci_event(void) {
     if (!laihost_inw || !laihost_outw)
         lai_panic("lai_read_event() requires port I/O");
 
+    struct lai_instance *instance = lai_current_instance();
+
     uint16_t a = 0, b = 0;
-    if (lai_fadt->pm1a_event_block) {
-        a = laihost_inw(lai_fadt->pm1a_event_block);
-        laihost_outw(lai_fadt->pm1a_event_block, a);
+    if (instance->fadt->pm1a_event_block) {
+        a = laihost_inw(instance->fadt->pm1a_event_block);
+        laihost_outw(instance->fadt->pm1a_event_block, a);
     }
-
-    if (lai_fadt->pm1b_event_block) {
-        b = laihost_inw(lai_fadt->pm1b_event_block);
-        laihost_outw(lai_fadt->pm1b_event_block, b);
+    if (instance->fadt->pm1b_event_block) {
+        b = laihost_inw(instance->fadt->pm1b_event_block);
+        laihost_outw(instance->fadt->pm1b_event_block, b);
     }
-
-    lai_last_event = a | b;
-    return lai_last_event;
+    return a | b;
 }
 
 // set event enable registers
@@ -37,13 +34,15 @@ void lai_set_sci_event(uint16_t value) {
     if (!laihost_inw || !laihost_outw)
         lai_panic("lai_set_event() requires port I/O");
 
-    uint16_t a = lai_fadt->pm1a_event_block + (lai_fadt->pm1_event_length / 2);
-    uint16_t b = lai_fadt->pm1b_event_block + (lai_fadt->pm1_event_length / 2);
+    struct lai_instance *instance = lai_current_instance();
 
-    if (lai_fadt->pm1a_event_block)
+    uint16_t a = instance->fadt->pm1a_event_block + (instance->fadt->pm1_event_length / 2);
+    uint16_t b = instance->fadt->pm1b_event_block + (instance->fadt->pm1_event_length / 2);
+
+    if (instance->fadt->pm1a_event_block)
         laihost_outw(a, value);
 
-    if (lai_fadt->pm1b_event_block)
+    if (instance->fadt->pm1b_event_block)
         laihost_outw(b, value);
 
     lai_debug("wrote event register value 0x%04X", value);
@@ -57,6 +56,8 @@ int lai_enable_acpi(uint32_t mode) {
     lai_nsnode_t *handle;
     lai_state_t state;
     lai_debug("attempt to enable ACPI...");
+
+    struct lai_instance *instance = lai_current_instance();
 
     if (!laihost_inw || !laihost_outb)
         lai_panic("lai_enable_acpi() requires port I/O");
@@ -91,11 +92,11 @@ int lai_enable_acpi(uint32_t mode) {
     }
 
     /* enable ACPI SCI */
-    laihost_outb(lai_fadt->smi_command_port, lai_fadt->acpi_enable);
+    laihost_outb(instance->fadt->smi_command_port, instance->fadt->acpi_enable);
     laihost_sleep(10);
 
     for (size_t i = 0; i < 100; i++) {
-        if (laihost_inw(lai_fadt->pm1a_control_block) & ACPI_ENABLED)
+        if (laihost_inw(instance->fadt->pm1a_control_block) & ACPI_ENABLED)
             break;
 
         laihost_sleep(10);
@@ -106,6 +107,36 @@ int lai_enable_acpi(uint32_t mode) {
     lai_get_sci_event();
 
     lai_debug("ACPI is now enabled.");
+    return 0;
+}
+
+int lai_disable_acpi(void) {
+    if (!laihost_inw || !laihost_outw)
+        lai_panic("lai_read_event() requires port I/O");
+
+    struct lai_instance *instance = lai_current_instance();
+
+    lai_debug("attempt to disable ACPI...");
+
+    // Disable all SCI events
+    lai_set_sci_event(0);
+    lai_get_sci_event();
+
+    // Clear SCI_EN (APCI_ENABLED in lai) so to stop SCIs from arriving
+    uint16_t pm1a_cnt_block = laihost_inw(instance->fadt->pm1a_control_block);
+    pm1a_cnt_block &= ~ACPI_ENABLED;
+    laihost_outw(instance->fadt->pm1a_control_block, pm1a_cnt_block);
+
+    if (instance->fadt->pm1b_control_block) {
+        uint16_t pm1b_cnt_block = laihost_inw(instance->fadt->pm1b_control_block);
+        pm1b_cnt_block &= ~ACPI_ENABLED;
+        laihost_outw(instance->fadt->pm1b_control_block, pm1b_cnt_block);
+    }
+
+    // Send the definitive ACPI_DISABLE command
+    laihost_outb(instance->fadt->smi_command_port, instance->fadt->acpi_disable);
+
+    lai_debug("Success");
     return 0;
 }
 
@@ -121,7 +152,7 @@ int lai_evaluate_sta(lai_nsnode_t *node) {
         LAI_CLEANUP_VAR lai_variable_t result = LAI_VAR_INITIALIZER;
         if (lai_eval(&result, handle, &state))
             lai_panic("could not evaluate _STA");
-        if(lai_obj_get_integer(&result, &sta))
+        if (lai_obj_get_integer(&result, &sta))
             lai_panic("_STA returned non-integer object");
     }
 

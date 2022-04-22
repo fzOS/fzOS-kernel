@@ -2,8 +2,6 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-//记录我们是否在debug模式下。
-#define FZOS_DEBUG_SWITCH
 
 typedef unsigned long long U64;
 typedef unsigned int U32;

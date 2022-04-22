@@ -275,11 +275,11 @@ cpstatus native_windowmanager_composite(thread* t)
 cpstatus native_windowmanager_create_window(thread* t)
 {
     char* title = (char*)get_constant_from_string((NativeTypeWrapperObject*)t->stack[t->rsp--].data);
-    int pos_y   = (t->stack[t->rsp--].data)&0xFFFFFFFF;
-    int pos_x   = (t->stack[t->rsp--].data)&0xFFFFFFFF;
-    int height  = (t->stack[t->rsp--].data)&0xFFFFFFFF;
-    int width   = (t->stack[t->rsp--].data)&0xFFFFFFFF;
-    int attrs   = (t->stack[t->rsp--].data)&0xFFFFFFFF;
+    int pos_y   = (t->stack[t->rsp--].data);
+    int pos_x   = (t->stack[t->rsp--].data);
+    int height  = (t->stack[t->rsp--].data);
+    int width   = (t->stack[t->rsp--].data);
+    int attrs   = (t->stack[t->rsp--].data);
     Window* w   = create_window(pos_x,pos_y,width,height,title,attrs,nullptr,nullptr);
     WindowObject* o = allocate_heap(sizeof(WindowObject));
     o->o.parent_class = (class*)&g_window_class_linked_node.c;

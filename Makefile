@@ -17,6 +17,9 @@ CC:=${CC}gcc
 CC_VER := $(shell LANG=C ${CC} --version | head -1 | awk '{printf($$3)}')
 CC_VER_MAJOR := $(shell echo ${CC_VER} | awk -F. '{print $$1}')
 CFLAGS=-fpie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -isystem "/usr/include/efi/x86_64" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-red-zone -ffreestanding
+ifeq '$(DEBUG)' '1'
+CFLAGS += -DFZOS_DEBUG_SWITCH
+endif
 SUBDIRS=drivers memory acpi common interrupt filesystem coldpoint zcrystal
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
@@ -45,7 +48,7 @@ install:
 	@echo -e "\e[33;1m[INSTALL]\e[0mkernel"
 	@a=$$(losetup -f) && \
 	echo "Mounting at $${a}p1" && \
-	losetup -f -P '/home/fhh/VirtualBox VMs/UEFITest/raw.img' && \
+	losetup -f -P '/home/fhh/VirtualBox VMs/UEFITest/raw.release.img' && \
 	mount -t auto $${a}p1 /media && \
 	cp -f build/kernel /media/ && \
 	umount /media && \

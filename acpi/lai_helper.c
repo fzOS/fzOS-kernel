@@ -9,7 +9,7 @@ void *laihost_malloc(size_t size)
 {
     return memalloc(size);
 }
-void *laihost_realloc(void * orig, size_t new)
+void *laihost_realloc(void * orig, size_t new,size_t old)
 {
     if(orig) {
         U64 orig_size = *(((U64*)orig)-1);
@@ -20,7 +20,7 @@ void *laihost_realloc(void * orig, size_t new)
     }
     return memalloc(new);
 }
-void laihost_free(void  *orig)
+void laihost_free(void  *orig,size_t old)
 {
     memfree(orig);
 }
@@ -34,13 +34,13 @@ void laihost_unmap(void *pointer, size_t count)
     (void)count;
     (void)pointer;
 }
-void *laihost_scan(char *sig, size_t index)
+void *laihost_scan(const char *sig, size_t index)
 {
     //我们现在只支持一张表（Virtualbox只有一张233333）
     if(index) {
         return nullptr;
     }
-    return acpi_get_table_by_name(sig);
+    return acpi_get_table_by_name((char*)sig);
 }
 void laihost_log(int level, const char *msg)
 {

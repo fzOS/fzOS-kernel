@@ -5,8 +5,11 @@
 #include <coldpoint/common/class.h>
 #include <coldpoint/threading/thread.h>
 #include <common/printk.h>
+#ifdef FZOS_DEBUG_SWITCH
 #define print_opcode(x...) printk(x)
-//#define print_opcode(x...)
+#else
+#define print_opcode(x...)
+#endif
 extern cpstatus(*g_automata_opcode[256])(thread* t);
 void except(thread* t,char* msg);
 void automata_main_loop();

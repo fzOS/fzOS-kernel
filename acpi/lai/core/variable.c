@@ -1,30 +1,36 @@
 /*
- * Lightweight ACPI Implementation
- * Copyright (C) 2018-2019 the lai authors
+ * Lightweight AML Interpreter
+ * Copyright (C) 2018-2021 The lai authors
  */
 
 #include <lai/core.h>
-#include "libc.h"
+
 #include "exec_impl.h"
+#include "libc.h"
 
 // laihost_free_package(): Frees a package object and all its children
 static void laihost_free_package(lai_variable_t *object) {
-    for(int i = 0; i < object->pkg_ptr->size; i++)
+    for (size_t i = 0; i < object->pkg_ptr->size; i++)
         lai_var_finalize(&object->pkg_ptr->elems[i]);
-    laihost_free(object->pkg_ptr);
+    laihost_free(object->pkg_ptr->elems, object->pkg_ptr->size * sizeof(lai_variable_t));
+    laihost_free(object->pkg_ptr, sizeof(struct lai_pkg_head));
 }
 
 void lai_var_finalize(lai_variable_t *object) {
     switch (object->type) {
         case LAI_STRING:
         case LAI_STRING_INDEX:
-            if (lai_rc_unref(&object->string_ptr->rc))
-                laihost_free(object->string_ptr);
+            if (lai_rc_unref(&object->string_ptr->rc)) {
+                laihost_free(object->string_ptr->content, object->string_ptr->capacity);
+                laihost_free(object->string_ptr, sizeof(struct lai_string_head));
+            }
             break;
         case LAI_BUFFER:
         case LAI_BUFFER_INDEX:
-            if (lai_rc_unref(&object->buffer_ptr->rc))
-                laihost_free(object->buffer_ptr);
+            if (lai_rc_unref(&object->buffer_ptr->rc)) {
+                laihost_free(object->buffer_ptr->content, object->buffer_ptr->size);
+                laihost_free(object->buffer_ptr, sizeof(struct lai_buffer_head));
+            }
             break;
         case LAI_PACKAGE:
         case LAI_PACKAGE_INDEX:

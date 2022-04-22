@@ -1,6 +1,7 @@
 #ifndef WINDOW_MANAGER
 #define WINDOW_MANAGER
 #include <zcrystal/window.h>
+#define DEBUG_CONSOLE_BACKGROUND_COLOR 0x3a6fa6
 extern InlineLinkedList g_window_linked_list;
 extern volatile int g_screen_lock;
 FzOSResult enter_graphical_mode(void);

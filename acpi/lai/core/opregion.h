@@ -1,7 +1,6 @@
-
 /*
- * Lightweight ACPI Implementation
- * Copyright (C) 2018-2019 the lai authors
+ * Lightweight AML Interpreter
+ * Copyright (C) 2018-2021 The lai authors
  */
 
 #pragma once

@@ -17,7 +17,6 @@ void iostream_check_sem(thread* t)
         char c = queue_out_single(&g_default_console->input_buffer.queue);
         acquire_semaphore(t->sem);
         t->stack[++t->rsp].data = c;
-        printk("c:%d\n",c);
         t->stack[t->rsp].type   = STACK_TYPE_INT;
         t->status = THREAD_READY;
     }
