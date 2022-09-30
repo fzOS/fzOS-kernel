@@ -4,3 +4,4 @@ build/**
 test/**
 .kdev4/**
 passwd.sh
+.DS_Store
