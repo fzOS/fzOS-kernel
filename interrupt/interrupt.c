@@ -9,6 +9,7 @@ static struct IDTR {
   U16 size;
   U64 address;
 } __attribute__((packed)) IDTR;
+// 定义预处理的程序 (1-32 的部分错误 IDT)
 __attribute__ ((interrupt)) void int_handler_DE (InterruptFrame* frame)
 {
     die("Divided by Zero",frame);
@@ -92,6 +93,7 @@ void (*g_int_handler_irqs[IRQS_MAX])(InterruptFrame* frame) = {
 };
 //以上。
 InterruptGateDescriptor g_IDT[MAX_INTERRUPT_COUNT];
+// IDT 中断索引表 的 设置函数
 void set_interrupt_handler(int index,U64 addr,U8 type)
 {
     memset(g_IDT+index,0x00,sizeof(InterruptGateDescriptor));
@@ -105,7 +107,8 @@ void set_interrupt_handler(int index,U64 addr,U8 type)
 }
 void init_interrupt(void)
 {
-    //首先填充一些null的。
+    //首先填充一些null的，初始化以免异常到达这部分跳转去奇奇怪怪的地方
+    // 0 - 32 的vector是reserved的，包括一些预定义部分
     for(int i=0;i<32;i++) {
         set_interrupt_handler(i,(U64)int_handler_dummy,TRAP_GATE);
     }

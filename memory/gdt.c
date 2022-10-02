@@ -11,6 +11,7 @@ struct GDTEntry {
     U8 base31_24;
 } __attribute__((packed));
 
+// 任务状态段 保存cpu的运行状态
 struct TSS {
     U32 reserved0;
     U64 rsp0;

@@ -5,11 +5,14 @@
 #include <common/halt.h>
 #include <drivers/vmsvga.h>
 #include <coldpoint/automata/automata.h>
+#include <taskschedule/schedule.h>
 HPETResgister* g_hpet_base_address;
 void hpet_inthandler(int no)
 {
     g_thread_time_expired = 1;
     vmsvga_refresh_whole_screen();
+    // use hpet to trigger the task
+    task_schedule();
 }
 void init_hpet(void)
 {

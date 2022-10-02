@@ -23,6 +23,7 @@
 #include <drivers/mouse.h>
 #include <filesystem/efivarfs.h>
 #include <zcrystal/window_manager.h>
+#include <taskschedule/schedule.h>
 #ifndef VERSION
 #define VERSION "0.1"
 #endif
@@ -73,7 +74,7 @@ void kernel_main_real()
     //等待用户按键以启动JVM！
     press_key_to_boot();
     //启动jvm！
-    init_classloader();
+    //init_classloader();
 
     //enter_graphical_mode();
 }
