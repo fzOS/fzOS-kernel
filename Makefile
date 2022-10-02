@@ -20,7 +20,7 @@ CFLAGS=-fpie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${P
 ifeq '$(DEBUG)' '1'
 CFLAGS += -DFZOS_DEBUG_SWITCH
 endif
-SUBDIRS=drivers memory acpi common interrupt filesystem coldpoint zcrystal
+SUBDIRS=drivers memory acpi common interrupt filesystem coldpoint zcrystal taskschedule
 RECURSIVE_MAKE= @for subdir in $(SUBDIRS); \
         do \
         ( cd $$subdir && $(MAKE) all -f Makefile -e CC="${CC}" -e BASE_DIR=${BASE_DIR} -e CFLAGS='${CFLAGS}') || exit 1; \
