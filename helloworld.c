@@ -64,6 +64,7 @@ void kernel_main_real()
             halt();
         }
     };
+    init_task_manager();
     start_hpet();
     show_banner();
     play_startup_audio();
