@@ -75,7 +75,7 @@ U64 get_parameter_in_object(object* o,const char* signature,const char* typename
              return var[i].value;
         }
     }
-    return NULL;
+    return 0;
 }
 void set_parameter_in_object(object* o,const char* signature,const char* typename,const char* class,U64 val)
 {
