@@ -16,7 +16,7 @@ BASE_DIR=${PWD}
 CC:=${CC}gcc
 CC_VER := $(shell LANG=C ${CC} --version | head -1 | awk '{printf($$3)}')
 CC_VER_MAJOR := $(shell echo ${CC_VER} | awk -F. '{print $$1}')
-CFLAGS=-fpie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -isystem "/usr/include/efi/x86_64" -Wall -Werror -O2 -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-red-zone -ffreestanding
+CFLAGS=-fpie -DVERSION="\"${VERSION}\"" -DTHIS_YEAR="${THIS_YEAR}" -isystem "${PWD}/include" -isystem "/usr/include/efi/x86_64" -Wall -Werror -O2 -fshort-wchar -fno-stack-protector -Wno-address-of-packed-member -Wno-implicit-function-declaration -mno-red-zone -ffreestanding
 ifeq '$(DEBUG)' '1'
 CFLAGS += -DFZOS_DEBUG_SWITCH
 endif

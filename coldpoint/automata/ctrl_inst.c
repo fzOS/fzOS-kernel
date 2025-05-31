@@ -79,7 +79,7 @@ cpstatus opcode_ifnull(thread* t)
     StackVar v1=t->stack[t->rsp];
     t->rsp--;
     I16 off = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
-    if(v1.data==NULL) {
+    if(v1.data==0) {
         t->pc += off;
     }
     else {
@@ -93,7 +93,7 @@ cpstatus opcode_ifnonnull(thread* t)
     StackVar v1=t->stack[t->rsp];
     t->rsp--;
     I16 off = ((t->code->code[t->pc])<<8|t->code->code[t->pc+1]);
-    if(v1.data!=NULL) {
+    if(v1.data!=0) {
         t->pc += off;
     }
     else {
